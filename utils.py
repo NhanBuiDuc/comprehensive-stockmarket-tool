@@ -125,3 +125,23 @@ def bullish(open, close):
         else:
             comparison_array.append(1)
     return comparison_array
+
+def mean_absolute_percentage_error(y_true, y_pred):
+    """
+    Calculates the mean absolute percentage error (MAPE) between two arrays.
+    
+    Parameters:
+    y_true (array): array of actual values
+    y_pred (array): array of predicted values
+    
+    Returns:
+    mape (float): MAPE between the two arrays
+    """
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+
+def diff(np_array):
+    diff = np.zeros(len(np_array) - 1)
+    for i in range(len(diff)):
+        diff[i] = np_array[i] - np_array[i+1]
+    return diff

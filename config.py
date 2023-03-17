@@ -29,7 +29,7 @@ config = {
             "output_dates": 1    
         },
         "rdfc":{
-            "output_dates": 1 
+            "output_dates": 1
         },
     },
     "training": {
