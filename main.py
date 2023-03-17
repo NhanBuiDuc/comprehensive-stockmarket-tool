@@ -25,17 +25,17 @@ rfc_y = (dataset_df['close'] > dataset_df['close'].shift(1)).astype(int).fillna(
 rfc_y = rfc_y.values.tolist()
 rfc_X = dataset_df.values.tolist()
 
-X_train, X_test, y_train, y_test = train_test_split(rfc_X, rfc_y, test_size=0.2, random_state=20)
+rfc_X_train, rfc_X_test, rfc_y_train, rfc_y_test = train_test_split(rfc_X, rfc_y, test_size=0.2, random_state=20)
 
 # Split the training set into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=10)
+rfc_X_train, rfc_X_val, rfc_y_train, rfc_y_val = train_test_split(rfc_X_train, rfc_y_train, test_size=0.2, random_state=10)
 
-random_forest_model, random_forest_acc, f1 = train.train_random_forest_classfier(X_train, y_train, X_val, y_val)
+random_forest_model, random_forest_acc, f1 = train.train_random_forest_classfier(rfc_X_train, rfc_y_train, rfc_X_val, rfc_y_val)
 print("Val Accuracy:", random_forest_acc)
 # Print the F1 score
 print("Val F1 score: {:.2f}".format(f1))
 print("Weights:", random_forest_model.feature_importances_)
-random_forest_test_acc, test_f1 = infer.test_random_forest_classfier(random_forest_model, X_test, y_test)
+random_forest_test_acc, test_f1 = infer.test_random_forest_classfier(random_forest_model, rfc_X_test, rfc_y_test)
 print("Test Accuracy:", random_forest_test_acc)
 # Print the F1 score
 print("Val F1 score: {:.2f}".format(test_f1))
