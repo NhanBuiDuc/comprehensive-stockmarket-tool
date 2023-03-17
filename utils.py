@@ -40,6 +40,7 @@ def str_to_datetime(s):
   split = s.split('-')
   year, month, day = int(split[0]), int(split[1]), int(split[2])
   return datetime.datetime(year=year, month=month, day=day)
+
 def prepare_new_shape(x, window_size):
     n_row = x.shape[0] - window_size + 1
     unseen_row = x.shape[0] - window_size - cf['model']['output_dates'] + 1
@@ -70,7 +71,6 @@ def EMA(x, smoothing, window_size):
         i += 1
     ema = [float('nan')]*(window_size-1) + ema
     return ema
-ema = EMA(np.array(df['4. close']), config['data']['smoothing'], config['data']['window_size'])
 
 def RSI(df, window_size, ema=True):
     delta_close = df['4. close'].diff()
@@ -88,7 +88,7 @@ def RSI(df, window_size, ema=True):
     rsi = ma_up / ma_down
     rsi = 100 - (100/(1 + rsi))
     return rsi.to_numpy().tolist()
-rsi = RSI(df, config['data']['window_size'])
+
 def VWAP(df, window_size):
     close = np.array(df['4. close'])
     vol = np.array(df['6. volume'])
@@ -98,7 +98,6 @@ def VWAP(df, window_size):
     vwap = vwap.tolist()
     vwap = [float('nan')]*(window_size-1) + vwap
     return vwap
-vwap = VWAP(df, config['data']['window_size'])
 
 '''
 https://oxfordstrat.com/trading-strategies/hull-moving-average/
@@ -112,5 +111,5 @@ def HMA(s, window_size):
     wma2 = WMA(s, window_size)
     hma = WMA(wma1.multiply(2).sub(wma2), int(np.sqrt(window_size)))
     return hma.tolist()
-hma = HMA(df['4. close'], config['data']['window_size'])   
+  
     
