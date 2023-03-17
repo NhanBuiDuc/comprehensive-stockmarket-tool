@@ -113,3 +113,15 @@ def HMA(s, window_size):
     return hma.tolist()
   
     
+def bullish(open, close):
+    # Create a new empty array to hold the results
+    comparison_array = []
+    open = np.array(open)
+    close = np.array(close)
+    # Loop through each element in the arrays and compare them
+    for i in range(len(open)):
+        if open[i] > close[i]:
+            comparison_array.append(0)
+        else:
+            comparison_array.append(1)
+    return comparison_array

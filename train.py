@@ -1,6 +1,6 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
-
+from sklearn.metrics import f1_score
 def train_random_forest_classfier(X_train, y_train, X_test, y_test):
     # train a random forest classifier using scikit-learn
     model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -9,5 +9,7 @@ def train_random_forest_classfier(X_train, y_train, X_test, y_test):
 
     # calculate the accuracy of the predictions
     accuracy = accuracy_score(y_test, y_pred)
+    # Calculate the F1 score of the model's predictions
+    f1 = f1_score(y_test, y_pred)
 
-    return model, accuracy
+    return model, accuracy, f1
