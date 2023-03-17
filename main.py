@@ -26,4 +26,4 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 random_forest_model, random_forest_acc = train.train_random_forest_classfier(X_train, y_train, X_test, y_test)
 print("Accuracy:", random_forest_acc)
-print("Weights:", random_forest_acc.im)
+print("Weights:", random_forest_model.feature_importances_)
