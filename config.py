@@ -21,11 +21,16 @@ config = {
         "color_pred_test": "#FF4136",
     },
     "model": {
-        "input_size": 1, # since we are only using 1 feature, close price
-        "num_lstm_layers": 2,
-        "lstm_size": 64,
-        "dropout": 0.5,
-        "output_dates": 1
+        "lstm_regression":{
+            "input_size": 1, # since we are only using 1 feature, close price
+            "num_lstm_layers": 2,
+            "lstm_size": 64,
+            "dropout": 0.5,
+            "output_dates": 1    
+        },
+        "rdfc":{
+            "output_dates": 1 
+        },
     },
     "training": {
         "device": "cuda", # "cuda" or "cpu"

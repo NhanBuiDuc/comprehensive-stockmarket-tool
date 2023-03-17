@@ -17,7 +17,8 @@ hma = utils.HMA(data_df['4. close'], cf['data']['window_size'])
 
 dataset_df = pd.DataFrame({'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'],  'close': data_df['4. close'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'sma' : sma, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
 dataset_df = dataset_df.drop(dataset_df.index[:15])
-y = (dataset_df['close'] > dataset_df['close'].shift(cf["data"]["window_size"])).astype(int).fillna(0)
+day_steps = cf["model"]["rdfc"]["output_dates"]
+y = (dataset_df['close'] > dataset_df['close'].shift(day_steps)).astype(int).fillna(0)
 y = y.values.tolist()
 X = dataset_df.values.tolist()
 
@@ -25,3 +26,4 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 random_forest_model, random_forest_acc = train.train_random_forest_classfier(X_train, y_train, X_test, y_test)
 print("Accuracy:", random_forest_acc)
+print("Weights:", random_forest_acc.im)
