@@ -7,11 +7,17 @@ import infer
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 import utils
+import torch
+import model
+from torch.utils.data import DataLoader
+import torch.nn as nn
+import torch.optim as optim
+import sys
 def train_random_forest_classfier(X_train, X_test, X_val, y_train, y_test, y_val):
     day_steps = cf["model"]["rdfc"]["output_dates"]
-    y_train = [-1 if y_train[i] > y_train[i+day_steps] else 1 for i in range(len(y_train) - day_steps)]
-    y_test = [-1 if y_test[i] > y_test[i+day_steps] else 1 for i in range(len(y_test) - day_steps)]
-    y_val = [-1 if y_val[i] > y_val[i+day_steps] else 1 for i in range(len(y_val) - day_steps)]
+    y_train = [1 if y_train[i] > y_train[i+day_steps] else 0 for i in range(len(y_train) - day_steps)]
+    y_test = [1 if y_test[i] > y_test[i+day_steps] else 0 for i in range(len(y_test) - day_steps)]
+    y_val = [1 if y_val[i] > y_val[i+day_steps] else 0 for i in range(len(y_val) - day_steps)]
 
     # train a random forest classifier using scikit-learn
     model = RandomForestClassifier(n_estimators=1000, random_state=42)
@@ -40,8 +46,138 @@ def train_random_forest_regressior(X_train, y_train):
     y_train = (utils.diff(y_train))
 
     # Create a Random Forest Regression model with 100 trees
-    model = RandomForestRegressor(n_estimators=100, random_state=42)
+    model = RandomForestRegressor(n_estimators=1000, random_state=42)
 
     # Train the model on the training data
     model.fit(X_train[:-1], y_train)
     return model
+
+def train_LSTM_regression(dataset_train, dataset_val, is_training=False):
+
+    regression_model = model.LSTM_Regression(
+        input_size = cf["model"]["lstm_regression"]["input_size"],
+        hidden_layer_size = cf["model"]["lstm_regression"]["lstm_size"], 
+        num_layers = cf["model"]["lstm_regression"]["num_lstm_layers"], 
+        output_size = cf["model"]["lstm_regression"]["output_dates"],
+        dropout = cf["model"]["lstm_regression"]["dropout"]
+    )
+    regression_model.to("cuda")
+    # create `DataLoader`
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["batch_size"], shuffle=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["batch_size"], shuffle=True)
+
+    # define optimizer, scheduler and loss function
+    criterion = nn.MSELoss()
+
+    """
+    betas: Adam optimizer uses exponentially decaying averages of past gradients to update the parameters.
+    betas is a tuple of two values that control the decay rates for these moving averages.
+    The first value (default 0.9) controls the decay rate for the moving average of gradients,
+    and the second value (default 0.999) controls the decay rate for the moving average of squared gradients.
+    Higher values of beta will result in a smoother update trajectory and may help to avoid oscillations in the optimization process, 
+    but may also lead to slower convergence.
+    eps: eps is a small constant added to the denominator of the Adam update formula to avoid division by zero.
+    It is typically set to a very small value (e.g. 1e-8 or 1e-9) to ensure numerical stability.
+    """
+    optimizer = optim.Adam(regression_model.parameters(), lr=cf["training"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9)
+
+    """
+    For example, suppose step_size=10 and gamma=0.1.
+    This means that the learning rate will be multiplied by 0.1 every 10 epochs.
+    If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
+    """
+
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["scheduler_step_size"], gamma=0.01)
+    loss_train_history = []
+    loss_val_history = []
+    lr_train_history = []
+    lr_val_history = []
+
+    best_loss = sys.float_info.max
+    stop = False
+    patient = cf["training"]["patient"]
+    patient_count = 0
+    stopped_epoch = 0
+    # begin training
+    for epoch in range(cf["training"]["num_epoch"]):
+        loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
+        loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler)
+        scheduler.step()
+        loss_train_history.append(loss_train)
+        loss_val_history.append(loss_val)
+        lr_train_history.append(lr_train)
+        lr_val_history.append(lr_val)
+        if(check_best_loss(best_loss=best_loss, loss=loss_train)):
+            best_loss = loss_train
+            save_best_model(model=regression_model, num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+        else:
+            stop, patient_count, _, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+
+        print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
+                .format(epoch+1, cf["training"]["num_epoch"], loss_train, loss_val, lr_train))
+        
+        print("patient", patient_count)
+        if(stop == True):
+            print("Early Stopped At Epoch: {}", epoch)
+            stopped_epoch = patient_count
+            break
+    
+def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=False):
+    epoch_loss = 0
+
+
+    if is_training:
+        model.train()
+    else:
+        model.eval()
+
+
+    for idx, (x, y) in enumerate(dataloader):
+        if is_training:
+            optimizer.zero_grad()
+
+        batchsize = x.shape[0]
+
+        x = x.to(cf["training"]["device"])
+        y = y.to(cf["training"]["device"])
+
+        out = model(x)
+        loss = criterion(out.contiguous(), y.contiguous())
+
+        if is_training:
+            loss.backward()
+            optimizer.step()
+
+        epoch_loss += (loss.detach().item() / batchsize)
+
+    lr = scheduler.get_last_lr()[0]
+
+    return epoch_loss, lr
+
+
+def save_best_model(model, num_epochs, optimizer, val_loss, training_loss, learning_rate):
+    torch.save({
+        'epoch': num_epochs,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'valid_loss': val_loss,
+        'training_loss': training_loss,
+        'learning_rate': learning_rate
+    }, "./models/best_model")
+    
+def check_best_loss(best_loss, loss):
+    if loss < best_loss:
+        return True
+    return False
+# return boolen Stop, patient_count, best_loss, current_loss
+def early_stop(best_loss, current_loss, patient_count, max_patient):
+    if patient_count >= max_patient:
+        return True, patient_count, best_loss, current_loss
+    else:
+        if(best_loss > current_loss):
+            best_loss = current_loss
+            patient_count = 0
+            return False, patient_count, current_loss, current_loss
+        else:
+            patient_count = patient_count + 1
+            return False, patient_count, best_loss, current_loss

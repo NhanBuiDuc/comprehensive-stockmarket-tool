@@ -5,9 +5,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import train
 from sklearn.metrics import f1_score
-import infer
 import model
 from sklearn.metrics import mean_squared_error
+from dataset import TimeSeriesDataset
+
 data_df, num_data_points, data_date = utils.download_data_api()
 
 data_df = utils.get_new_df(data_df, '2018-01-01')
@@ -19,27 +20,43 @@ vwap = utils.VWAP(data_df, cf['data']['window_size'])
 hma = utils.HMA(data_df['4. close'], cf['data']['window_size'])
 bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
 
-dataset_df = pd.DataFrame({'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'],  'close': data_df['4. close'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma' : sma, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma' : sma, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
 dataset_df = dataset_df.drop(dataset_df.index[:15])
 
 X = dataset_df.values.tolist()
 y = np.array(dataset_df['close'])
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
-# Split the training set into training and validation sets
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.2, shuffle=False)
+window_size = cf["data"]["window_size"]
+X, _, _ = utils.prepare_timeseries_data_x(X, window_size=window_size)
 
-random_forest_classification_model = train.train_random_forest_classfier(X_train, X_test, X_val, y_train, y_test, y_val)
-random_forest_regression_model = train.train_random_forest_regressior(X_train, y_train)
-y_test = np.array(y_test)
-y_val = np.array(y_val)
-y_test = (utils.diff(y_test))
-y_val = (utils.diff(y_val))
+y_diff = utils.prepare_timeseries_data_y_diff(X.shape[0], X[:, 0])
+y_trend = utils.prepare_timeseries_data_y_trend(X.shape[0], X[:, 0])
+X_unseen = X[-1, :]
+X = X[:-1]
+# split dataset
+split_index = int(y_diff.shape[0]*cf["data"]["train_split_size"])
+data_x_train = X[:split_index]
+# from 80% - 100%
+data_x_val = X[split_index:]
+# from 0 - 80%
+data_y_train_diff = y_diff[:split_index]
+# from 80% - 100%
+data_y_val_diff = y_diff[split_index:]
+data_y_train_trend = y_trend[:split_index]
+# from 80% - 100%
+data_y_val_trend = y_trend[split_index:]
+    
+dataset_train_diff = TimeSeriesDataset(data_x_train, data_y_train_diff)
+dataset_val_diff = TimeSeriesDataset(data_x_val, data_y_val_diff)
+dataset_train_trend = TimeSeriesDataset(data_x_train, data_y_train_trend)
+dataset_val_trend = TimeSeriesDataset(data_x_val, data_y_val_trend)
 
-assembly_regression = model.assembly_regression(random_forest_regression_model, random_forest_classification_model)
-y_pred = assembly_regression.predict(X_val[:-1])
+model = train.train_LSTM_regression(dataset_train_diff, dataset_val_diff)
+
+# assembly_regression = model.assembly_regression(random_forest_regression_model, random_forest_classification_model)
+# y_pred = assembly_regression.predict(X_val[:-1])
 # Evaluate the model's performance using mean squared error
-mape = utils.mean_absolute_percentage_error(y_val, y_pred)
-mse = mean_squared_error(y_val, y_pred)
-print("Mean Absolute Percentage Error: {:.2f}".format(mape))
-print("Mean Squared Error: {:.2f}".format(mse))
+# mape = utils.mean_absolute_percentage_error(y_val, y_pred)
+# mse = mean_squared_error(y_val, y_pred)
+# print("Mean Absolute Percentage Error: {:.2f}".format(mape))
+# print("Mean Squared Error: {:.2f}".format(mse))
