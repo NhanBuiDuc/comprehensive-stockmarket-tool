@@ -1,4 +1,5 @@
 import torch.nn as nn
+from config import config as cf
 class assembly_regression():
     def __init__(self, regression_model, forescasting_model):
         self.regression_model = regression_model
@@ -15,15 +16,15 @@ class LSTM_Classification():
     pass
 
 class LSTM_Regression(nn.Module):
-    def __init__(self, input_size=6, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
+    def __init__(self, input_size=12, window_size = 14, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
 
-        self.linear_1 = nn.Linear(input_size, hidden_layer_size)
+        self.linear_1 = nn.Linear(12, 32)
         self.relu = nn.ReLU()
-        self.lstm = nn.LSTM(hidden_layer_size, hidden_size=self.hidden_layer_size, num_layers=num_layers, batch_first=True)
+        self.lstm = nn.LSTM(32, hidden_size=self.hidden_layer_size, num_layers=num_layers, batch_first=True)
         self.dropout = nn.Dropout(dropout)
-        self.linear_2 = nn.Linear(num_layers*hidden_layer_size, output_size)
+        self.linear_2 = nn.Linear(64, output_size)
         
         self.init_weights()
 
@@ -52,4 +53,4 @@ class LSTM_Regression(nn.Module):
         # layer 2
         x = self.dropout(x)
         predictions = self.linear_2(x)
-        return predictions[:,-1]
+        return predictions

@@ -22,9 +22,9 @@ config = {
     },
     "model": {
         "lstm_regression":{
-            "input_size": 1, # since we are only using 1 feature, close price
+            "input_size": 12, # since we are only using 1 feature, close price
             "num_lstm_layers": 2,
-            "lstm_size": 64,
+            "lstm_size": 32,
             "dropout": 0.5,
             "output_dates": 1    
         },
@@ -33,12 +33,16 @@ config = {
         },
     },
     "training": {
-        "device": "cuda", # "cuda" or "cpu"
-        "batch_size": 64,
-        "num_epoch": 3000,
-        "learning_rate": 0.001,
-        "scheduler_step_size": 2000,
-        "patient": 2000,
-        "best_model": False
+        "lstm_regression":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 64,
+            "num_epoch": 10000,
+            "learning_rate": 0.001,
+            "scheduler_step_size": 1000,
+            "patient": 10000,
+            "best_model": False,
+            "early_stop": True
+        }
     }
 }

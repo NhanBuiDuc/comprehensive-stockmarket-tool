@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import numpy as np
-
+from sklearn.preprocessing import MaxAbsScaler
 class Normalizer():
     def __init__(self):
         self.mu = None
@@ -22,12 +22,17 @@ class Normalizer():
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = Normalizer()
-        x = np.expand_dims(x, 2) # in our case, we have only 1 feature, so we need to convert `x` into [batch, sequence, features] for LSTM
-        self.x = x.astype(np.float32)
-        self.y = y.astype(np.float32)
-        self.x = self.scaler.fit_transform(x)
+        self.scaler = MaxAbsScaler()
+        self.x = x.astype(np.float64)
+        # Reshape the data
+        x = x.reshape((x.shape[0]*x.shape[1], x.shape[2]))
+        # Apply the scaler
+        x = self.scaler.fit_transform(x)
         self.y = self.scaler.fit_transform(y)
+        # Reshape the scaled data back to the original shape
+        self.x = x.reshape((self.x.shape[0], self.x.shape[1], self.x.shape[2]))
+        self.x = self.x.astype(np.float32)
+        self.y = self.y.astype(np.float32)
     def __len__(self):
         return len(self.x)
 

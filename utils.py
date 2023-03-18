@@ -161,6 +161,7 @@ def prepare_timeseries_data_x(x, window_size):
     output[-1]: has shape (window_size,) and contains the last window of x.
     '''
     x = np.array(x)
+    num_features = x.shape[-1]
     output_size = cf["model"]["lstm_regression"]["output_dates"]
     n_row = x.shape[0] - window_size + 1
     unseen_row = x.shape[0] - window_size - output_size + 1
@@ -176,7 +177,10 @@ def prepare_timeseries_data_x(x, window_size):
     #                 [5, 6, 7, 8],
     #                 [6, 7, 8, 9],
     #                 [7, 8, 9, 10]])
-    output = np.lib.stride_tricks.as_strided(x, shape=(n_row,window_size), strides = (x.strides[0], x.strides[0]))
+    output = np.zeros((n_row, window_size, num_features))
+    for i in range(n_row):
+        for j in range(window_size):
+            output[i][j] = x[i + j]
 
     #return (all the element but the last one, return the last element)
     return output, output[:unseen_row],  output[unseen_row:]
@@ -202,7 +206,7 @@ def prepare_timeseries_data_y(num_rows, data, window_size):
     return output
 
 def prepare_timeseries_data_y_diff(num_rows, data):
-    output_size = cf["model"]["rdfc"]["output_dates"]
+    output_size = cf["model"]["lstm_regression"]["output_dates"]
     output = np.empty((num_rows, 1))
     # Iterate over original array and extract windows of size 3
     for i in range(num_rows - output_size):
@@ -210,7 +214,7 @@ def prepare_timeseries_data_y_diff(num_rows, data):
     return output
 
 def prepare_timeseries_data_y_trend(num_rows, data):
-    output_size = cf["model"]["rdfc"]["output_dates"]
+    output_size = cf["model"]["lstm_regression"]["output_dates"]
     output = np.empty((num_rows, 1))
     # Iterate over original array and extract windows of size 3
     for i in range(num_rows - 1):

@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import sys
+
 def train_random_forest_classfier(X_train, X_test, X_val, y_train, y_test, y_val):
     day_steps = cf["model"]["rdfc"]["output_dates"]
     y_train = [1 if y_train[i] > y_train[i+day_steps] else 0 for i in range(len(y_train) - day_steps)]
@@ -52,10 +53,11 @@ def train_random_forest_regressior(X_train, y_train):
     model.fit(X_train[:-1], y_train)
     return model
 
-def train_LSTM_regression(dataset_train, dataset_val, is_training=False):
+def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
 
     regression_model = model.LSTM_Regression(
         input_size = cf["model"]["lstm_regression"]["input_size"],
+        window_size = cf["data"]["window_size"],
         hidden_layer_size = cf["model"]["lstm_regression"]["lstm_size"], 
         num_layers = cf["model"]["lstm_regression"]["num_lstm_layers"], 
         output_size = cf["model"]["lstm_regression"]["output_dates"],
@@ -63,8 +65,8 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=False):
     )
     regression_model.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["batch_size"], shuffle=True)
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_regression"]["batch_size"], shuffle=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_regression"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -79,7 +81,7 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=False):
     eps: eps is a small constant added to the denominator of the Adam update formula to avoid division by zero.
     It is typically set to a very small value (e.g. 1e-8 or 1e-9) to ensure numerical stability.
     """
-    optimizer = optim.Adam(regression_model.parameters(), lr=cf["training"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9)
+    optimizer = optim.Adam(regression_model.parameters(), lr=cf["training"]["lstm_regression"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
 
     """
     For example, suppose step_size=10 and gamma=0.1.
@@ -87,7 +89,7 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=False):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["scheduler_step_size"], gamma=0.01)
+    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_regression"]["scheduler_step_size"], gamma=0.01)
     loss_train_history = []
     loss_val_history = []
     lr_train_history = []
@@ -95,11 +97,11 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=False):
 
     best_loss = sys.float_info.max
     stop = False
-    patient = cf["training"]["patient"]
+    patient = cf["training"]["lstm_regression"]["patient"]
     patient_count = 0
     stopped_epoch = 0
     # begin training
-    for epoch in range(cf["training"]["num_epoch"]):
+    for epoch in range(cf["training"]["lstm_regression"]["num_epoch"]):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler)
         scheduler.step()
@@ -114,18 +116,19 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=False):
             stop, patient_count, _, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
-                .format(epoch+1, cf["training"]["num_epoch"], loss_train, loss_val, lr_train))
+                .format(epoch+1, cf["training"]["lstm_regression"]["num_epoch"], loss_train, loss_val, lr_train))
         
         print("patient", patient_count)
         if(stop == True):
             print("Early Stopped At Epoch: {}", epoch)
             stopped_epoch = patient_count
             break
+    return regression_model
     
 def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=False):
     epoch_loss = 0
 
-
+    weight_decay=0.001
     if is_training:
         model.train()
     else:
@@ -138,11 +141,11 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
 
         batchsize = x.shape[0]
 
-        x = x.to(cf["training"]["device"])
-        y = y.to(cf["training"]["device"])
+        x = x.to(cf["training"]["lstm_regression"]["device"])
+        y = y.to(cf["training"]["lstm_regression"]["device"])
 
         out = model(x)
-        loss = criterion(out.contiguous(), y.contiguous())
+        loss = criterion(out, y)
 
         if is_training:
             loss.backward()
@@ -163,7 +166,7 @@ def save_best_model(model, num_epochs, optimizer, val_loss, training_loss, learn
         'valid_loss': val_loss,
         'training_loss': training_loss,
         'learning_rate': learning_rate
-    }, "./models/best_model")
+    }, "./models/lstm_regression")
     
 def check_best_loss(best_loss, loss):
     if loss < best_loss:
@@ -171,13 +174,13 @@ def check_best_loss(best_loss, loss):
     return False
 # return boolen Stop, patient_count, best_loss, current_loss
 def early_stop(best_loss, current_loss, patient_count, max_patient):
-    if patient_count >= max_patient:
-        return True, patient_count, best_loss, current_loss
+    stop = False
+    if(best_loss > current_loss):
+        best_loss = current_loss
+        patient_count = 0
     else:
-        if(best_loss > current_loss):
-            best_loss = current_loss
-            patient_count = 0
-            return False, patient_count, current_loss, current_loss
-        else:
-            patient_count = patient_count + 1
-            return False, patient_count, best_loss, current_loss
+        patient_count = patient_count + 1
+    if patient_count >= max_patient:
+        stop = True
+    return stop, patient_count, best_loss, current_loss
+    
