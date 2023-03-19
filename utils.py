@@ -162,9 +162,7 @@ def prepare_timeseries_data_x(x, window_size):
     '''
     x = np.array(x)
     num_features = x.shape[-1]
-    output_size = cf["model"]["lstm_regression"]["output_dates"]
-    n_row = x.shape[0] - window_size + 1
-    unseen_row = x.shape[0] - window_size - output_size + 1
+    n_row = x.shape[0] - window_size
     # Example: window_size = 20, x with shape = (100, 20) -> n_row = 100 - 20 + 1 = 81
     # output shape = (81, 20), strides = (8, 8)
     # -> output will move up one by one until the 100th element(last element) from the original x,
@@ -183,7 +181,7 @@ def prepare_timeseries_data_x(x, window_size):
             output[i][j] = x[i + j]
 
     #return (all the element but the last one, return the last element)
-    return output, output[:unseen_row],  output[unseen_row:]
+    return output
 
 def prepare_timeseries_data_y(num_rows, data, window_size):
     # output = x[window_size:]
@@ -205,23 +203,24 @@ def prepare_timeseries_data_y(num_rows, data, window_size):
         output[i] = data[window_size+i:window_size+i+output_size]
     return output
 
-def prepare_timeseries_data_y_diff(num_rows, data):
+def prepare_timeseries_data_y_diff(num_rows, data, window_size):
     output_size = cf["model"]["lstm_regression"]["output_dates"]
     output = np.empty((num_rows, 1))
     # Iterate over original array and extract windows of size 3
-    for i in range(num_rows - output_size):
-        output[i] = data[i] - data[i+output_size]
+    for i in range(num_rows):
+        output[i] = data[i+output_size+window_size - 1] - data[i+window_size - 1]
     return output
 
-def prepare_timeseries_data_y_trend(num_rows, data):
-    output_size = cf["model"]["lstm_regression"]["output_dates"]
-    output = np.empty((num_rows, 1))
+def prepare_timeseries_data_y_trend(num_rows, data, output_size):
+    output = np.empty((num_rows, 2))
     # Iterate over original array and extract windows of size 3
+    # (0,1) means up
+    # (1,0) means down
     for i in range(num_rows - 1):
-        if(data[i] > data[i + output_size]):
-            output[i] = 0
-        elif(data[i] < data[i + output_size]):
-            output[i] = 1
+        # Go up
+        if(data[i + output_size] > data[i]):
+            output[i] = (0, 1)
+        # Go down
         else:
-            output[i] = 2
+            output[i] = (1, 0)
     return output

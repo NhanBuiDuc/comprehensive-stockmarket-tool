@@ -21,15 +21,30 @@ config = {
         "color_pred_test": "#FF4136",
     },
     "model": {
+        "assembly_regression":{
+            "input_size": 12,
+            "output_dates": 1    
+        },
         "lstm_regression":{
-            "input_size": 12, # since we are only using 1 feature, close price
+            "input_size": 12,
             "num_lstm_layers": 2,
             "lstm_size": 32,
             "dropout": 0.5,
             "output_dates": 1    
         },
-        "rdfc":{
+        "lstm_classification1":{
+            "input_size": 12,
+            "num_lstm_layers": 2,
+            "lstm_size": 32,
+            "dropout": 0.5, 
             "output_dates": 1
+        },
+        "lstm_classification14":{
+            "input_size": 12,
+            "num_lstm_layers": 2,
+            "lstm_size": 32,
+            "dropout": 0.5, 
+            "output_dates": 14
         },
     },
     "training": {
@@ -37,10 +52,32 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 10000,
+            "num_epoch": 5000,
             "learning_rate": 0.001,
             "scheduler_step_size": 1000,
-            "patient": 10000,
+            "patient": 2000,
+            "best_model": False,
+            "early_stop": True
+        },
+        "lstm_classification1":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 64,
+            "num_epoch": 5000,
+            "learning_rate": 0.001,
+            "scheduler_step_size": 1000,
+            "patient": 2000,
+            "best_model": False,
+            "early_stop": True
+        },
+        "lstm_classification14":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 64,
+            "num_epoch": 5000,
+            "learning_rate": 0.001,
+            "scheduler_step_size": 1000,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         }
