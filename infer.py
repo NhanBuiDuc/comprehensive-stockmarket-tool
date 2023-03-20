@@ -187,10 +187,10 @@ def evalute_binary1(dataset_val):
         # RMSE_val_loss += loss3.detach().item()  / batchsize
 
 
-    print('Binary cross-entropy Valid loss:{:.6f}%'
-                    .format(binary_cross_entropy_val_loss * 100 / num_data * batch_size))
-    print('Binary cross-entropy Valid loss:{:.6f}, Accuracy:{:.6f}'
-                    .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
+    print('Binary cross-entropy1 Valid loss:{:.6f}%'
+                    .format(binary_cross_entropy_val_loss * 100 / num_data))
+    print('Binary cross-entropy1 Valid loss:{:.6f}, Accuracy:{:.6f}'
+                    .format(binary_cross_entropy_val_loss, accuracy_score / num_data))
     # print('Valid loss:{:.6f}%'
     #                 .format(val_loss))
     return binary_cross_entropy_val_loss
@@ -245,10 +245,10 @@ def evalute_binary14(dataset_val):
         # RMSE_val_loss += loss3.detach().item()  / batchsize
 
 
-    print('Binary cross-entropy Valid loss:{:.6f}%'
+    print('Binary cross-entropy14 Valid loss:{:.6f}%'
                     .format(binary_cross_entropy_val_loss * 100 / num_data))
-    print('Binary cross-entropy Valid loss:{:.6f}, Accuracy:{:.6f}'
-                    .format(binary_cross_entropy_val_loss, accuracy_score/(len(val_dataloader))))
+    print('Binary cross-entropy14 Valid loss:{:.6f}, Accuracy:{:.6f}'
+                    .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
     # print('Valid loss:{:.6f}%'
     #                 .format(val_loss))
     return binary_cross_entropy_val_loss

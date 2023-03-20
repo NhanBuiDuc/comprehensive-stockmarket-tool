@@ -40,15 +40,15 @@ def train_assembly_model(dataset_train, dataset_val):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step()
-        loss_train_history.append(loss_train)
-        loss_val_history.append(loss_val)
-        lr_train_history.append(lr_train)
-        lr_val_history.append(lr_val)
+        # loss_train_history.append(loss_train)
+        # loss_val_history.append(loss_val)
+        # lr_train_history.append(lr_train)
+        # lr_val_history.append(lr_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_train)):
-            best_loss = loss_train
+            best_loss = loss_val
             save_best_model(model=regression_model, name = "assembly_regression", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, _, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_regression"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -151,15 +151,16 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step()
-        loss_train_history.append(loss_train)
-        loss_val_history.append(loss_val)
-        lr_train_history.append(lr_train)
-        lr_val_history.append(lr_val)
+        # loss_train_history.append(loss_train)
+        # loss_val_history.append(loss_val)
+        # lr_train_history.append(lr_train)
+        # lr_val_history.append(lr_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_train)):
-            best_loss = loss_train
+            best_loss = loss_val
+            patient_count = 0
             save_best_model(model=regression_model, name = "lstm_regression", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, _, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_regression"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -223,15 +224,16 @@ def train_LSTM_binary_1(dataset_train, dataset_val, is_training=True):
         loss_train, lr_train = run_epoch(binary_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(binary_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step()
-        loss_train_history.append(loss_train)
-        loss_val_history.append(loss_val)
-        lr_train_history.append(lr_train)
-        lr_val_history.append(lr_val)
+        # loss_train_history.append(loss_train)
+        # loss_val_history.append(loss_val)
+        # lr_train_history.append(lr_train)
+        # lr_val_history.append(lr_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_train)):
-            best_loss = loss_train
+            best_loss = loss_val
+            patient_count = 0
             save_best_model(model=binary_model, name="lstm_binary1", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, _, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_classification1"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -294,15 +296,16 @@ def train_LSTM_binary_14(dataset_train, dataset_val, is_training=True):
         loss_train, lr_train = run_epoch(binary_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(binary_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step()
-        loss_train_history.append(loss_train)
-        loss_val_history.append(loss_val)
-        lr_train_history.append(lr_train)
-        lr_val_history.append(lr_val)
+        # loss_train_history.append(loss_train)
+        # loss_val_history.append(loss_val)
+        # lr_train_history.append(lr_train)
+        # lr_val_history.append(lr_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_train)):
-            best_loss = loss_train
+            best_loss = loss_val
+            patient_count = 0
             save_best_model(model=binary_model, name="lstm_binary14", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, _, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_classification14"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -336,11 +339,11 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
         out = model(x)
 
         # Calculate the L2 regularization term
-        # l2_reg = 0
-        # for param in model.parameters():
-        #     l2_reg += torch.norm(param).to("cuda")
+        l2_reg = 0
+        for param in model.parameters():
+            l2_reg += torch.norm(param).to("cuda")
         loss = criterion(out, y)
-        # loss = criterion(out, y) + weight_decay * l2_reg
+        loss = criterion(out, y) + weight_decay * l2_reg
         if is_training:
             torch.autograd.set_detect_anomaly(True)
             loss.backward()

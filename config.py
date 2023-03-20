@@ -64,7 +64,7 @@ config = {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
             "num_epoch": 5000,
-            "learning_rate": 0.001,
+            "learning_rate": 0.0001,
             "scheduler_step_size": 1000,
             "patient": 2000,
             "best_model": False,
@@ -75,7 +75,7 @@ config = {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
             "num_epoch": 5000,
-            "learning_rate": 0.001,
+            "learning_rate": 0.0001,
             "scheduler_step_size": 1000,
             "patient": 2000,
             "best_model": False,
