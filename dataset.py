@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import numpy as np
-from sklearn.preprocessing import MaxAbsScaler
+from sklearn.preprocessing import MinMaxScaler
 class Normalizer():
     def __init__(self):
         self.mu = None
@@ -22,7 +22,7 @@ class Normalizer():
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = MaxAbsScaler()
+        self.scaler = MinMaxScaler()
         self.x = x.astype(np.float64)
         # Reshape the data
         x = x.reshape((x.shape[0]*x.shape[1], x.shape[2]))
@@ -41,7 +41,7 @@ class TimeSeriesDataset(Dataset):
     
 class Classification_TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = MaxAbsScaler()
+        self.scaler = MinMaxScaler()
         self.y = y.astype(np.float32)
         self.x = x.astype(np.float64)
         # Reshape the data

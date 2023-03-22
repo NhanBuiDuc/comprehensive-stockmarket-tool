@@ -7,7 +7,7 @@ import numpy as np
 import torch.nn as nn
 import torch
 from model import LSTM_Regression
-from model import LSTM_Binary
+from model import LSTM_Classifier
 def test_random_forest_classfier(model, X_test, y_test):
 
     y_pred = model.predict(X_test)
@@ -138,12 +138,12 @@ def evalute_assembly_regression(dataset_val):
     return MSE_val_loss, MAE_val_loss, RMSE_val_loss, y_true, y_pred
 
 
-def evalute_binary1(dataset_val):
+def evalute_classifier_1(dataset_val):
     batch_size = cf["training"]["lstm_classification1"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = LSTM_Binary()
-    checkpoint = torch.load('./models/lstm_binary1')
+    model = LSTM_Classifier()
+    checkpoint = torch.load('./models/lstm_classification_1')
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
@@ -196,11 +196,11 @@ def evalute_binary1(dataset_val):
     return binary_cross_entropy_val_loss
 
 
-def evalute_binary14(dataset_val):
+def evalute_classifier_14(dataset_val):
     batch_size = cf["training"]["lstm_classification14"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = LSTM_Binary()
+    model = LSTM_Classifier()
     checkpoint = torch.load('./models/lstm_binary14')
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])

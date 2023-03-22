@@ -224,3 +224,33 @@ def prepare_timeseries_data_y_trend(num_rows, data, output_size):
         else:
             output[i] = (1, 0)
     return output
+def prepare_timeseries_data_y_trend_percentage(num_rows, data, output_size):
+    output = np.empty((num_rows, 3))
+    # Iterate over original array and extract windows of size 3
+    # (0,1,0) means up
+    # (1,0,0) means down
+    # (0,0,1) means side way
+    for i in range(num_rows - 1):
+        change_percentage =  (( data[i + output_size] - data[i] ) * 100 ) / data[i]
+        # Go up
+        if((change_percentage > 5)):
+            output[i] = (0, 1, 0)
+        # Go down
+        elif ((change_percentage > -5)):
+            output[i] = (1, 0, 0)
+        else:
+            output[i] = (0, 0, 1)
+    return output
+def prepare_tree_data_y_trend(num_rows, data, output_size):
+    output = np.empty((num_rows, 1), dtype=int)
+    # Iterate over original array and extract windows of size 3
+    # (1) means up
+    # (0) means down
+    for i in range(num_rows - 1):
+        # Go up
+        if(data[i + output_size] > data[i]):
+            output[i] = 1
+        # Go down
+        else:
+            output[i] = 0
+    return output

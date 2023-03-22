@@ -13,6 +13,9 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import sys
+from torch.optim.lr_scheduler import LambdaLR
+from sklearn.svm import SVC
+
 def train_assembly_model(dataset_train, dataset_val):
     regression_model = model.Assembly_regression()
     regression_model.to("cuda")
@@ -44,11 +47,12 @@ def train_assembly_model(dataset_train, dataset_val):
         # loss_val_history.append(loss_val)
         # lr_train_history.append(lr_train)
         # lr_val_history.append(lr_val)
-        if(check_best_loss(best_loss=best_loss, loss=loss_train)):
+        if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
+            patient = 0
             save_best_model(model=regression_model, name = "assembly_regression", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_regression"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -60,28 +64,70 @@ def train_assembly_model(dataset_train, dataset_val):
             break
     return regression_model
 
-def train_random_forest_classfier(X_train, X_test, X_val, y_train, y_test, y_val):
-    day_steps = cf["model"]["rdfc"]["output_dates"]
-    y_train = [1 if y_train[i] > y_train[i+day_steps] else 0 for i in range(len(y_train) - day_steps)]
-    y_test = [1 if y_test[i] > y_test[i+day_steps] else 0 for i in range(len(y_test) - day_steps)]
-    y_val = [1 if y_val[i] > y_val[i+day_steps] else 0 for i in range(len(y_val) - day_steps)]
+def train_random_forest_classfier(X_train, y_train, X_val, y_val, X_test, y_test):
+    day_steps = 14
 
     # train a random forest classifier using scikit-learn
-    model = RandomForestClassifier(n_estimators=1000, random_state=42)
-    model.fit(X_train[:-day_steps], y_train)
-    y_pred = model.predict(X_val[:-day_steps])
+    model = RandomForestClassifier(n_estimators=2000, random_state=42)
+    y_train = np.squeeze(y_train)
+    y_val = np.squeeze(y_val)
+    y_test = np.squeeze(y_test)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_val)
 
     # calculate the accuracy of the predictions
     accuracy = accuracy_score(y_val, y_pred)
     print("Val Accuracy:", accuracy)
     # Print the F1 score
-    f1 = f1_score(y_val, y_pred)
+    f1 = f1_score(y_val, y_pred, average="micro")
     print("Val F1 score: {:.2f}".format(f1))
     print("Weights:", model.feature_importances_)
-    random_forest_test_acc, test_f1 = infer.test_random_forest_classfier(model, X_test[:-day_steps], y_test)
-    print("Test Accuracy:", random_forest_test_acc)
+    
+    y_pred_test = model.predict(X_test)
+    print(y_test.dtype)
+    print(y_pred_test.dtype)
+    # calculate the accuracy of the predictions
+    accuracy = accuracy_score(y_test, y_pred_test)
+    # Calculate the F1 score of the model's predictions
+    f1 = f1_score(y_test, y_pred_test, average="micro")
+
+    print("Test Accuracy:", accuracy)
     # Print the F1 score
-    print("Test F1 score: {:.2f}".format(test_f1))
+    print("Test F1 score: {:.2f}".format(f1))
+
+
+    return model
+
+def train_svm_classfier(X_train, y_train, X_val, y_val, X_test, y_test):
+    day_steps = 14
+
+    # train a random forest classifier using scikit-learn
+    model = SVC(kernel='linear', C=1)
+    y_train = np.squeeze(y_train)
+    y_val = np.squeeze(y_val)
+    y_test = np.squeeze(y_test)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_val)
+
+    # calculate the accuracy of the predictions
+    accuracy = accuracy_score(y_val, y_pred)
+    print("Val Accuracy:", accuracy)
+    # Print the F1 score
+    f1 = f1_score(y_val, y_pred, average="micro")
+    print("Val F1 score: {:.2f}".format(f1))
+    print("Weights:", model.class_weight_)
+    
+    y_pred_test = model.predict(X_test)
+    print(y_test.dtype)
+    print(y_pred_test.dtype)
+    # calculate the accuracy of the predictions
+    accuracy = accuracy_score(y_test, y_pred_test)
+    # Calculate the F1 score of the model's predictions
+    f1 = f1_score(y_test, y_pred_test, average="micro")
+
+    print("Test Accuracy:", accuracy)
+    # Print the F1 score
+    print("Test F1 score: {:.2f}".format(f1))
 
 
     return model
@@ -111,7 +157,7 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
     )
     regression_model.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_regression"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_regression"]["batch_size"])
     val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_regression"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
@@ -135,7 +181,8 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_regression"]["scheduler_step_size"], gamma=0.01)
+    #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_regression"]["scheduler_step_size"], gamma=0.01)
+    scheduler = LambdaLR(optimizer, lr_lambda)
     loss_train_history = []
     loss_val_history = []
     lr_train_history = []
@@ -155,12 +202,12 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
         # loss_val_history.append(loss_val)
         # lr_train_history.append(lr_train)
         # lr_val_history.append(lr_val)
-        if(check_best_loss(best_loss=best_loss, loss=loss_train)):
+        if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
             save_best_model(model=regression_model, name = "lstm_regression", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_regression"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -172,9 +219,9 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
             break
     return regression_model
 
-def train_LSTM_binary_1(dataset_train, dataset_val, is_training=True):
+def train_LSTM_classifier_1(dataset_train, dataset_val, is_training=True):
 
-    binary_model = model.LSTM_Binary(
+    binary_model = model.LSTM_Classifier(
         input_size = cf["model"]["lstm_classification1"]["input_size"],
         window_size = cf["data"]["window_size"],
         hidden_layer_size = cf["model"]["lstm_classification1"]["lstm_size"], 
@@ -184,7 +231,7 @@ def train_LSTM_binary_1(dataset_train, dataset_val, is_training=True):
     )
     binary_model.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_classification1"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_classification1"]["batch_size"])
     val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_classification1"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
@@ -200,15 +247,16 @@ def train_LSTM_binary_1(dataset_train, dataset_val, is_training=True):
     eps: eps is a small constant added to the denominator of the Adam update formula to avoid division by zero.
     It is typically set to a very small value (e.g. 1e-8 or 1e-9) to ensure numerical stability.
     """
-    optimizer = optim.Adam(binary_model.parameters(), lr=cf["training"]["lstm_classification1"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
-
+    # optimizer = optim.Adam(binary_model.parameters(), lr=cf["training"]["lstm_classification1"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
+    optimizer = optim.SGD(binary_model.parameters(), lr=cf["training"]["lstm_classification1"]["learning_rate"], momentum=0.9)
     """
     For example, suppose step_size=10 and gamma=0.1.
     This means that the learning rate will be multiplied by 0.1 every 10 epochs.
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_classification1"]["scheduler_step_size"], gamma=0.01)
+    #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_classification1"]["scheduler_step_size"], gamma=0.01)
+    scheduler = LambdaLR(optimizer, lr_lambda)
     loss_train_history = []
     loss_val_history = []
     lr_train_history = []
@@ -228,12 +276,12 @@ def train_LSTM_binary_1(dataset_train, dataset_val, is_training=True):
         # loss_val_history.append(loss_val)
         # lr_train_history.append(lr_train)
         # lr_val_history.append(lr_val)
-        if(check_best_loss(best_loss=best_loss, loss=loss_train)):
+        if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=binary_model, name="lstm_binary1", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=binary_model, name="lstm_classification_1", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_classification1"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -244,9 +292,9 @@ def train_LSTM_binary_1(dataset_train, dataset_val, is_training=True):
             stopped_epoch = patient_count
             break
     return binary_model
-def train_LSTM_binary_14(dataset_train, dataset_val, is_training=True):
+def train_LSTM_classifier_14(dataset_train, dataset_val, is_training=True):
 
-    binary_model = model.LSTM_Binary(
+    binary_model = model.LSTM_Classifier(
         input_size = cf["model"]["lstm_classification14"]["input_size"],
         window_size = cf["data"]["window_size"],
         hidden_layer_size = cf["model"]["lstm_classification14"]["lstm_size"], 
@@ -256,7 +304,7 @@ def train_LSTM_binary_14(dataset_train, dataset_val, is_training=True):
     )
     binary_model.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_classification14"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_classification14"]["batch_size"])
     val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_classification14"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
@@ -272,7 +320,7 @@ def train_LSTM_binary_14(dataset_train, dataset_val, is_training=True):
     eps: eps is a small constant added to the denominator of the Adam update formula to avoid division by zero.
     It is typically set to a very small value (e.g. 1e-8 or 1e-9) to ensure numerical stability.
     """
-    optimizer = optim.Adam(binary_model.parameters(), lr=cf["training"]["lstm_classification14"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
+    optimizer = optim.SGD(binary_model.parameters(), lr=cf["training"]["lstm_classification14"]["learning_rate"], momentum=0.9)
 
     """
     For example, suppose step_size=10 and gamma=0.1.
@@ -280,7 +328,8 @@ def train_LSTM_binary_14(dataset_train, dataset_val, is_training=True):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_classification14"]["scheduler_step_size"], gamma=0.01)
+    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_classification14"]["scheduler_step_size"], gamma=0.01)
+    scheduler = LambdaLR(optimizer, lr_lambda)
     loss_train_history = []
     loss_val_history = []
     lr_train_history = []
@@ -300,12 +349,12 @@ def train_LSTM_binary_14(dataset_train, dataset_val, is_training=True):
         # loss_val_history.append(loss_val)
         # lr_train_history.append(lr_train)
         # lr_val_history.append(lr_val)
-        if(check_best_loss(best_loss=best_loss, loss=loss_train)):
+        if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=binary_model, name="lstm_binary14", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=binary_model, name="lstm_classification_14", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
-            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_train, patient_count=patient_count, max_patient=patient)
+            stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                 .format(epoch+1, cf["training"]["lstm_classification14"]["num_epoch"], loss_train, loss_val, lr_train))
@@ -317,6 +366,15 @@ def train_LSTM_binary_14(dataset_train, dataset_val, is_training=True):
             break
     return binary_model
 
+
+def lr_lambda(epoch):
+    if epoch < 1000:
+        return 1
+    elif epoch < 5000:
+        return 0.1
+    else:
+        return 0.1 * (0.1 ** ((epoch - 5000) // 1000))
+    
 def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=False):
     epoch_loss = 0
 
@@ -342,7 +400,6 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
         l2_reg = 0
         for param in model.parameters():
             l2_reg += torch.norm(param).to("cuda")
-        loss = criterion(out, y)
         loss = criterion(out, y) + weight_decay * l2_reg
         if is_training:
             torch.autograd.set_detect_anomaly(True)
