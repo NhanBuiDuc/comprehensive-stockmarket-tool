@@ -7,7 +7,7 @@ config = {
     },
     "data": {
         "window_size": 14,
-        "train_split_size": 0.80,
+        "train_split_size": 0.70,
         "smoothing": 2
     }, 
     "plots": {
@@ -41,8 +41,8 @@ config = {
         },
         "lstm_classification14":{
             "input_size": 12,
-            "num_lstm_layers": 2,
-            "lstm_size": 32,
+            "num_lstm_layers": 1,
+            "lstm_size": 14,
             "dropout": 0.5, 
             "output_dates": 14
         },
@@ -52,7 +52,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 2000,
+            "num_epoch": 3000,
             "learning_rate": 0.001,
             "scheduler_step_size": 1000,
             "patient": 1000,
@@ -64,9 +64,9 @@ config = {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
             "num_epoch": 10000,
-            "learning_rate": 0.01,
+            "learning_rate": 0.1,
             "scheduler_step_size": 100,
-            "patient": 10000,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         },
@@ -75,9 +75,9 @@ config = {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
             "num_epoch": 10000,
-            "learning_rate": 0.001,
+            "learning_rate": 0.1,
             "scheduler_step_size": 100,
-            "patient": 1000,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         }

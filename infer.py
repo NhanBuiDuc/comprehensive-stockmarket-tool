@@ -7,7 +7,8 @@ import numpy as np
 import torch.nn as nn
 import torch
 from model import LSTM_Regression
-from model import LSTM_Classifier
+from model import LSTM_Classifier_14
+from model import LSTM_Classifier_1
 def test_random_forest_classfier(model, X_test, y_test):
 
     y_pred = model.predict(X_test)
@@ -142,7 +143,7 @@ def evalute_classifier_1(dataset_val):
     batch_size = cf["training"]["lstm_classification1"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = LSTM_Classifier()
+    model = LSTM_Classifier_1()
     checkpoint = torch.load('./models/lstm_classification_1')
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
@@ -151,10 +152,7 @@ def evalute_classifier_1(dataset_val):
     # create `DataLoader`
     val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_classification1"]["batch_size"], shuffle=True)
     num_data = len(val_dataloader) * val_dataloader.batch_size
-    # define optimizer, scheduler and loss function
     criterion = nn.BCELoss()
-    # criterion2 = nn.L1Loss()
-    # criterion3 = nn.NLLLoss()
     
     binary_cross_entropy_val_loss = 0
     accuracy_score = 0
@@ -175,16 +173,8 @@ def evalute_classifier_1(dataset_val):
         _, prob_true = torch.max(y, dim=1)
         accuracy_score+= torch.sum(prob_predict == prob_true).item()
         y_pred.append(out)
-
-        # y = torch.tensor(y).to("cuda")
-        # out = torch.tensor(out).to("cuda")
         loss = criterion(out, y)
-        # loss2 = criterion2(out, y)
-        # loss3 = torch.sqrt(loss)
-        
         binary_cross_entropy_val_loss += loss.detach().item()  / batchsize
-        # MAE_val_loss += loss2.detach().item()  / batchsize
-        # RMSE_val_loss += loss3.detach().item()  / batchsize
 
 
     print('Binary cross-entropy1 Valid loss:{:.6f}%'
@@ -200,8 +190,8 @@ def evalute_classifier_14(dataset_val):
     batch_size = cf["training"]["lstm_classification14"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = LSTM_Classifier()
-    checkpoint = torch.load('./models/lstm_binary14')
+    model = LSTM_Classifier_14()
+    checkpoint = torch.load('./models/lstm_classification_14')
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
@@ -233,16 +223,8 @@ def evalute_classifier_14(dataset_val):
         _, prob_true = torch.max(y, dim=1)
         accuracy_score+= torch.sum(prob_predict == prob_true).item()
         y_pred.append(out)
-
-        # y = torch.tensor(y).to("cuda")
-        # out = torch.tensor(out).to("cuda")
         loss = criterion(out, y)
-        # loss2 = criterion2(out, y)
-        # loss3 = torch.sqrt(loss)
-        
         binary_cross_entropy_val_loss += loss.detach().item()  / batchsize
-        # MAE_val_loss += loss2.detach().item()  / batchsize
-        # RMSE_val_loss += loss3.detach().item()  / batchsize
 
 
     print('Binary cross-entropy14 Valid loss:{:.6f}%'

@@ -8,12 +8,12 @@ class Assembly_regression(nn.Module):
         checkpoint = torch.load('./models/lstm_regression')
         self.regression_model.load_state_dict(checkpoint['model_state_dict'])
 
-        self.forecasting_model_1 = LSTM_Binary()
-        checkpoint = torch.load('./models/lstm_binary1')
+        self.forecasting_model_1 = LSTM_Classifier_1()
+        checkpoint = torch.load('./models/lstm_classification_1')
         self.forecasting_model_1.load_state_dict(checkpoint['model_state_dict'])
 
-        self.forecasting_model_14 = LSTM_Binary()
-        checkpoint = torch.load('./models/lstm_binary14')
+        self.forecasting_model_14 = LSTM_Classifier_14()
+        checkpoint = torch.load('./models/lstm_classification_1')
         self.forecasting_model_14.load_state_dict(checkpoint['model_state_dict'])
         
         self.linear_1 = nn.Linear(4, 2)
@@ -55,17 +55,17 @@ class LSTM_Regression(nn.Module):
     def __init__(self, input_size=12, window_size = 14, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
+        self.linear_1 = nn.Linear(12, 1)
+        self.dropout_1 = nn.Dropout(0.2)
+        self.tanh_1 = nn.Tanh()
 
-        self.linear_1 = nn.Linear(12, 32)
-        self.relu = nn.ReLU()
-        self.lstm = nn.LSTM(32, hidden_size=self.hidden_layer_size, num_layers=num_layers, batch_first=True)
-        self.dropout = nn.Dropout(dropout)
-        self.linear_2 = nn.Linear(64, 1)
-        
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=7, num_layers=2, batch_first=True)
+        self.linear_2 = nn.Linear(14, 1)
+        self.dropout_2 = nn.Dropout(0.2)
         self.init_weights()
 
     def init_weights(self):
-        for name, param in self.lstm.named_parameters():
+        for name, param in self.lstm_2.named_parameters():
             if 'bias' in name:
                  nn.init.constant_(param, 0.0)
             elif 'weight_ih' in name:
@@ -78,37 +78,40 @@ class LSTM_Regression(nn.Module):
 
         # layer 1
         x = self.linear_1(x)
-        x = self.relu(x)
-        
+        x = self.dropout_1(x)
+        x = self.tanh_1(x)
+
         # LSTM layer
-        lstm_out, (h_n, c_n) = self.lstm(x)
+        lstm_out, (h_n, c_n) = self.lstm_2(x)
 
         # reshape output from hidden cell into [batch, features] for `linear_2`
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1) 
         
         # layer 2
-        x = self.dropout(x)
-        predictions = self.linear_2(x)
-        return predictions
+        x = self.linear_2(x)
+        x = self.dropout_2(x)
+        return x
     
-class   LSTM_Classifier(nn.Module):
+class LSTM_Classifier_14(nn.Module):
     def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
 
         self.linear_1 = nn.Linear(12, 1)
-        self.sigmoid_1 = nn.Sigmoid()
+        self.dropout_1 = nn.Dropout(0.2)
         self.tanh_1 = nn.Tanh()
-        self.lstm = nn.LSTM(input_size = 1, hidden_size=14, num_layers=1, batch_first=True)
+
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=7, num_layers=2, batch_first=True)
         self.linear_2 = nn.Linear(14, 2)
+        self.dropout_2 = nn.Dropout(0.2)
         self.tanh_2 = nn.Tanh()
-        self.dropout_2 = nn.Dropout(dropout)
-        self.softmax =nn.Softmax(dim=1)  # Apply softmax activation
+
+        self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
 
     def init_weights(self):
-        for name, param in self.lstm.named_parameters():
+        for name, param in self.lstm_2.named_parameters():
             if 'bias' in name:
                  nn.init.constant_(param, 0.0)
             elif 'weight_ih' in name:
@@ -119,12 +122,56 @@ class   LSTM_Classifier(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         x = self.linear_1(x)
-        x = self.sigmoid_1(x)
+        x = self.dropout_1(x)
         x = self.tanh_1(x)
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1) 
+
+        lstm_out, (h_n, c_n) = self.lstm_2(x)
+        x = h_n.permute(1, 2, 0).reshape(batchsize, -1) 
         x = self.linear_2(x)
         x = self.dropout_2(x)
-        predictions = self.softmax(x)  # Apply softmax activation
+        x = self.tanh_2(x)
+
+        predictions = self.softmax_3(x)  # Apply softmax activation
         return predictions
 
+
+class LSTM_Classifier_1(nn.Module):
+    def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
+        super().__init__()
+        self.hidden_layer_size = hidden_layer_size
+        self.linear_1 = nn.Linear(12, 1)
+        self.dropout_1 = nn.Dropout(0.2)
+        self.tanh_1 = nn.Tanh()
+
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=7, num_layers=2, batch_first=True)
+        self.linear_2 = nn.Linear(14, 2)
+        self.dropout_2 = nn.Dropout(0.2)
+        self.tanh_2 = nn.Tanh()
+
+        self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
+
+        self.init_weights()
+
+    def init_weights(self):
+        for name, param in self.lstm_2.named_parameters():
+            if 'bias' in name:
+                 nn.init.constant_(param, 0.0)
+            elif 'weight_ih' in name:
+                 nn.init.kaiming_normal_(param)
+            elif 'weight_hh' in name:
+                 nn.init.orthogonal_(param)
+
+    def forward(self, x):
+        batchsize = x.shape[0]
+        x = self.linear_1(x)
+        x = self.dropout_1(x)
+        x = self.tanh_1(x)
+
+        lstm_out, (h_n, c_n) = self.lstm_2(x)
+        x = h_n.permute(1, 2, 0).reshape(batchsize, -1) 
+        x = self.linear_2(x)
+        x = self.dropout_2(x)
+        x = self.tanh_2(x)
+
+        predictions = self.softmax_3(x)  # Apply softmax activation
+        return predictions

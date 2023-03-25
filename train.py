@@ -13,10 +13,12 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 import torch.optim as optim
 import sys
-from torch.optim.lr_scheduler import LambdaLR
+from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, OneCycleLR
 from sklearn.svm import SVC
 
-def train_assembly_model(dataset_train, dataset_val):
+def train_assemble_model(dataset_train, dataset_val):
+    lr=cf["training"]["lstm_regression"]["learning_rate"]
+    epochs=cf["training"]["lstm_regression"]["num_epoch"]
     regression_model = model.Assembly_regression()
     regression_model.to("cuda")
     # create `DataLoader`
@@ -26,13 +28,18 @@ def train_assembly_model(dataset_train, dataset_val):
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
 
-    optimizer = optim.Adam(regression_model.parameters(), lr=cf["training"]["lstm_regression"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_regression"]["scheduler_step_size"], gamma=0.01)
-    loss_train_history = []
-    loss_val_history = []
-    lr_train_history = []
-    lr_val_history = []
+    optimizer = optim.Adam(regression_model.parameters(), lr=lr, betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
+    # OneCycleLR is a PyTorch learning rate scheduler that implements the 1Cycle policy.
+    # It adjusts the learning rate during training in a cyclical manner, gradually increasing the learning rate to a maximum value,
+    # and then decreasing it back to the initial value.
+    # The learning rate is increased in the first half of the cycle and decreased in the second half.
+    
+    # optimizer: the optimizer for the model.
+    # max_lr: the maximum learning rate to be used during training.
+    # epochs: the total number of epochs to train the model for.
+    # steps_per_epoch: the number of steps (batches) per epoch.
 
+    scheduler = OneCycleLR(optimizer, max_lr=0.01, epochs=epochs, steps_per_epoch=len(train_dataloader))
     best_loss = sys.float_info.max
     stop = False
     patient = cf["training"]["lstm_regression"]["patient"]
@@ -181,23 +188,17 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_regression"]["scheduler_step_size"], gamma=0.01)
-    scheduler = LambdaLR(optimizer, lr_lambda)
-    loss_train_history = []
-    loss_val_history = []
-    lr_train_history = []
-    lr_val_history = []
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
 
     best_loss = sys.float_info.max
     stop = False
     patient = cf["training"]["lstm_regression"]["patient"]
     patient_count = 0
-    stopped_epoch = 0
     # begin training
     for epoch in range(cf["training"]["lstm_regression"]["num_epoch"]):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
-        scheduler.step()
+        scheduler.step(loss_val)
         # loss_train_history.append(loss_train)
         # loss_val_history.append(loss_val)
         # lr_train_history.append(lr_train)
@@ -221,7 +222,7 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
 
 def train_LSTM_classifier_1(dataset_train, dataset_val, is_training=True):
 
-    binary_model = model.LSTM_Classifier(
+    binary_model = model.LSTM_Classifier_1(
         input_size = cf["model"]["lstm_classification1"]["input_size"],
         window_size = cf["data"]["window_size"],
         hidden_layer_size = cf["model"]["lstm_classification1"]["lstm_size"], 
@@ -237,30 +238,9 @@ def train_LSTM_classifier_1(dataset_train, dataset_val, is_training=True):
     # define optimizer, scheduler and loss function
     criterion = nn.BCELoss()
 
-    """
-    betas: Adam optimizer uses exponentially decaying averages of past gradients to update the parameters.
-    betas is a tuple of two values that control the decay rates for these moving averages.
-    The first value (default 0.9) controls the decay rate for the moving average of gradients,
-    and the second value (default 0.999) controls the decay rate for the moving average of squared gradients.
-    Higher values of beta will result in a smoother update trajectory and may help to avoid oscillations in the optimization process, 
-    but may also lead to slower convergence.
-    eps: eps is a small constant added to the denominator of the Adam update formula to avoid division by zero.
-    It is typically set to a very small value (e.g. 1e-8 or 1e-9) to ensure numerical stability.
-    """
     # optimizer = optim.Adam(binary_model.parameters(), lr=cf["training"]["lstm_classification1"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
     optimizer = optim.SGD(binary_model.parameters(), lr=cf["training"]["lstm_classification1"]["learning_rate"], momentum=0.9)
-    """
-    For example, suppose step_size=10 and gamma=0.1.
-    This means that the learning rate will be multiplied by 0.1 every 10 epochs.
-    If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
-    """
-
-    #scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_classification1"]["scheduler_step_size"], gamma=0.01)
-    scheduler = LambdaLR(optimizer, lr_lambda)
-    loss_train_history = []
-    loss_val_history = []
-    lr_train_history = []
-    lr_val_history = []
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
 
     best_loss = sys.float_info.max
     stop = False
@@ -271,11 +251,7 @@ def train_LSTM_classifier_1(dataset_train, dataset_val, is_training=True):
     for epoch in range(cf["training"]["lstm_classification1"]["num_epoch"]):
         loss_train, lr_train = run_epoch(binary_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(binary_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
-        scheduler.step()
-        # loss_train_history.append(loss_train)
-        # loss_val_history.append(loss_val)
-        # lr_train_history.append(lr_train)
-        # lr_val_history.append(lr_val)
+        scheduler.step(loss_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
@@ -294,7 +270,7 @@ def train_LSTM_classifier_1(dataset_train, dataset_val, is_training=True):
     return binary_model
 def train_LSTM_classifier_14(dataset_train, dataset_val, is_training=True):
 
-    binary_model = model.LSTM_Classifier(
+    binary_model = model.LSTM_Classifier_14(
         input_size = cf["model"]["lstm_classification14"]["input_size"],
         window_size = cf["data"]["window_size"],
         hidden_layer_size = cf["model"]["lstm_classification14"]["lstm_size"], 
@@ -309,17 +285,6 @@ def train_LSTM_classifier_14(dataset_train, dataset_val, is_training=True):
 
     # define optimizer, scheduler and loss function
     criterion = nn.BCELoss()
-
-    """
-    betas: Adam optimizer uses exponentially decaying averages of past gradients to update the parameters.
-    betas is a tuple of two values that control the decay rates for these moving averages.
-    The first value (default 0.9) controls the decay rate for the moving average of gradients,
-    and the second value (default 0.999) controls the decay rate for the moving average of squared gradients.
-    Higher values of beta will result in a smoother update trajectory and may help to avoid oscillations in the optimization process, 
-    but may also lead to slower convergence.
-    eps: eps is a small constant added to the denominator of the Adam update formula to avoid division by zero.
-    It is typically set to a very small value (e.g. 1e-8 or 1e-9) to ensure numerical stability.
-    """
     optimizer = optim.SGD(binary_model.parameters(), lr=cf["training"]["lstm_classification14"]["learning_rate"], momentum=0.9)
 
     """
@@ -328,27 +293,17 @@ def train_LSTM_classifier_14(dataset_train, dataset_val, is_training=True):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=cf["training"]["lstm_classification14"]["scheduler_step_size"], gamma=0.01)
-    scheduler = LambdaLR(optimizer, lr_lambda)
-    loss_train_history = []
-    loss_val_history = []
-    lr_train_history = []
-    lr_val_history = []
-
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
     best_loss = sys.float_info.max
     stop = False
     patient = cf["training"]["lstm_classification14"]["patient"]
     patient_count = 0
-    stopped_epoch = 0
+
     # begin training
     for epoch in range(cf["training"]["lstm_classification14"]["num_epoch"]):
         loss_train, lr_train = run_epoch(binary_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(binary_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
-        scheduler.step()
-        # loss_train_history.append(loss_train)
-        # loss_val_history.append(loss_val)
-        # lr_train_history.append(lr_train)
-        # lr_val_history.append(lr_val)
+        scheduler.step(metrics=loss_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
@@ -407,9 +362,10 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
             optimizer.step()
 
         epoch_loss += (loss.detach().item() / batchsize)
-
-    lr = scheduler.get_last_lr()[0]
-
+    try:
+        lr = scheduler.get_last_lr()[0]
+    except:
+        lr = optimizer.param_groups[0]['lr']
     return epoch_loss, lr
 
 
