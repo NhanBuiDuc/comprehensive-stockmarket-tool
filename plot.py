@@ -76,9 +76,9 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
         plt.plot(plot_date_test, to_plot_data_y_test_pred, label="Predicted price for next day", marker=".", markersize=20, color=cf["plots"]["color_pred_test"])
             
         # xticks = [plot_date_test[i] if ((i%2 == 0 and (plot_range + test_size - i ) > 2) or i > plot_range)  else None for i in range(plot_range + test_size )]
-        plt.title("Predicted close price of the next trading day")
-        x = np.arange(0,len(xticks))
-        plt.xticks(x, xticks, rotation='vertical')
+        # plt.title("Predicted close price of the next trading day")
+        # x = np.arange(0,len(xticks))
+        # plt.xticks(x, xticks, rotation='vertical')
 
         plt.grid(b=None, which='major', axis='y', linestyle='--')
         plt.legend()

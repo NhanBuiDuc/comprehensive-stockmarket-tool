@@ -48,14 +48,25 @@ config = {
         },
     },
     "training": {
+        "assemble_regressor":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 64,
+            "num_epoch": 1000,
+            "learning_rate": 0.1,
+            "scheduler_step_size": 200,
+            "patient": 500,
+            "best_model": False,
+            "early_stop": True
+        },
         "lstm_regression":
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 3000,
-            "learning_rate": 0.001,
-            "scheduler_step_size": 1000,
-            "patient": 1000,
+            "num_epoch": 1000,
+            "learning_rate": 0.1,
+            "scheduler_step_size": 200,
+            "patient": 500,
             "best_model": False,
             "early_stop": True
         },
@@ -63,10 +74,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 10000,
+            "num_epoch": 1000,
             "learning_rate": 0.1,
-            "scheduler_step_size": 100,
-            "patient": 2000,
+            "scheduler_step_size": 200,
+            "patient": 500,
             "best_model": False,
             "early_stop": True
         },
@@ -74,10 +85,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 10000,
+            "num_epoch": 1000,
             "learning_rate": 0.1,
-            "scheduler_step_size": 100,
-            "patient": 2000,
+            "scheduler_step_size": 200,
+            "patient": 500,
             "best_model": False,
             "early_stop": True
         }

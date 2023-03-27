@@ -96,6 +96,7 @@ class LSTM_Classifier_14(nn.Module):
 
         self.linear_1 = nn.Linear(12, 1)
         self.dropout_1 = nn.Dropout(0.2)
+        self.sigmoid_1 = nn.Sigmoid()
         self.tanh_1 = nn.Tanh()
 
         self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=7, num_layers=2, batch_first=True)
@@ -119,6 +120,7 @@ class LSTM_Classifier_14(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         x = self.linear_1(x)
+        x = self.sigmoid_1(x)
         x = self.dropout_1(x)
         x = self.tanh_1(x)
 
@@ -137,6 +139,7 @@ class LSTM_Classifier_1(nn.Module):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
         self.linear_1 = nn.Linear(12, 1)
+        self.sigmoid_1 = nn.Sigmoid()
         self.dropout_1 = nn.Dropout(0.2)
         self.tanh_1 = nn.Tanh()
 
@@ -161,6 +164,7 @@ class LSTM_Classifier_1(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         x = self.linear_1(x)
+        x = self.sigmoid_1(x)
         x = self.dropout_1(x)
         x = self.tanh_1(x)
 

@@ -17,8 +17,8 @@ from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, OneCycleLR
 from sklearn.svm import SVC
 
 def train_assemble_model(dataset_train, dataset_val):
-    lr=0.1
-    epochs=cf["training"]["lstm_regression"]["num_epoch"]
+    lr=cf["training"]["assemble_regressor"]["learning_rate"]
+    epochs=cf["training"]["assemble_regressor"]["num_epoch"]
     regression_model = model.Assembly_regression()
     regression_model.to("cuda")
     # create `DataLoader`
@@ -39,12 +39,11 @@ def train_assemble_model(dataset_train, dataset_val):
     # epochs: the total number of epochs to train the model for.
     # steps_per_epoch: the number of steps (batches) per epoch.
 
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["assemble_regressor"]["scheduler_step_size"], verbose=True)
     best_loss = sys.float_info.max
     stop = False
-    patient = 3000
+    patient = cf["training"]["assemble_regressor"]["patient"]
     patient_count = 0
-    stopped_epoch = 0
     # begin training
     for epoch in range(10000):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
@@ -62,8 +61,7 @@ def train_assemble_model(dataset_train, dataset_val):
         
         print("patient", patient_count)
         if(stop == True):
-            print("Early Stopped At Epoch: {}", epoch)
-            stopped_epoch = patient_count
+            print("Early Stopped At Epoch: {}", epoch + 1)
             break
     return regression_model
 
