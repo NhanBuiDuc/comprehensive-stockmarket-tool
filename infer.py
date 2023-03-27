@@ -6,7 +6,7 @@ from config import config as cf
 import numpy as np
 import torch.nn as nn
 import torch
-from model import LSTM_Regression
+from model import LSTM_Regression, Assembly_regression
 from model import LSTM_Classifier_14
 from model import LSTM_Classifier_1
 def test_random_forest_classfier(model, X_test, y_test):
@@ -67,11 +67,11 @@ def evalute_regression(dataset_val):
         RMSE_val_loss += loss3.detach().item()  / batchsize
 
 
-    print('MSE Valid loss:{:.6f}%, MAE Valid loss:{:.6f}%, RMSE Valid loss:{:.6f}%'
+    print('Regressor MSE Valid loss:{:.6f}%, MAE Valid loss:{:.6f}%, RMSE Valid loss:{:.6f}%'
                     .format(MSE_val_loss * 100 / num_data, 
                             MAE_val_loss * 100 / num_data,
                             RMSE_val_loss * 100 / num_data))
-    print('MSE Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
+    print('Regressor MSE Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
                     .format(MSE_val_loss, 
                             MAE_val_loss,
                             RMSE_val_loss))
@@ -83,7 +83,7 @@ def evalute_assembly_regression(dataset_val):
     batch_size = cf["training"]["lstm_regression"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = LSTM_Regression()
+    model = Assembly_regression()
     checkpoint = torch.load('./models/assembly_regression')
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
@@ -126,11 +126,11 @@ def evalute_assembly_regression(dataset_val):
         RMSE_val_loss += loss3.detach().item()  / batchsize
 
 
-    print('MSE Valid loss:{:.6f}%, MAE Valid loss:{:.6f}%, RMSE Valid loss:{:.6f}%'
+    print('Assemble MSE Valid loss:{:.6f}%, MAE Valid loss:{:.6f}%, RMSE Valid loss:{:.6f}%'
                     .format(MSE_val_loss * 100 / num_data, 
                             MAE_val_loss * 100 / num_data,
                             RMSE_val_loss * 100 / num_data))
-    print('MSE Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
+    print('Assemble MSE Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
                     .format(MSE_val_loss, 
                             MAE_val_loss,
                             RMSE_val_loss))

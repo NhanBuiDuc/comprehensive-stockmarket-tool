@@ -17,7 +17,7 @@ from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, OneCycleLR
 from sklearn.svm import SVC
 
 def train_assemble_model(dataset_train, dataset_val):
-    lr=cf["training"]["lstm_regression"]["learning_rate"]
+    lr=0.1
     epochs=cf["training"]["lstm_regression"]["num_epoch"]
     regression_model = model.Assembly_regression()
     regression_model.to("cuda")
@@ -39,24 +39,20 @@ def train_assemble_model(dataset_train, dataset_val):
     # epochs: the total number of epochs to train the model for.
     # steps_per_epoch: the number of steps (batches) per epoch.
 
-    scheduler = OneCycleLR(optimizer, max_lr=0.01, epochs=epochs, steps_per_epoch=len(train_dataloader))
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
     best_loss = sys.float_info.max
     stop = False
-    patient = cf["training"]["lstm_regression"]["patient"]
+    patient = 3000
     patient_count = 0
     stopped_epoch = 0
     # begin training
-    for epoch in range(cf["training"]["lstm_regression"]["num_epoch"]):
+    for epoch in range(10000):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
-        scheduler.step()
-        # loss_train_history.append(loss_train)
-        # loss_val_history.append(loss_val)
-        # lr_train_history.append(lr_train)
-        # lr_val_history.append(lr_val)
+        scheduler.step(loss_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
-            patient = 0
+            patient_count = 0
             save_best_model(model=regression_model, name = "assembly_regression", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)

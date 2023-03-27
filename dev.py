@@ -5,10 +5,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import train
 from sklearn.metrics import f1_score
-import model
 from sklearn.metrics import mean_squared_error
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
+from plot import to_plot
 # data_df, num_data_points, data_date = utils.download_data_api()
 
 # # data_df = utils.get_new_df(data_df, '2018-01-01')
@@ -224,12 +224,16 @@ def train_assemble(data_df, num_data_points, data_date, is_train):
     y_real_1 = utils.prepare_timeseries_data_y(n_row, close, window_size, 1)
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_real_1.shape[0]*cf["data"]["train_split_size"])
-
+    dates = data_date[15:-window_size]
+    train_dates_first = dates[:split_index]
+    test_dates = dates[split_index:]
     X_train_first = X_set[:split_index]
     X_test = X_set[split_index:]
     y_train_first = y_real_1[:split_index]
     y_test = y_real_1[split_index:]
     split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
+    train_dates = train_dates_first[:split_index]
+    val_dates = train_dates_first[split_index:]
     X_train = X_train_first[:split_index]
     X_val = X_train_first[split_index:]
     y_train = y_train_first[:split_index]
@@ -240,9 +244,9 @@ def train_assemble(data_df, num_data_points, data_date, is_train):
     dataset_test = TimeSeriesDataset(X_test, y_test)
     if is_train:
         train.train_assemble_model(dataset_train, dataset_val)
-    infer.evalute_regression(dataset_val=dataset_val)
-    infer.evalute_regression(dataset_val=dataset_test)
-
+    infer.evalute_assembly_regression(dataset_val=dataset_val)
+    infer.evalute_assembly_regression(dataset_val=dataset_test)
+    to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, test_dates, val_dates)
 
 def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
     window_size = cf["data"]["window_size"]
@@ -286,7 +290,7 @@ def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
 if __name__ == "__main__":
     data_df, num_data_points, data_date = utils.download_data_api()
     # train_random_tree_classifier_14(data_df, num_data_points, data_date)
-    train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = False)
-    train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = False)
-    train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
-    train_assemble(data_df, num_data_points, data_date, is_train = False)
+    train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = True)
+    train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = True)
+    train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = True)
+    train_assemble(data_df, num_data_points, data_date, is_train = True)

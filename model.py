@@ -56,12 +56,12 @@ class LSTM_Regression(nn.Module):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
         self.linear_1 = nn.Linear(12, 1)
+        self.sigmoid_1 = nn.Sigmoid()
         self.dropout_1 = nn.Dropout(0.2)
-        self.tanh_1 = nn.Tanh()
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=1, num_layers=1, batch_first=True)
 
-        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=7, num_layers=2, batch_first=True)
-        self.linear_2 = nn.Linear(14, 1)
-        self.dropout_2 = nn.Dropout(0.2)
+        self.linear_3 = nn.Linear(1, 1)
+        self.dropout_3 = nn.Dropout(0.2)
         self.init_weights()
 
     def init_weights(self):
@@ -75,21 +75,18 @@ class LSTM_Regression(nn.Module):
 
     def forward(self, x):
         batchsize = x.shape[0]
-
-        # layer 1
         x = self.linear_1(x)
+        x = self.sigmoid_1(x)
         x = self.dropout_1(x)
-        x = self.tanh_1(x)
-
-        # LSTM layer
+        
         lstm_out, (h_n, c_n) = self.lstm_2(x)
 
         # reshape output from hidden cell into [batch, features] for `linear_2`
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1) 
         
         # layer 2
-        x = self.linear_2(x)
-        x = self.dropout_2(x)
+        x = self.linear_3(x)
+        x = self.dropout_3(x)
         return x
     
 class LSTM_Classifier_14(nn.Module):
