@@ -11,38 +11,33 @@ class Assembly_regression(nn.Module):
         self.forecasting_model_1 = LSTM_Classifier_1()
         checkpoint = torch.load('./models/lstm_classification_1')
         self.forecasting_model_1.load_state_dict(checkpoint['model_state_dict'])
-
-        self.forecasting_model_14 = LSTM_Classifier_14()
-        checkpoint = torch.load('./models/lstm_classification_1')
-        self.forecasting_model_14.load_state_dict(checkpoint['model_state_dict'])
         
-        self.linear_1 = nn.Linear(4, 2)
+        self.linear_1 = nn.Linear(3, 1)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
-
-        # define a trainable parameter
-        self.up_magnitude = nn.Parameter(torch.randn(size=(1,), dtype =torch.float, requires_grad=True)).to("cuda")
-        self.down_magnitude = nn.Parameter(torch.randn(size=(1,), dtype =torch.float, requires_grad=True)).to("cuda")
 
     def forward(self, x):
         batch_size = x.shape[0]
         # Run the short-term and long-term forecasting models
-        prob_1 = self.forecasting_model_1(x) * 0.7
-
-        prob_14 = self.forecasting_model_14(x) * 0.3
-    
-        prob = torch.cat([prob_1,prob_14], dim=1)
-        prob = self.linear_1(prob)
-        prob = self.softmax(prob)
-        max_probs, max_indices = torch.max(prob, dim=1)
-
+        prob_1 = self.forecasting_model_1(x)
+        max_probs, max_indices = torch.max(prob_1, dim=1)
         direction = torch.where(max_indices == 0, -1, 1)
-        up_magnitude = torch.abs(self.up_magnitude)
-        down_magnitude = -torch.abs(self.down_magnitude)
-        change_magnitude = torch.where(direction == -1, down_magnitude, up_magnitude)
-        change_magnitude = change_magnitude.unsqueeze(1)
+        direction = direction.unsqueeze(1)
         # Run the regression model
         delta = self.regression_model(x)
-        delta = delta + change_magnitude
+        prob_delta = torch.where(delta < 0, -1, 1)
+    
+        # prob = torch.cat([prob_1,prob_delta], dim=1)
+        # prob = self.linear_1(prob)
+        # prob = self.softmax(prob)
+        # max_probs, max_indices = torch.max(prob, dim=1)
+
+        # direction = torch.where(max_indices == 0, -1, 1)
+        # up_magnitude = torch.abs(self.up_magnitude)
+        # down_magnitude = -torch.abs(self.down_magnitude)
+        # change_magnitude = torch.where(direction == -1, down_magnitude, up_magnitude)
+        # change_magnitude = change_magnitude.unsqueeze(1)
+        delta = torch.concat([direction, delta, prob_delta], dim= 1)
+        delta = self.linear_1(delta)
         x = x[:, -1, 0].unsqueeze(1)
         # Compute the final output
         last_val = x + delta

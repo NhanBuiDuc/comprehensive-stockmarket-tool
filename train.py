@@ -45,7 +45,7 @@ def train_assemble_model(dataset_train, dataset_val):
     patient = cf["training"]["assemble_regressor"]["patient"]
     patient_count = 0
     # begin training
-    for epoch in range(10000):
+    for epoch in range(cf["training"]["assemble_regressor"]["num_epoch"]):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step(loss_val)
