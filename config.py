@@ -13,7 +13,8 @@ config = {
     "plots": {
         "show_plots": True,
         "xticks_interval": 90,
-        "color_actual": "#001f3f",
+        "color_actual_val": "#001f3f",
+        "color_actual_test": "#4D1BF3",
         "color_train": "#3D9970",
         "color_val": "#0074D9",
         "color_pred_train": "#3D9970",
@@ -52,10 +53,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1000,
+            "num_epoch": 3000,
             "learning_rate": 0.1,
-            "scheduler_step_size": 200,
-            "patient": 500,
+            "scheduler_step_size": 500,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         },
@@ -63,10 +64,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1000,
+            "num_epoch": 500,
             "learning_rate": 0.1,
-            "scheduler_step_size": 200,
-            "patient": 500,
+            "scheduler_step_size": 500,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         },
@@ -74,10 +75,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1000,
+            "num_epoch": 3000,
             "learning_rate": 0.1,
-            "scheduler_step_size": 200,
-            "patient": 500,
+            "scheduler_step_size": 500,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         },
@@ -85,10 +86,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1000,
+            "num_epoch": 3000,
             "learning_rate": 0.1,
-            "scheduler_step_size": 200,
-            "patient": 500,
+            "scheduler_step_size": 500,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         }

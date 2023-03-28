@@ -289,8 +289,9 @@ def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
 
 if __name__ == "__main__":
     data_df, num_data_points, data_date = utils.download_data_api()
+    data_df = utils.get_new_df(data_df, '2018-01-01')
     # train_random_tree_classifier_14(data_df, num_data_points, data_date)
-    train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = True)
-    train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = True)
-    train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = True)
-    train_assemble(data_df, num_data_points, data_date, is_train = True)
+    train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = False)
+    train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = False)   
+    train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
+    train_assemble(data_df, num_data_points, data_date, is_train = False)

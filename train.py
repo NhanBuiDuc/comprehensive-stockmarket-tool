@@ -182,7 +182,7 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["lstm_regression"]["scheduler_step_size"], verbose=True)
 
     best_loss = sys.float_info.max
     stop = False
@@ -234,7 +234,7 @@ def train_LSTM_classifier_1(dataset_train, dataset_val, is_training=True):
 
     # optimizer = optim.Adam(binary_model.parameters(), lr=cf["training"]["lstm_classification1"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
     optimizer = optim.SGD(binary_model.parameters(), lr=cf["training"]["lstm_classification1"]["learning_rate"], momentum=0.9)
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["lstm_classification1"]["scheduler_step_size"], verbose=True)
 
     best_loss = sys.float_info.max
     stop = False
@@ -287,7 +287,7 @@ def train_LSTM_classifier_14(dataset_train, dataset_val, is_training=True):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=500, verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["lstm_classification1"]["scheduler_step_size"], verbose=True)
     best_loss = sys.float_info.max
     stop = False
     patient = cf["training"]["lstm_classification14"]["patient"]

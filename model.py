@@ -37,10 +37,7 @@ class Assembly_regression(nn.Module):
 
         direction = torch.where(max_indices == 0, -1, 1)
         up_magnitude = torch.abs(self.up_magnitude)
-        # up_magnitude.unsqueeze_(1)
         down_magnitude = -torch.abs(self.down_magnitude)
-        # down_magnitude.unsqueeze_(1)
-
         change_magnitude = torch.where(direction == -1, down_magnitude, up_magnitude)
         change_magnitude = change_magnitude.unsqueeze(1)
         # Run the regression model
@@ -58,9 +55,9 @@ class LSTM_Regression(nn.Module):
         self.linear_1 = nn.Linear(12, 1)
         self.sigmoid_1 = nn.Sigmoid()
         self.dropout_1 = nn.Dropout(0.2)
-        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=1, num_layers=1, batch_first=True)
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=10, num_layers=10, batch_first=True)
 
-        self.linear_3 = nn.Linear(1, 1)
+        self.linear_3 = nn.Linear(100, 1)
         self.dropout_3 = nn.Dropout(0.2)
         self.init_weights()
 
@@ -99,8 +96,8 @@ class LSTM_Classifier_14(nn.Module):
         self.sigmoid_1 = nn.Sigmoid()
         self.tanh_1 = nn.Tanh()
 
-        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=7, num_layers=2, batch_first=True)
-        self.linear_2 = nn.Linear(14, 2)
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=10, num_layers=10, batch_first=True)
+        self.linear_2 = nn.Linear(100, 2)
         self.dropout_2 = nn.Dropout(0.2)
         self.tanh_2 = nn.Tanh()
 
@@ -143,8 +140,8 @@ class LSTM_Classifier_1(nn.Module):
         self.dropout_1 = nn.Dropout(0.2)
         self.tanh_1 = nn.Tanh()
 
-        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=7, num_layers=2, batch_first=True)
-        self.linear_2 = nn.Linear(14, 2)
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=10, num_layers=10, batch_first=True)
+        self.linear_2 = nn.Linear(100, 2)
         self.dropout_2 = nn.Dropout(0.2)
         self.tanh_2 = nn.Tanh()
 
