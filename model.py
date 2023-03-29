@@ -81,6 +81,51 @@ class LSTM_Regression(nn.Module):
         x = self.dropout_3(x)
         return x
     
+class LSTM_Classifier_1(nn.Module):
+    def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
+        super().__init__()
+        self.hidden_layer_size = hidden_layer_size
+
+        self.linear_1 = nn.Linear(12, 1)
+        self.dropout_1 = nn.Dropout(0.2)
+        self.sigmoid_1 = nn.Sigmoid()
+        self.tanh_1 = nn.Tanh()
+        self.relu_1 = nn.ReLU()
+        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=5, num_layers=5, batch_first=True)
+        self.linear_2 = nn.Linear(25, 1)
+        self.linear_3 = nn.Linear(1, 2)
+        self.dropout_2 = nn.Dropout(0.2)
+        self.tanh_2 = nn.Tanh()
+        self.sigmoid_2 = nn.Sigmoid()
+        self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
+
+        self.init_weights()
+
+    def init_weights(self):
+        for name, param in self.lstm_2.named_parameters():
+            if 'bias' in name:
+                 nn.init.constant_(param, 0.0)
+            elif 'weight_ih' in name:
+                 nn.init.kaiming_normal_(param)
+            elif 'weight_hh' in name:
+                 nn.init.orthogonal_(param)
+
+    def forward(self, x):
+        batchsize = x.shape[0]
+        x = self.linear_1(x)
+        x = self.relu_1(x)
+        x = self.dropout_1(x)
+
+        lstm_out, (h_n, c_n) = self.lstm_2(x)
+        x = h_n.permute(1, 2, 0).reshape(batchsize, -1) 
+        x = self.linear_2(x)
+        x = self.linear_3(x)
+        x = self.dropout_2(x)
+
+        predictions = self.softmax_3(x)  # Apply softmax activation
+        return predictions
+
+
 class LSTM_Classifier_14(nn.Module):
     def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
         super().__init__()
@@ -90,12 +135,12 @@ class LSTM_Classifier_14(nn.Module):
         self.dropout_1 = nn.Dropout(0.2)
         self.sigmoid_1 = nn.Sigmoid()
         self.tanh_1 = nn.Tanh()
-
+        self.relu_1 = nn.ReLU()
         self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=10, num_layers=10, batch_first=True)
         self.linear_2 = nn.Linear(100, 2)
         self.dropout_2 = nn.Dropout(0.2)
         self.tanh_2 = nn.Tanh()
-
+        self.sigmoid_2 = nn.Sigmoid()
         self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
@@ -112,59 +157,13 @@ class LSTM_Classifier_14(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         x = self.linear_1(x)
-        x = self.sigmoid_1(x)
+        x = self.relu_1(x)
         x = self.dropout_1(x)
-        x = self.tanh_1(x)
 
         lstm_out, (h_n, c_n) = self.lstm_2(x)
         x = h_n.permute(1, 2, 0).reshape(batchsize, -1) 
         x = self.linear_2(x)
         x = self.dropout_2(x)
-        x = self.tanh_2(x)
-
-        predictions = self.softmax_3(x)  # Apply softmax activation
-        return predictions
-
-
-class LSTM_Classifier_1(nn.Module):
-    def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
-        super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-        self.linear_1 = nn.Linear(12, 1)
-        self.sigmoid_1 = nn.Sigmoid()
-        self.dropout_1 = nn.Dropout(0.2)
-        self.tanh_1 = nn.Tanh()
-
-        self.lstm_2 = nn.LSTM(input_size = 1, hidden_size=10, num_layers=10, batch_first=True)
-        self.linear_2 = nn.Linear(100, 2)
-        self.dropout_2 = nn.Dropout(0.2)
-        self.tanh_2 = nn.Tanh()
-
-        self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
-
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm_2.named_parameters():
-            if 'bias' in name:
-                 nn.init.constant_(param, 0.0)
-            elif 'weight_ih' in name:
-                 nn.init.kaiming_normal_(param)
-            elif 'weight_hh' in name:
-                 nn.init.orthogonal_(param)
-
-    def forward(self, x):
-        batchsize = x.shape[0]
-        x = self.linear_1(x)
-        x = self.sigmoid_1(x)
-        x = self.dropout_1(x)
-        x = self.tanh_1(x)
-
-        lstm_out, (h_n, c_n) = self.lstm_2(x)
-        x = h_n.permute(1, 2, 0).reshape(batchsize, -1) 
-        x = self.linear_2(x)
-        x = self.dropout_2(x)
-        x = self.tanh_2(x)
 
         predictions = self.softmax_3(x)  # Apply softmax activation
         return predictions

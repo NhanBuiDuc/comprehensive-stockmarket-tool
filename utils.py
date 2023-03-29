@@ -122,7 +122,7 @@ def bullish(open, close):
     # Loop through each element in the arrays and compare them
     for i in range(len(open)):
         if open[i] > close[i]:
-            comparison_array.append(0)
+            comparison_array.append(-1)
         else:
             comparison_array.append(1)
     return comparison_array

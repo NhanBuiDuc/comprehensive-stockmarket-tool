@@ -75,8 +75,8 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
 
         fig = figure(figsize=(50, 50), dpi=80)
         fig.patch.set_facecolor((1.0, 1.0, 1.0))
-        # plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices validation", marker=".", markersize=10, color=cf["plots"]["color_actual_val"])
-        # plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted validation prices", marker=".", markersize=10, color=cf["plots"]["color_pred_val"])
+        plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices validation", marker=".", markersize=10, color=cf["plots"]["color_actual_val"])
+        plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted validation prices", marker=".", markersize=10, color=cf["plots"]["color_pred_val"])
         plt.plot(plot_date_test, to_plot_data_y_test, label="Actual prices test", marker=".", markersize=20, color=cf["plots"]["color_actual_test"])
         plt.plot(plot_date_test, to_plot_data_y_test_pred, label="Past predicted validation prices", marker=".", markersize=20, color=cf["plots"]["color_pred_test"])
             
