@@ -40,6 +40,13 @@ config = {
             "dropout": 0.5, 
             "output_dates": 1
         },
+        "lstm_classification7":{
+            "input_size": 12,
+            "num_lstm_layers": 2,
+            "lstm_size": 14,
+            "dropout": 0.2, 
+            "output_dates": 7
+        },
         "lstm_classification14":{
             "input_size": 12,
             "num_lstm_layers": 1,
@@ -87,7 +94,7 @@ config = {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
             "num_epoch": 3000,
-            "learning_rate": 0.1,
+            "learning_rate": 0.01,
             "scheduler_step_size": 100,
             "patient": 1000,
             "best_model": False,
@@ -97,10 +104,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 3000,
-            "learning_rate": 0.1,
-            "scheduler_step_size": 100,
-            "patient": 1000,
+            "num_epoch": 10000,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 500,
+            "patient": 2000,
             "best_model": False,
             "early_stop": True
         }

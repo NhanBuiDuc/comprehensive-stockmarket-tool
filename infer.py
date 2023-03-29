@@ -185,6 +185,54 @@ def evalute_classifier_1(dataset_val):
     #                 .format(val_loss))
     return binary_cross_entropy_val_loss
 
+def evalute_classifier_7(dataset_val):
+    batch_size = cf["training"]["lstm_classification7"]["batch_size"]
+    # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
+    # load the saved model weights from a file
+    model = LSTM_Classifier_14()
+    checkpoint = torch.load('./models/lstm_classification_7')
+    model.load_state_dict(checkpoint['model_state_dict'])
+    print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
+    model.eval()
+    model.to("cuda")
+    # create `DataLoader`
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_classification7"]["batch_size"], shuffle=True)
+    num_data = len(val_dataloader) * val_dataloader.batch_size
+    # define optimizer, scheduler and loss function
+    criterion = nn.BCELoss()
+    # criterion2 = nn.L1Loss()
+    # criterion3 = nn.NLLLoss()
+    
+    binary_cross_entropy_val_loss = 0
+    accuracy_score = 0
+    y_true = []
+    y_pred = []
+    model.eval()
+
+    for idx, (x, y) in enumerate(val_dataloader):
+
+        batchsize = x.shape[0]
+
+        x = x.to("cuda")
+        y = y.to("cuda")
+        y_true.append(y)
+
+        out = model(x)
+        _, prob_predict = torch.max(out, dim=1)
+        _, prob_true = torch.max(y, dim=1)
+        accuracy_score+= torch.sum(prob_predict == prob_true).item()
+        y_pred.append(out)
+        loss = criterion(out, y)
+        binary_cross_entropy_val_loss += loss.detach().item()  / batchsize
+
+
+    print('Binary cross-entropy 7 Valid loss:{:.6f}%'
+                    .format(binary_cross_entropy_val_loss * 100 / num_data))
+    print('Binary cross-entropy 7 Valid loss:{:.6f}, Accuracy:{:.6f}'
+                    .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
+    # print('Valid loss:{:.6f}%'
+    #                 .format(val_loss))
+    return binary_cross_entropy_val_loss
 
 def evalute_classifier_14(dataset_val):
     batch_size = cf["training"]["lstm_classification14"]["batch_size"]
