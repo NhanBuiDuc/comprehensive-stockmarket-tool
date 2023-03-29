@@ -77,7 +77,18 @@ config = {
             "batch_size": 64,
             "num_epoch": 5000,
             "learning_rate": 0.1,
-            "scheduler_step_size": 200,
+            "scheduler_step_size": 100,
+            "patient": 1000,
+            "best_model": False,
+            "early_stop": True
+        },
+        "lstm_classification7":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 64,
+            "num_epoch": 3000,
+            "learning_rate": 0.1,
+            "scheduler_step_size": 100,
             "patient": 1000,
             "best_model": False,
             "early_stop": True
@@ -88,8 +99,8 @@ config = {
             "batch_size": 64,
             "num_epoch": 3000,
             "learning_rate": 0.1,
-            "scheduler_step_size": 500,
-            "patient": 2000,
+            "scheduler_step_size": 100,
+            "patient": 1000,
             "best_model": False,
             "early_stop": True
         }

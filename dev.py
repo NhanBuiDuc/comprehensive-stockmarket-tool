@@ -204,6 +204,45 @@ def train_lstm_classifier_1(data_df, num_data_points, data_date, is_train):
     infer.evalute_classifier_1(dataset_val=dataset_val_trend)
     infer.evalute_classifier_1(dataset_val=dataset_test_trend)
 
+def train_lstm_classifier_7(data_df, num_data_points, data_date, is_train):
+    window_size = cf["data"]["window_size"]
+    sma = utils.SMA(data_df['4. close'].values, window_size)
+    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
+    rsi = utils.RSI(data_df, window_size)
+    vwap = utils.VWAP(data_df, window_size)
+    hma = utils.HMA(data_df['4. close'], window_size)
+    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma' : sma, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+    dataset_df = dataset_df[15:]
+    X = dataset_df.to_numpy()
+
+    n_row = X.shape[0] - window_size
+
+    close_df = pd.DataFrame({'close': dataset_df['close']})
+    close = close_df.to_numpy()
+    y_trend_7 = utils.prepare_timeseries_data_y_trend(n_row, close, 7)
+    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    split_index = int(y_trend_7.shape[0]*cf["data"]["train_split_size"])
+
+    X_train_first = X_set[:split_index]
+    X_test = X_set[split_index:]
+    y_train_first = y_trend_7[:split_index]
+    y_test = y_trend_7[split_index:]
+    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
+    X_train = X_train_first[:split_index]
+    X_val = X_train_first[split_index:]
+    y_train = y_train_first[:split_index]
+    y_val = y_train_first[split_index:]
+
+    dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
+    dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
+    dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
+    if is_train:
+        train.train_LSTM_classifier_7(dataset_train_trend, dataset_val_trend)
+    infer.evalute_classifier_7(dataset_val=dataset_val_trend)
+    infer.evalute_classifier_7(dataset_val=dataset_test_trend)
+
 def train_assemble(data_df, num_data_points, data_date, is_train):
     window_size = cf["data"]["window_size"]
     sma = utils.SMA(data_df['4. close'].values, window_size)
@@ -291,7 +330,7 @@ if __name__ == "__main__":
     data_df, num_data_points, data_date = utils.download_data_api()
     # data_df = utils.get_new_df(data_df, '2018-01-01')
     # train_random_tree_classifier_14(data_df, num_data_points, data_date)
-    train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = False)
-    train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = False)   
-    train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
-    train_assemble(data_df, num_data_points, data_date, is_train = False)
+    train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = True)
+    # train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = True)   
+    # train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
+    # train_assemble(data_df, num_data_points, data_date, is_train = False)

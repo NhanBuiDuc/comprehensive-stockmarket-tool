@@ -70,7 +70,7 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
 
         # plot
 
-        plot_date_test = dates[-plot_range+1:]
+        plot_date_test = test_dates + val_dates
         plot_date_test.append("next trading day")
 
         fig = figure(figsize=(50, 50), dpi=80)
