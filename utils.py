@@ -52,12 +52,12 @@ def SMA(x, window_size):
     #output = [sum(row) / len(row) for row in x]
     i = 0
     sma = []
-    while i < (len(x) - window_size + 1):
+    while i < (len(x) - window_size):
         window = x[i:i+window_size]
         window_avg = np.sum(window)/window_size
         sma.append(window_avg)
         i += 1   
-    sma = [float('nan')]*(window_size-1) + sma
+    sma = [float('nan')]*(window_size) + sma
     return sma
 
 
@@ -225,19 +225,16 @@ def prepare_timeseries_data_y_trend(num_rows, data, output_size):
 def prepare_timeseries_data_y_trend_percentage(num_rows, data, output_size):
     output = np.empty((num_rows, 3))
     # Iterate over original array and extract windows of size 3
-    # (0,1,0) means up
-    # (1,0,0) means down
-    # (0,0,1) means side way
+    # (0,1,p) means up
+    # (1,0,p) means down
     for i in range(num_rows - 1):
         change_percentage =  (( data[i + output_size] - data[i] ) * 100 ) / data[i]
         # Go up
-        if((change_percentage > 5)):
-            output[i] = (0, 1, 0)
+        if((change_percentage > 0)):
+            output[i] = (0, 1, abs(change_percentage))
         # Go down
-        elif ((change_percentage > -5)):
-            output[i] = (1, 0, 0)
-        else:
-            output[i] = (0, 0, 1)
+        elif ((change_percentage < 0)):
+            output[i] = (1, 0, abs(change_percentage))
     return output
 def prepare_tree_data_y_trend(num_rows, data, output_size):
     output = np.empty((num_rows, 1), dtype=int)

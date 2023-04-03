@@ -6,9 +6,10 @@ from config import config as cf
 import numpy as np
 import torch.nn as nn
 import torch
-from model import LSTM_Regression, Assembly_regression
+from model import LSTM_Regression, Assembly_regression, Movement_3,Movement_7,Movement_14
 from model import LSTM_Classifier_14
 from model import LSTM_Classifier_1
+
 def test_random_forest_classfier(model, X_test, y_test):
 
     y_pred = model.predict(X_test)
@@ -282,3 +283,147 @@ def evalute_classifier_14(dataset_val):
     # print('Valid loss:{:.6f}%'
     #                 .format(val_loss))
     return binary_cross_entropy_val_loss
+
+
+def evalute_Movement_3(dataset_val):
+    batch_size = cf["training"]["movement_3"]["batch_size"]
+    model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
+    # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
+    # load the saved model weights from a file
+    model = Movement_3()
+    checkpoint = torch.load('./models/' + model_name)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
+    model.eval()
+    model.to("cuda")
+    # create `DataLoader`
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True)
+    num_data = len(val_dataloader) * val_dataloader.batch_size
+    # define optimizer, scheduler and loss function
+    criterion1 = nn.BCELoss()
+    criterion2 = nn.MSELoss()    
+    binary_cross_entropy_val_loss = 0
+    mean_squared_error_val_loss = 0
+    accuracy_score = 0
+    y_true = []
+    y_pred = []
+    model.eval()
+
+    for idx, (x, y) in enumerate(val_dataloader):
+
+        batchsize = x.shape[0]
+
+        x = x.to("cuda")
+        y = y.to("cuda")
+        y_true.append(y)
+
+        out = model(x)
+        _, prob_predict = torch.max(out, dim=1)
+        _, prob_true = torch.max(y, dim=1)
+        accuracy_score += torch.sum(prob_predict == prob_true).item()
+        y_pred.append(out)
+        loss1 = criterion1(out[:, :2], y[:, :2])
+        loss2 = criterion2(out[:, :-1], y[:, :-1])
+        binary_cross_entropy_val_loss += loss1.detach().item()  / batchsize
+        mean_squared_error_val_loss += loss2.detach().item()  / batchsize
+    print('Binary movement_3 infer BCE loss:{:.6f}, Accuracy:{:.6f}'
+                    .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
+    print('Binary movement_3 infer percentage MSE loss:{:.6f}'
+                    .format(mean_squared_error_val_loss))
+    return binary_cross_entropy_val_loss, mean_squared_error_val_loss
+
+def evalute_Movement_7(dataset_val):
+    batch_size = cf["training"]["movement_7"]["batch_size"]
+    # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
+    # load the saved model weights from a file
+    model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
+    # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
+    # load the saved model weights from a file
+    model = Movement_7()
+    checkpoint = torch.load('./models/' + model_name)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
+    model.eval()
+    model.to("cuda")
+    # create `DataLoader`
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_7"]["batch_size"], shuffle=True)
+    num_data = len(val_dataloader) * val_dataloader.batch_size
+    # define optimizer, scheduler and loss function
+    criterion1 = nn.BCELoss()
+    criterion2 = nn.MSELoss()    
+    binary_cross_entropy_val_loss = 0
+    mean_squared_error_val_loss = 0
+    accuracy_score = 0
+    y_true = []
+    y_pred = []
+    model.eval()
+
+    for idx, (x, y) in enumerate(val_dataloader):
+
+        batchsize = x.shape[0]
+
+        x = x.to("cuda")
+        y = y.to("cuda")
+        y_true.append(y)
+
+        out = model(x)
+        _, prob_predict = torch.max(out, dim=1)
+        _, prob_true = torch.max(y, dim=1)
+        accuracy_score += torch.sum(prob_predict == prob_true).item()
+        y_pred.append(out)
+        loss1 = criterion1(out[:, :2], y[:, :2])
+        loss2 = criterion2(out[:, :-1], y[:, :-1])
+        binary_cross_entropy_val_loss += loss1.detach().item()  / batchsize
+        mean_squared_error_val_loss += loss2.detach().item()  / batchsize
+    print('Binary movement_7 infer BCE loss:{:.6f}, Accuracy:{:.6f}'
+                    .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
+    print('Binary movement_7 infer percentage MSE loss:{:.6f}'
+                    .format(mean_squared_error_val_loss))
+    return binary_cross_entropy_val_loss, mean_squared_error_val_loss
+
+def evalute_Movement_14(dataset_val):
+    batch_size = cf["training"]["movement_14"]["batch_size"]
+    model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
+    # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
+    # load the saved model weights from a file
+    model = Movement_14()
+    checkpoint = torch.load('./models/' + model_name)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
+    model.eval()
+    model.to("cuda")
+    # create `DataLoader`
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True)
+    num_data = len(val_dataloader) * val_dataloader.batch_size
+    # define optimizer, scheduler and loss function
+    criterion1 = nn.BCELoss()
+    criterion2 = nn.MSELoss()    
+    binary_cross_entropy_val_loss = 0
+    mean_squared_error_val_loss = 0
+    accuracy_score = 0
+    y_true = []
+    y_pred = []
+    model.eval()
+
+    for idx, (x, y) in enumerate(val_dataloader):
+
+        batchsize = x.shape[0]
+
+        x = x.to("cuda")
+        y = y.to("cuda")
+        y_true.append(y)
+
+        out = model(x)
+        _, prob_predict = torch.max(out, dim=1)
+        _, prob_true = torch.max(y, dim=1)
+        accuracy_score += torch.sum(prob_predict == prob_true).item()
+        y_pred.append(out)
+        loss1 = criterion1(out[:, :2], y[:, :2])
+        loss2 = criterion2(out[:, :-1], y[:, :-1])
+        binary_cross_entropy_val_loss += loss1.detach().item()  / batchsize
+        mean_squared_error_val_loss += loss2.detach().item()  / batchsize
+    print('Binary movement_14 infer BCE loss:{:.6f}, Accuracy:{:.6f}'
+                    .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
+    print('Binary movement_14 infer percentage MSE loss:{:.6f}'
+                    .format(mean_squared_error_val_loss))
+    return binary_cross_entropy_val_loss, mean_squared_error_val_loss

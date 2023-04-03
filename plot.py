@@ -24,7 +24,7 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
     y_val = np.reshape(y_val, y_val.shape[0])
     # predict on the training data, to see how well the model managed to learn and memorize
 
-    test_prediction = np.empty((1))
+    test_prediction = np.empty(shape=(0))
 
     for idx, (x, y) in enumerate(test_dataloader):
         x = x.to("cuda")
@@ -35,7 +35,7 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
 
     # predict on the validation data, to see how the model does
 
-    val_prediction = np.empty((1))
+    val_prediction = np.empty(shape=(0))
 
     for idx, (x, y) in enumerate(val_dataloader):
         x = x.to("cuda")
@@ -43,6 +43,7 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
         out = out.cpu().detach().numpy()
         out = np.reshape(out, out.shape[0])
         val_prediction = np.concatenate((val_prediction, out))
+        
     val_prediction = np.reshape(val_prediction, (val_prediction.shape[0], 1))
     test_prediction = np.reshape(test_prediction, (test_prediction.shape[0],1))
     val_prediction = val_scaler.inverse_transform(val_prediction)
@@ -51,17 +52,19 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
     test_prediction = np.reshape(test_prediction, (test_prediction.shape[0],))
     if cf["plots"]["show_plots"]:
         # prepare plots
-        test_size = 14
-        plot_range = 30
+        
+        plot_date_test = val_dates + test_dates
+        plot_size = 14
+        plot_range = len(plot_date_test)
         to_plot_data_y_val = np.zeros(plot_range)
         to_plot_data_y_test = np.zeros(plot_range)
         to_plot_data_y_val_pred = np.zeros(plot_range)
         to_plot_data_y_test_pred = np.zeros(plot_range)
 
-        to_plot_data_y_val[:plot_range-1] = (y_val)[-plot_range+1:]
-        to_plot_data_y_test[:plot_range-1] = (y_test)[-plot_range+1:]
-        to_plot_data_y_val_pred[:plot_range-1] = (val_prediction)[-plot_range+1:]
-        to_plot_data_y_test_pred[:plot_range-1] = (test_prediction)[-plot_range+1:]
+        to_plot_data_y_val[:len(y_val)] = (y_val)
+        to_plot_data_y_test[len(y_val):] = (y_test)
+        to_plot_data_y_val_pred[:len(val_prediction)] = (val_prediction)
+        to_plot_data_y_test_pred[len(val_prediction):] = (test_prediction)
 
         to_plot_data_y_val = np.where(to_plot_data_y_val == 0, None, to_plot_data_y_val)
         to_plot_data_y_test = np.where(to_plot_data_y_test == 0, None, to_plot_data_y_test)
@@ -70,20 +73,17 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
 
         # plot
 
-        plot_date_test = test_dates + val_dates
-        plot_date_test.append("next trading day")
-
         fig = figure(figsize=(50, 50), dpi=80)
         fig.patch.set_facecolor((1.0, 1.0, 1.0))
-        plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices validation", marker=".", markersize=10, color=cf["plots"]["color_actual_val"])
-        plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted validation prices", marker=".", markersize=10, color=cf["plots"]["color_pred_val"])
-        plt.plot(plot_date_test, to_plot_data_y_test, label="Actual prices test", marker=".", markersize=20, color=cf["plots"]["color_actual_test"])
-        plt.plot(plot_date_test, to_plot_data_y_test_pred, label="Past predicted validation prices", marker=".", markersize=20, color=cf["plots"]["color_pred_test"])
-            
-        # xticks = [plot_date_test[i] if ((i%2 == 0 and (plot_range + test_size - i ) > 2) or i > plot_range)  else None for i in range(plot_range + test_size )]
-        # plt.title("Predicted close price of the next trading day")
-        # x = np.arange(0,len(xticks))
-        # plt.xticks(x, xticks, rotation='vertical')
+        plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices validation", marker="*", markersize=1, color=cf["plots"]["color_actual_val"])
+        # plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted validation prices", marker="o", markersize=1, color=cf["plots"]["color_pred_val"])
+        plt.plot(plot_date_test, to_plot_data_y_test, label="Actual prices test", marker="*", markersize=1, color=cf["plots"]["color_actual_test"])
+        # plt.plot(plot_date_test, to_plot_data_y_test_pred, label="Past predicted validation prices", marker="o", markersize=1, color=cf["plots"]["color_pred_test"])
+
+        xticks = [plot_date_test[i] if ((i%2 == 0 > 2) or i > plot_range)  else None for i in range(plot_range)]
+        plt.title("Predicted close price of the next trading day")
+        x = np.arange(0,len(xticks))
+        plt.xticks(x, xticks, rotation='vertical')
 
         plt.grid(b=None, which='major', axis='y', linestyle='--')
         plt.legend()
