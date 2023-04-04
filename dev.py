@@ -387,9 +387,10 @@ if __name__ == "__main__":
     # train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = False)
     # train_lstm_classifier_7(data_df, num_data_points, data_date, is_train = False)
     # train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = False)   
-    # train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
+    # train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = True)
 
     train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_train = False)
     train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_train = False)
-    train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train = False)
-    train_assemble(data_df, num_data_points, data_date, is_train = True)
+    train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train = True)
+    train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
+    train_assemble(data_df, num_data_points, data_date, is_train = False)    
