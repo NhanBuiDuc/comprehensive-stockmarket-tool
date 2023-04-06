@@ -54,12 +54,12 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
         # prepare plots
         
         plot_date_test = val_dates + test_dates
-        plot_size = 14
-        plot_range = len(plot_date_test)
-        to_plot_data_y_val = np.zeros(plot_range)
-        to_plot_data_y_test = np.zeros(plot_range)
-        to_plot_data_y_val_pred = np.zeros(plot_range)
-        to_plot_data_y_test_pred = np.zeros(plot_range)
+        plot_range = 14
+        plot_size = len(plot_date_test)
+        to_plot_data_y_val = np.zeros(plot_size)
+        to_plot_data_y_test = np.zeros(plot_size)
+        to_plot_data_y_val_pred = np.zeros(plot_size)
+        to_plot_data_y_test_pred = np.zeros(plot_size)
 
         to_plot_data_y_val[:len(y_val)] = (y_val)
         to_plot_data_y_test[len(y_val):] = (y_test)
@@ -75,10 +75,10 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
 
         fig = figure(figsize=(50, 50), dpi=80)
         fig.patch.set_facecolor((1.0, 1.0, 1.0))
-        plt.plot(plot_date_test, to_plot_data_y_val, label="Actual prices validation", marker="*", markersize=10, color=cf["plots"]["color_actual_val"])
-        plt.plot(plot_date_test, to_plot_data_y_val_pred, label="Past predicted validation prices", marker="o", markersize=1, color=cf["plots"]["color_pred_val"])
-        plt.plot(plot_date_test, to_plot_data_y_test, label="Actual prices test", marker="*", markersize=10, color=cf["plots"]["color_actual_test"])
-        plt.plot(plot_date_test, to_plot_data_y_test_pred, label="Past predicted validation prices", marker="o", markersize=1, color=cf["plots"]["color_pred_test"])
+        plt.plot(plot_date_test[-30+len(val_dates):], to_plot_data_y_val[-30+len(val_dates):], label="Actual prices validation", marker="*", markersize=10, color=cf["plots"]["color_actual_val"])
+        plt.plot(plot_date_test[-30+len(val_dates):], to_plot_data_y_val_pred[-30+len(val_dates):], label="Past predicted validation prices", marker="o", markersize=1, color=cf["plots"]["color_pred_val"])
+        # plt.plot(plot_date_test, to_plot_data_y_test, label="Actual prices test", marker="*", markersize=10, color=cf["plots"]["color_actual_test"])
+        # plt.plot(plot_date_test, to_plot_data_y_test_pred, label="Past predicted validation prices", marker="o", markersize=1, color=cf["plots"]["color_pred_test"])
 
         xticks = [plot_date_test[i] if ((i%2 == 0 > 2) or i > plot_range)  else None for i in range(plot_range)]
         plt.title("Predicted close price of the next trading day")
@@ -89,6 +89,18 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
         plt.legend()
         plt.show()
 
+        fig = figure(figsize=(50, 50), dpi=80)
+        fig.patch.set_facecolor((1.0, 1.0, 1.0))
+        plt.plot(plot_date_test[-30:], to_plot_data_y_test[-30:], label="Actual prices test", marker="*", markersize=10, color=cf["plots"]["color_actual_test"])
+        plt.plot(plot_date_test[-30:], to_plot_data_y_test_pred[-30:], label="Past predicted validation prices", marker="o", markersize=1, color=cf["plots"]["color_pred_test"])
+        xticks = [plot_date_test[i] if ((i%2 == 0 > 2) or i > plot_range)  else None for i in range(plot_range)]
+        plt.title("Predicted close price of the next trading day")
+        x = np.arange(0,len(xticks))
+        plt.xticks(x, xticks, rotation='vertical')
+
+        plt.grid(b=None, which='major', axis='y', linestyle='--')
+        plt.legend()
+        plt.show()
     # print("Predicted close price of the next trading day:", round(test_prediction, 2))
 
 # if __name__ == "__main__":

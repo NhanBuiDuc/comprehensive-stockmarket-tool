@@ -45,7 +45,7 @@ def train_assemble_model(dataset_train, dataset_val):
     patient = cf["training"]["assemble_regressor"]["patient"]
     patient_count = 0
     # begin training
-    for epoch in range(cf["training"]["assemble_regressor"]["num_epoch"]):
+    for epoch in range(epochs):
         loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
         loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step(loss_val)
@@ -147,7 +147,7 @@ def train_random_forest_regressior(X_train, y_train):
     return model
 
 def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
-
+    model_name = cf["alpha_vantage"]["symbol"] + "_" + "diff_1"
     regression_model = model.LSTM_Regression(
         input_size = cf["model"]["lstm_regression"]["input_size"],
         window_size = cf["data"]["window_size"],
@@ -200,7 +200,7 @@ def train_LSTM_regression(dataset_train, dataset_val, is_training=True):
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=regression_model, name = "lstm_regression", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=regression_model, name = model_name, num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 

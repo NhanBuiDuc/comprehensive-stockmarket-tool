@@ -82,7 +82,7 @@ config = {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
             "num_epoch": 3000,
-            "learning_rate": 0.1,
+            "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 2000,
             "best_model": False,
@@ -136,10 +136,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
-            "num_epoch": 100,
-            "learning_rate": 0.1,
-            "scheduler_step_size": 100,
-            "patient": 2000,
+            "num_epoch": 500,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
+            "patient": 200,
             "best_model": False,
             "early_stop": True
         },
@@ -147,10 +147,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
-            "num_epoch": 100,
-            "learning_rate": 0.1,
-            "scheduler_step_size": 100,
-            "patient": 2000,
+            "num_epoch": 500,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
+            "patient": 200,
             "best_model": False,
             "early_stop": True
         },
@@ -158,10 +158,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
-            "num_epoch": 100,
+            "num_epoch": 500,
             "learning_rate": 0.01,
-            "scheduler_step_size": 100,
-            "patient": 2000,
+            "scheduler_step_size": 50,
+            "patient": 200,
             "best_model": False,
             "early_stop": True
         }

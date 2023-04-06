@@ -3,8 +3,9 @@ from alpha_vantage.timeseries import TimeSeries
 from config import config as cf
 import pandas as pd
 import numpy as np
-
-
+import pandas_ta as ta
+import seaborn as sns
+import matplotlib.pyplot as plt
 """
 return df: pandas dataframe, num_data_points: int, data_date: list
 """
@@ -47,85 +48,6 @@ def prepare_new_shape(x, window_size):
     unseen_row = x.shape[0] - window_size - cf['model']['output_dates'] + 1
     output = np.lib.stride_tricks.as_strided(x, shape=(n_row,window_size), strides = (x.strides[0], x.strides[0])) 
     return output[:unseen_row],  output[unseen_row:]
-
-def SMA(x, window_size):
-    #output = [sum(row) / len(row) for row in x]
-    i = 0
-    sma = []
-    while i < (len(x) - window_size):
-        window = x[i:i+window_size]
-        window_avg = np.sum(window)/window_size
-        sma.append(window_avg)
-        i += 1   
-    sma = [float('nan')]*(window_size) + sma
-    return sma
-
-
-def EMA(x, smoothing, window_size):
-    k = smoothing/(window_size + 1)
-    ema = []
-    ema.append(x[0])
-    i = 1
-    while i < (len(x) - window_size + 1):
-        window_avg = x[i]*k + ema[i-1]*(1-k)
-        ema.append(window_avg)
-        i += 1
-    ema = [float('nan')]*(window_size-1) + ema
-    return ema
-
-def RSI(df, window_size, ema=True):
-    delta_close = df['4. close'].diff()
-    up = delta_close.clip(lower=0)
-    down = -1 * delta_close.clip(upper=0)
-    if ema == True:
-	    # Use exponential moving average
-        ma_up = up.ewm(com = window_size - 1, adjust=True, min_periods = window_size).mean()
-        ma_down = down.ewm(com = window_size - 1, adjust=True, min_periods = window_size).mean()
-    else:
-        # Use simple moving average
-        ma_up = up.rolling(window = window_size, adjust=False).mean()
-        ma_down = down.rolling(window = window_size, adjust=False).mean()
-        
-    rsi = ma_up / ma_down
-    rsi = 100 - (100/(1 + rsi))
-    return rsi.to_numpy().tolist()
-
-def VWAP(df, window_size):
-    close = np.array(df['4. close'])
-    vol = np.array(df['6. volume'])
-    cum_price_volume = np.cumsum(close * vol)
-    cum_volume = np.cumsum(vol)
-    vwap = cum_price_volume[window_size-1:] / cum_volume[window_size-1:]
-    vwap = vwap.tolist()
-    vwap = [float('nan')]*(window_size-1) + vwap
-    return vwap
-
-'''
-https://oxfordstrat.com/trading-strategies/hull-moving-average/
-'''
-def WMA(s, window_size):
-    wma = s.rolling(window_size).apply(lambda x: ((np.arange(window_size)+1)*x).sum()/(np.arange(window_size)+1).sum(), raw=True)
-    return wma
-
-def HMA(s, window_size):
-    wma1 = WMA(s, window_size//2)
-    wma2 = WMA(s, window_size)
-    hma = WMA(wma1.multiply(2).sub(wma2), int(np.sqrt(window_size)))
-    return hma.tolist()
-  
-    
-def bullish(open, close):
-    # Create a new empty array to hold the results
-    comparison_array = []
-    open = np.array(open)
-    close = np.array(close)
-    # Loop through each element in the arrays and compare them
-    for i in range(len(open)):
-        if open[i] > close[i]:
-            comparison_array.append(-1)
-        else:
-            comparison_array.append(1)
-    return comparison_array
 
 def mean_absolute_percentage_error(y_true, y_pred):
     """
@@ -249,3 +171,237 @@ def prepare_tree_data_y_trend(num_rows, data, output_size):
         else:
             output[i] = 0
     return output
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def correlation_filter(dataframe, main_columns, max_columns, threshold=0.5):
+    correlated_columns = []
+    for column in main_columns:
+        corr_matrix = dataframe.corr(method='spearman')
+        corr_values = corr_matrix[column].abs().sort_values(ascending=False)
+        correlated_columns += [col for col in corr_values[corr_values >= threshold].index.tolist() if col not in main_columns]
+    result_df = dataframe[list(set(correlated_columns))[:max_columns]]
+    result_df = pd.concat([result_df, dataframe[main_columns]], axis=1)
+    
+    # create a correlation table for the selected columns
+    corr_table = pd.DataFrame(index=result_df.columns, columns=result_df.columns)
+    for col1 in corr_table.columns:
+        for col2 in corr_table.index:
+            corr_value = result_df[[col1, col2]].corr(method='spearman').iloc[0, 1]
+            corr_table.loc[col1, col2] = corr_value
+    
+    # replace missing values with 0
+    corr_table = corr_table.replace(np.nan, 0)
+    
+    # plot the correlation table for the selected columns using heatmap
+    sns.set(font_scale=1)
+    plt.figure(figsize=(19,19))
+    sns.heatmap(corr_table.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
+    plt.title('Correlation Heatmap for Selected Columns')
+    plt.show()
+    
+    # create a correlation table for all columns in the original dataframe
+    corr_all = dataframe.corr(method='spearman')
+    corr_all = corr_all.replace(np.nan, 0)
+    
+    # plot the correlation table for all columns using heatmap
+    corr_filtered = corr_all.loc[result_df.columns, result_df.columns]
+    plt.figure(figsize=(19,19))
+    sns.heatmap(corr_filtered.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
+    plt.title('Correlation Heatmap for Removed Columns in the Original DataFrame')
+    plt.show()
+    
+    return result_df, result_df.shape[1]
+
+
+
+def Willr(df, window_size):
+    return ta.willr(df['2. high'], df['3. low'], df['4. close'], window_size)
+def Smi(df, window_size):
+    return ta.smi(df['4. close'], fast=window_size - window_size//2, slow=window_size)
+def Stochrsi(df, window_size):
+    if ( window_size < 14):
+        return ta.stochrsi(df['4. close'], window_size, rsi_length= window_size * 2 )
+    else:
+        return ta.stochrsi(df['4. close'], window_size, rsi_length= window_size )
+def Cci(df, window_size):
+    return ta.cci(df['2. high'], df['3. low'], df['4. close'], window_size)
+def Macd(df, window_size):
+    return ta.macd(df['4. close'], fast=window_size, slow=window_size * 2)
+def Dm(df, window_size):
+    return ta.dm(df['2. high'], df['3. low'], window_size)
+def Cfo(df, window_size):
+    return ta.cfo(df['4. close'], window_size)
+def Cmo(df, window_size):
+    return ta.cmo(df['4. close'], window_size)
+def Er(df, window_size):
+    return ta.er(df['4. close'], window_size)
+def Mom(df, window_size):
+    return ta.mom(df['4. close'], window_size)
+def Roc(df, window_size):
+    return ta.roc(df['4. close'], window_size)
+def Stc(df, window_size):
+    return ta.stc(df['4. close'], window_size, window_size, window_size * 2)
+def Slope(df, window_size):
+    return ta.slope(df['4. close'], window_size)
+def Eri(df, window_size):
+    return ta.eri(df['2. high'], df['3. low'], df['4. close'], window_size)
+def Bbands(df, window_size):
+    return ta.bbands(close = df['4. close'], lenght = window_size, std = 2)
+def Sma(df, window_size):
+    return ta.sma(df['4. close'], window_size)
+def Ema(df, window_size):
+    return ta.ema(df['4. close'], window_size)
+def Vwap(df, window_size):
+    close = np.array(df['4. close'])
+    vol = np.array(df['6. volume'])
+    cum_price_volume = np.cumsum(close * vol)
+    cum_volume = np.cumsum(vol)
+    vwap = cum_price_volume[window_size-1:] / cum_volume[window_size-1:]
+    vwap = vwap.tolist()
+    vwap = [float('nan')]*(window_size-1) + vwap
+    return vwap
+def Hma(df, window_size):
+
+    '''
+    https://oxfordstrat.com/trading-strategies/hull-moving-average/
+    '''
+    return ta.hma(df['4. close'], window_size)
+def Cmf(df, window_size):
+    return ta.cmf(df['2. high'], df['3. low'], df['4. close'], df['6. volume'], lenght = window_size)
+def MACD(df):
+    '''
+    Moving Average Convergence Divergence (MACD)
+    The MACD is a popular indicator to that is used to identify a security's trend.
+    While APO and MACD are the same calculation, MACD also returns two more series
+    called Signal and Histogram. The Signal is an EMA of MACD and the Histogram is
+    the difference of MACD and Signal.
+    This STI is calculated by taking the difference of the EA of 26 days from the EA of 12 days.
+    Args:
+        close (pd.Series): Series of 'close's
+        fast (int): The short period. Default: 12
+        slow (int): The long period. Default: 26
+        signal (int): The signal period. Default: 9
+    Returns:
+        pd.DataFrame: macd, histogram, signal columns.
+    '''
+    return ta.macd(close=df['4. close'])
+def BBANDS(df, window_size):
+    return ta.bbands(df, window_size)
+def SO(df):
+    return ta.stoch(df['2. high'], df['3. low'], df['4. close'], df['6. volume'])
+
+
+def CMO(df, window_size):
+    '''
+    Chande Momentum Oscillator
+    The CMO is another well-known STI that employs momentum to locate 
+    the relative behavior of stock by demonstrating its strengths and weaknesses in a particular period 
+    CMO = 100 * ((Su - Sd)/ ( Su + Sd ) )
+    https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/cmo#:~:text=The%20CMO%20indicator%20is%20created,%2D100%20to%20%2B100%20range.
+    '''
+    return ta.cmo(df, window_size)
+def ROC(df, window_size):
+    '''
+    The Price Rate of Change
+    ROC is the percentage change between the current price with respect to an earlier closing price n periods ago.
+    ROC = [(Today’s Closing Price – Closing Price n periods ago) / Closing Price n periods ago] x 100
+    no need to multiply by 100
+    '''
+    return ta.roc(df, window_size)
+def DMI(df, window_size):
+    '''
+    Directional Movement Index
+    This STI identifies the direction of price movement by comparing prior highs and lows.
+    The directional movement index (DMI) is a technical indicator that measures both 
+    the strength and direction of a price movement and is intended to reduce false signals.
+    window_size typically = 14 days ----> remember to tranfer dataframe to datatime object
+    Note: import pandas_ta 
+    func return as dataframe have 3 cols: adx, dmp, dmn we take adx col only
+    '''
+    dmi = ta.trend.adx(df['2. high'], df['3. low'], df['4. close'], length= window_size)
+    return dmi
+def CCI(df, window_size):
+    '''
+    Commodity Channel Index
+    CCI measures the difference between a security's price change and its average price change.
+    window_size typically = 20 days
+    '''
+    cci = ta.momentum.cci(high=df['2. high'], low=df['3. low'], close=df['4. close'], window=window_size, constant=0.015)
+    return cci
+def CMF(df, window_size):
+    """
+    def CCI(df, window_size):
+    """
+    return ta.cmf(high=df['2. high'], low=df['3. low'], close=df['4. close'], volume=['6. volume'], length=window_size)
+def prepare_dataset_and_indicators(data_df, window_size):
+    willr = Willr(data_df, window_size)
+    smi = Smi(data_df, window_size)
+    stochrsi = Stochrsi(data_df, window_size)
+    cci = Cci(data_df, window_size)
+    macd = Macd(data_df, window_size)
+    dm = Dm(data_df, window_size)
+    cfo = Cfo(data_df, window_size)
+    cmo = Cmo(data_df, window_size)
+    er = Er(data_df, window_size)
+    mom = Mom(data_df, window_size)
+    roc = Roc(data_df, window_size)
+    stc = Stc(data_df, window_size)
+    slope = Slope(data_df, window_size)
+    eri = Eri(data_df, window_size)
+    bbands = Bbands(data_df, window_size)
+    sma = Sma(data_df, window_size)
+    ema = Ema(data_df, window_size)
+    vwap = Vwap(data_df, window_size)
+    hma = Hma(data_df, window_size)
+    cmf = Cmf(data_df, window_size)
+    dataset_df = pd.DataFrame({
+        'close': data_df['4. close'], 
+        'open': data_df['1. open'],
+        'high': data_df['2. high'],
+        'low': data_df['3. low'],
+        'adjusted close': data_df['5. adjusted close'],
+        'volume': data_df['6. volume']})
+    dataset_df['willr'] =willr
+    dataset_df['smi'] =smi.to_numpy()[:, 0]
+    dataset_df['SMIs'] =smi.to_numpy()[:, 1]
+    dataset_df['SMIo'] =smi.to_numpy()[:, 2]
+    dataset_df['STOCHRSIk'] =stochrsi.to_numpy()[:, 0]
+    dataset_df['STOCHRSId'] =stochrsi.to_numpy()[:, 1]
+    dataset_df['cci'] =cci
+    dataset_df['macd'] =macd.to_numpy()[:, 0]
+    dataset_df['mach'] =macd.to_numpy()[:, 1]
+    dataset_df['macs'] =macd.to_numpy()[:, 2]
+    dataset_df['DMp'] =dm.to_numpy()[:, 0]
+    dataset_df['DMn'] =dm.to_numpy()[:, 1]
+    dataset_df['cfo'] =cfo
+    dataset_df['cmo'] =cmo
+    dataset_df['er'] =er
+    dataset_df['mom'] =mom
+    dataset_df['roc'] =roc
+    dataset_df['stc'] =stc.to_numpy()[:, 0]
+    dataset_df['STCmacd'] =stc.to_numpy()[:, 1]
+    dataset_df['STCstoch'] =stc.to_numpy()[:, 2]
+    dataset_df['slope'] =slope
+    dataset_df['ERIbull'] =eri.to_numpy()[:, 0]
+    dataset_df['ERIbear'] =eri.to_numpy()[:, 1]
+    dataset_df['BBANDSl'] =bbands.to_numpy()[:, 0]
+    dataset_df['BBANDSm'] =bbands.to_numpy()[:, 1]
+    dataset_df['BBANDSu'] =bbands.to_numpy()[:, 2]
+    dataset_df['BBANDSb'] =bbands.to_numpy()[:, 3]
+    dataset_df['BBANDSp'] =bbands.to_numpy()[:, 4]
+    dataset_df['sma'] =sma
+    dataset_df['ema'] =ema
+    dataset_df['vwap'] =vwap
+    dataset_df['hma'] =hma
+    dataset_df['cmf'] =cmf
+    dataset_df = dataset_df.interpolate(method='linear', limit_direction='forward')
+    dataset_df = dataset_df.dropna()
+    return dataset_df

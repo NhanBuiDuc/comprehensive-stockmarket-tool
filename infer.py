@@ -26,7 +26,9 @@ def evalute_regression(dataset_val):
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
     model = LSTM_Regression()
-    checkpoint = torch.load('./models/lstm_regression')
+    model_name = cf["alpha_vantage"]["symbol"] + "_" + "diff_1"
+    
+    checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
@@ -81,11 +83,12 @@ def evalute_regression(dataset_val):
     return MSE_val_loss, MAE_val_loss, RMSE_val_loss, y_true, y_pred
 
 def evalute_assembly_regression(dataset_val):
+    model_name = cf["alpha_vantage"]["symbol"] + "_" + "assemble_1"
     batch_size = cf["training"]["lstm_regression"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
     model = Assembly_regression()
-    checkpoint = torch.load('./models/assembly_regression')
+    checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()

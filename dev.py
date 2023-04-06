@@ -9,7 +9,7 @@ from sklearn.metrics import mean_squared_error
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
 from plot import to_plot
-
+import pandas_ta as ta
 
 def train_random_tree_classifier_14(data_df, num_data_points, data_date):
     # data_df = utils.get_new_df(data_df, '2018-01-01')
@@ -19,9 +19,9 @@ def train_random_tree_classifier_14(data_df, num_data_points, data_date):
     rsi = utils.RSI(data_df, cf['data']['window_size'])
     vwap = utils.VWAP(data_df, cf['data']['window_size'])
     hma = utils.HMA(data_df['4. close'], cf['data']['window_size'])
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'],'bullish': bullish, 'sma' : sma, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'],'upward': upward, 'sma' : sma, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
     dataset_df = dataset_df[15:]
     X = dataset_df.to_numpy()
 
@@ -55,9 +55,9 @@ def train_lstm_classifier_14(data_df, num_data_points, data_date, is_train):
     rsi = utils.RSI(data_df, window_size)
     vwap = utils.VWAP(data_df, window_size)
     hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
     dataset_df = dataset_df[15:]
     X = dataset_df.to_numpy()
 
@@ -96,9 +96,9 @@ def train_lstm_classifier_1(data_df, num_data_points, data_date, is_train):
     rsi = utils.RSI(data_df, window_size)
     vwap = utils.VWAP(data_df, window_size)
     hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
     dataset_df = dataset_df[15:]
     X = dataset_df.to_numpy()
 
@@ -137,9 +137,9 @@ def train_lstm_classifier_7(data_df, num_data_points, data_date, is_train):
     rsi = utils.RSI(data_df, window_size)
     vwap = utils.VWAP(data_df, window_size)
     hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
     dataset_df = dataset_df[15:]
     X = dataset_df.to_numpy()
 
@@ -178,10 +178,12 @@ def train_assemble(data_df, num_data_points, data_date, is_train):
     rsi = utils.RSI(data_df, window_size)
     vwap = utils.VWAP(data_df, window_size)
     hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+
+    # dataset_df = dataset_df[15:]
+    dataset_df = dataset_df.dropna()
     X = dataset_df.to_numpy()
 
     n_row = X.shape[0] - window_size
@@ -224,10 +226,12 @@ def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
     rsi = utils.RSI(data_df, window_size)
     vwap = utils.VWAP(data_df, window_size)
     hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+
+    # dataset_df = dataset_df[15:]
+    dataset_df = dataset_df.dropna()
     X = dataset_df.to_numpy()
 
     n_row = X.shape[0] - window_size
@@ -257,25 +261,26 @@ def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
     infer.evalute_regression(dataset_val=dataset_test)
 
 def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    data_df.set_index('date', inplace=True)
+    window_size = 3
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
-    X = dataset_df.to_numpy()
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-    n_row = X.shape[0] - window_size
-
+    # prepare y df
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
+    n_row = len(dataset_df) - window_size
+    # calculate y
     y_trend_percentage_3 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, 3)
+
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
+    temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
+    temp_df["target_trend_up"] = y_trend_percentage_3[:, 1:2]
+    temp_df["target_percentage"] = y_trend_percentage_3[:, 2:]
+    dataset_df, number_of_columns = utils.correlation_filter(dataframe=temp_df, main_columns=["target_trend_down", "target_trend_up", "target_percentage"], max_columns = 20 )
+    X = dataset_df.to_numpy()
+
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_trend_percentage_3.shape[0]*cf["data"]["train_split_size"])
 
@@ -306,9 +311,9 @@ def train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_t
     rsi = utils.RSI(data_df, window_size)
     vwap = utils.VWAP(data_df, window_size)
     hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
     dataset_df = dataset_df[15:]
     X = dataset_df.to_numpy()
 
@@ -348,10 +353,12 @@ def train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_
     rsi = utils.RSI(data_df, window_size)
     vwap = utils.VWAP(data_df, window_size)
     hma = utils.HMA(data_df['4. close'], window_size)
-    bullish = utils.bullish(data_df['1. open'], data_df['4. close'])
+    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'bullish': bullish, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
+    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+
+    # dataset_df = dataset_df[15:]
+    dataset_df = dataset_df.dropna()
     X = dataset_df.to_numpy()
 
     n_row = X.shape[0] - window_size
@@ -389,8 +396,8 @@ if __name__ == "__main__":
     # train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = False)   
     # train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = True)
 
-    train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_train = False)
+    train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_train = True)
     train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_train = False)
-    train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train = True)
+    train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train = False)
     train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
     train_assemble(data_df, num_data_points, data_date, is_train = False)    
