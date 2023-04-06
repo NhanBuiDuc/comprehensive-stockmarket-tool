@@ -37,27 +37,6 @@ config = {
             "dropout": 0.5,
             "output_dates": 1    
         },
-        "lstm_classification_1":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 32,
-            "dropout": 0.5, 
-            "output_dates": 1
-        },
-        "lstm_classification_7":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 14,
-            "dropout": 0.2, 
-            "output_dates": 7
-        },
-        "lstm_classification_14":{
-            "input_size": 14,
-            "num_lstm_layers": 1,
-            "lstm_size": 14,
-            "dropout": 0.5, 
-            "output_dates": 14
-        },
         "movement_3":{
             "lstm_num_layers": 2,
             "lstm_hidden_layer_size": 7,
@@ -100,39 +79,6 @@ config = {
             "num_epoch": 500,
             "learning_rate": 0.1,
             "scheduler_step_size": 100,
-            "patient": 2000,
-            "best_model": False,
-            "early_stop": True
-        },
-        "lstm_classification1":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 5000,
-            "learning_rate": 0.1,
-            "scheduler_step_size": 100,
-            "patient": 1000,
-            "best_model": False,
-            "early_stop": True
-        },
-        "lstm_classification7":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 3000,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 100,
-            "patient": 1000,
-            "best_model": False,
-            "early_stop": True
-        },
-        "lstm_classification14":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 10000,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 500,
             "patient": 2000,
             "best_model": False,
             "early_stop": True

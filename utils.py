@@ -181,44 +181,36 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def correlation_filter(dataframe, main_columns, max_columns, threshold=0.5):
+def correlation_filter(dataframe, main_columns, max_columns, threshold=0.5, show_heat_map = False):
     correlated_columns = []
     for column in main_columns:
         corr_matrix = dataframe.corr(method='spearman')
-        corr_values = corr_matrix[column].abs().sort_values(ascending=False)
-        correlated_columns += [col for col in corr_values[corr_values >= threshold].index.tolist() if col not in main_columns]
-    result_df = dataframe[list(set(correlated_columns))[:max_columns]]
-    result_df = pd.concat([result_df, dataframe[main_columns]], axis=1)
+        corr_values = corr_matrix[column].sort_values(ascending=False)
+        correlated_columns += [col for col in corr_values[abs(corr_values) >= threshold].index.tolist() if col not in main_columns]
+    result_df = dataframe[correlated_columns[:max_columns]]
+    if show_heat_map == True:
+        heatmap_df = pd.concat([result_df, dataframe[main_columns]], axis=1)
+        
+        # create a correlation table for the selected columns
+        corr_table = heatmap_df.corr(method='spearman')
+        
+        # plot the correlation table for the selected columns using heatmap
+        sns.set(font_scale=1)
+        plt.figure(figsize=(40,25))
+        sns.heatmap(corr_table.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
+        plt.title('Correlation Heatmap for Selected Columns')
+        plt.show()
+        
+        # create a correlation table for main columns and removed columns in the original dataframe
+        corr_filtered = dataframe[list(set(dataframe.columns)-set(heatmap_df.columns)) + main_columns].corr(method='spearman')
+        
+        # plot the correlation table for main columns and removed columns using heatmap
+        plt.figure(figsize=(40,25))
+        sns.heatmap(corr_filtered.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
+        plt.title('Correlation Heatmap for Main Columns and Removed Columns in the Original DataFrame')
+        plt.show()
     
-    # create a correlation table for the selected columns
-    corr_table = pd.DataFrame(index=result_df.columns, columns=result_df.columns)
-    for col1 in corr_table.columns:
-        for col2 in corr_table.index:
-            corr_value = result_df[[col1, col2]].corr(method='spearman').iloc[0, 1]
-            corr_table.loc[col1, col2] = corr_value
-    
-    # replace missing values with 0
-    corr_table = corr_table.replace(np.nan, 0)
-    
-    # plot the correlation table for the selected columns using heatmap
-    sns.set(font_scale=1)
-    plt.figure(figsize=(19,19))
-    sns.heatmap(corr_table.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
-    plt.title('Correlation Heatmap for Selected Columns')
-    plt.show()
-    
-    # create a correlation table for all columns in the original dataframe
-    corr_all = dataframe.corr(method='spearman')
-    corr_all = corr_all.replace(np.nan, 0)
-    
-    # plot the correlation table for all columns using heatmap
-    corr_filtered = corr_all.loc[result_df.columns, result_df.columns]
-    plt.figure(figsize=(19,19))
-    sns.heatmap(corr_filtered.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
-    plt.title('Correlation Heatmap for Removed Columns in the Original DataFrame')
-    plt.show()
-    
-    return result_df, result_df.shape[1]
+    return result_df, result_df.columns.values
 
 
 

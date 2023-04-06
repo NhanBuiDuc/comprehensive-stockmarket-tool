@@ -7,8 +7,6 @@ import numpy as np
 import torch.nn as nn
 import torch
 from model import LSTM_Regression, Assembly_regression, Movement_3,Movement_7,Movement_14
-from model import LSTM_Classifier_14
-from model import LSTM_Classifier_1
 
 def test_random_forest_classfier(model, X_test, y_test):
 
@@ -288,12 +286,19 @@ def evalute_classifier_14(dataset_val):
     return binary_cross_entropy_val_loss
 
 
-def evalute_Movement_3(dataset_val):
+def evalute_Movement_3(dataset_val, features):
     batch_size = cf["training"]["movement_3"]["batch_size"]
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = Movement_3()
+    model = Movement_3(
+        input_size = len(features),
+        window_size = cf["model"]["movement_3"]["window_size"],
+        lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
+        lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
+        output_steps = cf["model"]["movement_3"]["output_steps"],
+        attn_num_heads = cf["model"]["movement_3"]["attn_num_heads"],
+    )
     checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])

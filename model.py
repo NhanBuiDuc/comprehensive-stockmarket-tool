@@ -78,25 +78,18 @@ class Assembly_regression(nn.Module):
 
 
 class Movement_3(nn.Module):
-    def __init__(self, input_size=14, window_size=14, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2, num_heads=3):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, attn_num_heads):
         super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-        self.num_heads = 3
+        self.input_size = (window_size, input_size)
+        self.window_size = window_size
+        self.lstm_hidden_layer_size = lstm_hidden_layer_size
+        self.lstm_num_layers = lstm_num_layers
+        self.output_steps = output_steps
+        self.attn_num_heads = attn_num_heads
 
-        self.linear_1 = nn.Linear(14, 2)
-        self.sigmoid_1 = nn.Sigmoid()
-        self.tanh_1 = nn.Tanh()
-        self.dropout_1 = nn.Dropout(0.2)
-
-        # self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3)
-        # self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
-        # self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        # self.fc1 = nn.Linear(64 * 6 * 6, 512)
-        # self.fc2 = nn.Linear(512, num_classes)
-
-        self.autoencoder = ConvAutoencoder()
-        self.lstm = nn.LSTM(input_size = 30, hidden_size=14, num_layers=14, batch_first=True)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=30, num_heads=self.num_heads)
+        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
+        self.lstm = nn.LSTM(input_size = 32, hidden_size=14, num_layers=14, batch_first=True)
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=30, num_heads=self.attn_num_heads)
 
         self.linear_2 = nn.Linear(196, 3)
         self.tanh_2 = nn.Tanh()
@@ -116,16 +109,11 @@ class Movement_3(nn.Module):
                  nn.init.orthogonal_(param)
     def forward(self, x):
         batchsize = x.shape[0]
-
-        # x = self.linear_1(x)
-        # x = self.sigmoid_1(x)
-        # x = self.dropout_1(x)
-        # x = self.tanh_1(x)
-
+        #Data extract
         x = self.autoencoder(x)
-        x = x.permute(1, 0, 2, 3).reshape(14, batchsize, -1)  # (seq_len, batch_size, embed_dim)
-        attn_output, attn_weights = self.multihead_attn(x, x, x)
-        x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
+        # x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
+        # attn_output, attn_weights = self.multihead_attn(x, x, x)
+        # x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
         x = self.linear_2(x)
@@ -152,7 +140,7 @@ class Movement_7(nn.Module):
         # self.fc1 = nn.Linear(64 * 6 * 6, 512)
         # self.fc2 = nn.Linear(512, num_classes)
 
-        self.autoencoder = ConvAutoencoder()
+        self.autoencoder = Conv1DAutoencoder()
         self.lstm = nn.LSTM(input_size = 36, hidden_size=14, num_layers=14, batch_first=True)
         self.multihead_attn = nn.MultiheadAttention(embed_dim=36, num_heads=self.num_heads)
 
@@ -199,20 +187,9 @@ class Movement_14(nn.Module):
         self.hidden_layer_size = hidden_layer_size
         self.num_heads = 3
 
-        self.linear_1 = nn.Linear(14, 2)
-        self.sigmoid_1 = nn.Sigmoid()
-        self.tanh_1 = nn.Tanh()
-        self.dropout_1 = nn.Dropout(0.2)
-
-        # self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3)
-        # self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
-        # self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        # self.fc1 = nn.Linear(64 * 6 * 6, 512)
-        # self.fc2 = nn.Linear(512, num_classes)
-
-        self.autoencoder = ConvAutoencoder()
+        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
         self.lstm = nn.LSTM(input_size = 36, hidden_size=14, num_layers=14, batch_first=True)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=36, num_heads=self.num_heads)
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=32, num_heads=self.num_heads)
 
         self.linear_2 = nn.Linear(196, 3)
         self.tanh_2 = nn.Tanh()
@@ -249,57 +226,72 @@ class Movement_14(nn.Module):
         x[:, :2] = self.softmax_3(x[:, :2])
         x[:, 2:] = self.relu_3(x[:, 2:])
         return x
-    
 
-class ConvAutoencoder(nn.Module):
-    def __init__(self, n=10):
-        super(ConvAutoencoder, self).__init__()
-
-        self.n = n
-
+class Conv1DAutoencoder(nn.Module):
+    def __init__(self, window_size):
+        super(Conv1DAutoencoder, self).__init__()
+        
         # Encoder layers
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1)
-        self.relu1 = nn.ReLU(inplace=True)
-        self.maxpool1 = nn.MaxPool2d(kernel_size=2, stride=2)
-
-        self.conv2 = nn.Conv2d(in_channels=16, out_channels=8, kernel_size=3, stride=1)
-        self.relu2 = nn.ReLU(inplace=True)
-        self.maxpool2 = nn.MaxPool2d(kernel_size=2, stride=2)
-
+        self.conv1 = nn.Conv1d(in_channels=window_size, out_channels=64, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm1d(num_features=64)
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm1d(num_features=128)
+        self.relu2 = nn.ReLU()
+        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
+        self.bn3 = nn.BatchNorm1d(num_features=256)
+        self.relu3 = nn.ReLU()
+        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
+        
         # Decoder layers
-        self.t_conv1 = nn.ConvTranspose2d(in_channels=8, out_channels=10, kernel_size=3, stride=1)
-        self.relu3 = nn.ReLU(inplace=True)
-
-        self.t_conv2 = nn.ConvTranspose2d(in_channels=10, out_channels=14, kernel_size=3, stride=1)
-
+        self.tconv3 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=3, padding=1)
+        self.tbn3 = nn.BatchNorm1d(num_features=128)
+        self.trelu3 = nn.ReLU()
+        self.tconv2 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=3, padding=1)
+        self.tbn2 = nn.BatchNorm1d(num_features=64)
+        self.trelu2 = nn.ReLU()
+        self.tconv1 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=3, padding=1)
+        self.tbn1 = nn.BatchNorm1d(num_features=32)
+        self.trelu1 = nn.ReLU()
+        self.up = nn.Upsample(scale_factor=2, mode='nearest')
+        self.sigmoid = nn.Sigmoid()
+        
     def forward(self, x):
         # Encoder
-        batchsize = x.shape[0]
-        x = x.unsqueeze(1)
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.maxpool1(x)
-
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = self.maxpool2(x)
-
-        # Decoder
-        x = self.t_conv1(x)
-        x = self.relu3(x)
-
-        x = self.t_conv2(x)
-        x = x.squeeze(1)
-
-        return x
+        x1 = self.conv1(x)
+        x1 = self.bn1(x1)
+        x1 = self.relu1(x1)
+        x2 = self.conv2(x1)
+        x2 = self.bn2(x2)
+        x2 = self.relu2(x2)
+        x3 = self.conv3(x2)
+        x3 = self.bn3(x3)
+        x3 = self.relu3(x3)
+        x = self.pool(x3)
         
+        # Decoder
+        x = self.up(x)
+        x3 = self.tconv3(x)
+        x3 = self.tbn3(x3)
+        x3 = self.trelu3(x3+x2)
+        x2 = self.tconv2(x3)
+        x2 = self.tbn2(x2)
+        x2 = self.trelu2(x2+x1)
+        x1 = self.tconv1(x2)
+        x1 = self.tbn1(x1)
+        x1 = self.trelu1(x1)
+        x = self.sigmoid(x1)
+        return x
+
+
+
 class LSTM_Regression(nn.Module):
     def __init__(self, input_size=12, window_size = 14, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
         super().__init__()
         self.hidden_layer_size = hidden_layer_size
         self.num_heads = 3
         self.lstm = nn.LSTM(input_size = 36, hidden_size=10, num_layers=10, batch_first=True)
-        self.autoencoder = ConvAutoencoder()
+        self.autoencoder = Conv1DAutoencoder()
         self.multihead_attn = nn.MultiheadAttention(embed_dim=36, num_heads=self.num_heads)
         self.linear_3 = nn.Linear(100, 1)
         self.dropout_3 = nn.Dropout(0.2)
@@ -329,290 +321,3 @@ class LSTM_Regression(nn.Module):
         x = self.linear_3(x)
         x = self.dropout_3(x)
         return x
-    
-class LSTM_Classifier_1(nn.Module):
-    def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
-        super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-
-        self.linear_1 = nn.Linear(14, 1)
-        self.sigmoid_1 = nn.Sigmoid()
-        self.tanh_1 = nn.Tanh()
-        self.dropout_1 = nn.Dropout(0.2)
-
-        self.lstm = nn.LSTM(input_size = 1, hidden_size=14, num_layers=2, batch_first=True)
-
-        self.linear_2 = nn.Linear(14 , 2)
-        self.tanh_2 = nn.Tanh()
-        self.dropout_2 = nn.Dropout(0.2)
-
-        self.sigmoid_3 = nn.Sigmoid()
-        self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
-
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm.named_parameters():
-            if 'bias' in name:
-                 nn.init.constant_(param, 0.0)
-            elif 'weight_ih' in name:
-                 nn.init.kaiming_normal_(param)
-            elif 'weight_hh' in name:
-                 nn.init.orthogonal_(param)
-
-    def forward(self, x):
-        batchsize = x.shape[0]
-
-        x = self.linear_1(x)
-        x = self.sigmoid_1(x)
-        x = self.dropout_1(x)
-        x = self.tanh_1(x)
-
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = lstm_out[:, -1:, :].reshape(batchsize, -1)
-        x = self.linear_2(x)
-        x = self.tanh_2(x)
-        x = self.dropout_2(x)
-        # x = self.sigmoid_3(x)
-        x = self.softmax_3(x)
-
-        return x
-    
-class LSTM_Classifier_7(nn.Module):
-    def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
-        super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-
-        self.linear_1 = nn.Linear(14, 1)
-        self.sigmoid_1 = nn.Sigmoid()
-        self.tanh_1 = nn.Tanh()
-        self.dropout_1 = nn.Dropout(0.2)
-
-        self.lstm = nn.LSTM(input_size = 1, hidden_size=14, num_layers=2, batch_first=True)
-
-        self.linear_2 = nn.Linear(28 , 2)
-        self.tanh_2 = nn.Tanh()
-        self.dropout_2 = nn.Dropout(0.2)
-
-        self.sigmoid_3 = nn.Sigmoid()
-        self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
-
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm.named_parameters():
-            if 'bias' in name:
-                 nn.init.constant_(param, 0.0)
-            elif 'weight_ih' in name:
-                 nn.init.kaiming_normal_(param)
-            elif 'weight_hh' in name:
-                 nn.init.orthogonal_(param)
-
-    def forward(self, x):
-        batchsize = x.shape[0]
-
-        x = self.linear_1(x)
-        x = self.sigmoid_1(x)
-        x = self.dropout_1(x)
-        x = self.tanh_1(x)
-
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-
-        x = self.linear_2(x)
-        x = self.tanh_2(x)
-        x = self.dropout_2(x)
-        # x = self.sigmoid_3(x)
-        x = self.softmax_3(x)
-
-        return x
-
-class LSTM_Classifier_14(nn.Module):
-    def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
-        super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-
-        self.linear_1 = nn.Linear(14, 1)
-        self.sigmoid_1 = nn.Sigmoid()
-        self.tanh_1 = nn.Tanh()
-        self.dropout_1 = nn.Dropout(0.2)
-
-        self.lstm = nn.LSTM(input_size = 1, hidden_size=14, num_layers=2, batch_first=True)
-
-        self.linear_2 = nn.Linear(28 , 2)
-        self.tanh_2 = nn.Tanh()
-        self.dropout_2 = nn.Dropout(0.2)
-
-        self.sigmoid_3 = nn.Sigmoid()
-        self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
-
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm.named_parameters():
-            if 'bias' in name:
-                 nn.init.constant_(param, 0.0)
-            elif 'weight_ih' in name:
-                 nn.init.kaiming_normal_(param)
-            elif 'weight_hh' in name:
-                 nn.init.orthogonal_(param)
-
-    def forward(self, x):
-        batchsize = x.shape[0]
-
-        x = self.linear_1(x)
-        x = self.sigmoid_1(x)
-        x = self.dropout_1(x)
-        x = self.tanh_1(x)
-
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-
-        x = self.linear_2(x)
-        x = self.tanh_2(x)
-        x = self.dropout_2(x)
-        # x = self.sigmoid_3(x)
-        x = self.softmax_3(x)
-
-        return x
-    
-# class Movement_3(nn.Module):
-#     def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
-#         super().__init__()
-#         self.hidden_layer_size = hidden_layer_size
-
-#         self.linear_1 = nn.Linear(14, 1)
-#         self.sigmoid_1 = nn.Sigmoid()
-#         self.tanh_1 = nn.Tanh()
-#         self.dropout_1 = nn.Dropout(0.2)
-
-#         self.lstm = nn.LSTM(input_size = 1, hidden_size=14, num_layers=14, batch_first=True)
-
-#         self.linear_2 = nn.Linear(196 , 3)
-#         self.tanh_2 = nn.Tanh()
-
-#         self.relu_3 = nn.ReLU()
-#         self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
-
-#         self.init_weights()
-
-#     def init_weights(self):
-#         for name, param in self.lstm.named_parameters():
-#             if 'bias' in name:
-#                  nn.init.constant_(param, 0.0)
-#             elif 'weight_ih' in name:
-#                  nn.init.kaiming_normal_(param)
-#             elif 'weight_hh' in name:
-#                  nn.init.orthogonal_(param)
-
-#     def forward(self, x):
-#         batchsize = x.shape[0]
-
-#         x = self.linear_1(x)
-#         x = self.sigmoid_1(x)
-#         x = self.dropout_1(x)
-#         x = self.tanh_1(x)
-
-#         lstm_out, (h_n, c_n) = self.lstm(x)
-#         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-
-#         x = self.linear_2(x)
-#         # x = self.tanh_2(x)
-#         x = x.clone()
-#         x[:, :2] = self.softmax_3(x[:, :2])
-#         x[:, 2:] = self.relu_3(x[:, 2:])
-#         return x
-    
-# class Movement_7(nn.Module):
-#     def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
-#         super().__init__()
-#         self.hidden_layer_size = hidden_layer_size
-
-#         self.linear_1 = nn.Linear(14, 1)
-#         self.sigmoid_1 = nn.Sigmoid()
-#         self.tanh_1 = nn.Tanh()
-#         self.dropout_1 = nn.Dropout(0.2)
-
-#         self.lstm = nn.LSTM(input_size = 1, hidden_size=14, num_layers=14, batch_first=True)
-
-#         self.linear_2 = nn.Linear(196 , 3)
-#         self.tanh_2 = nn.Tanh()
-
-#         self.relu_3 = nn.ReLU()
-#         self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
-
-#         self.init_weights()
-
-#     def init_weights(self):
-#         for name, param in self.lstm.named_parameters():
-#             if 'bias' in name:
-#                  nn.init.constant_(param, 0.0)
-#             elif 'weight_ih' in name:
-#                  nn.init.kaiming_normal_(param)
-#             elif 'weight_hh' in name:
-#                  nn.init.orthogonal_(param)
-
-#     def forward(self, x):
-#         batchsize = x.shape[0]
-
-#         x = self.linear_1(x)
-#         x = self.sigmoid_1(x)
-#         x = self.dropout_1(x)
-#         x = self.tanh_1(x)
-
-#         lstm_out, (h_n, c_n) = self.lstm(x)
-#         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-
-#         x = self.linear_2(x)
-#         # x = self.tanh_2(x)
-#         x = x.clone()
-#         x[:, :2] = self.softmax_3(x[:, :2])
-#         x[:, 2:] = self.relu_3(x[:, 2:])
-#         return x
- 
-# class Movement_14(nn.Module):
-#     def __init__(self, input_size=12, window_size=14, hidden_layer_size=32, num_layers=2, output_size = 14, dropout=0.2):
-#         super().__init__()
-#         self.hidden_layer_size = hidden_layer_size
-
-#         self.linear_1 = nn.Linear(14, 1)
-#         self.sigmoid_1 = nn.Sigmoid()
-#         self.tanh_1 = nn.Tanh()
-#         self.dropout_1 = nn.Dropout(0.2)
-
-#         self.lstm = nn.LSTM(input_size = 1, hidden_size=14, num_layers=14, batch_first=True)
-
-#         self.linear_2 = nn.Linear(196 , 3)
-#         self.tanh_2 = nn.Tanh()
-
-#         self.relu_3 = nn.ReLU()
-#         self.softmax_3 =nn.Softmax(dim=1)  # Apply softmax activation
-
-#         self.init_weights()
-
-#     def init_weights(self):
-#         for name, param in self.lstm.named_parameters():
-#             if 'bias' in name:
-#                  nn.init.constant_(param, 0.0)
-#             elif 'weight_ih' in name:
-#                  nn.init.kaiming_normal_(param)
-#             elif 'weight_hh' in name:
-#                  nn.init.orthogonal_(param)
-
-#     def forward(self, x):
-#         batchsize = x.shape[0]
-
-#         x = self.linear_1(x)
-#         x = self.sigmoid_1(x)
-#         x = self.dropout_1(x)
-#         x = self.tanh_1(x)
-
-#         lstm_out, (h_n, c_n) = self.lstm(x)
-#         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-
-#         x = self.linear_2(x)
-#         # x = self.tanh_2(x)
-#         x = x.clone()
-#         x[:, :2] = self.softmax_3(x[:, :2])
-#         x[:, 2:] = self.relu_3(x[:, 2:])
-#         return x

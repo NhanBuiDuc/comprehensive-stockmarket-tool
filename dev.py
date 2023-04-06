@@ -260,7 +260,7 @@ def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
     infer.evalute_regression(dataset_val=dataset_val)
     infer.evalute_regression(dataset_val=dataset_test)
 
-def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_train):
+def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, show_heat_map, is_train):
     data_df.set_index('date', inplace=True)
     window_size = 3
 
@@ -278,10 +278,10 @@ def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_t
     temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
     temp_df["target_trend_up"] = y_trend_percentage_3[:, 1:2]
     temp_df["target_percentage"] = y_trend_percentage_3[:, 2:]
-    dataset_df, number_of_columns = utils.correlation_filter(dataframe=temp_df, main_columns=["target_trend_down", "target_trend_up", "target_percentage"], max_columns = 20 )
+    dataset_df, features = utils.correlation_filter(dataframe=temp_df, main_columns=["target_trend_down", "target_trend_up", "target_percentage"], max_columns = 40, show_heat_map = show_heat_map)
     X = dataset_df.to_numpy()
 
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    X_set = utils.prepare_timeseries_data_x(X, window_size=14)
     split_index = int(y_trend_percentage_3.shape[0]*cf["data"]["train_split_size"])
 
     X_train_first = X_set[:split_index]
@@ -298,9 +298,9 @@ def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_t
     dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_Movement_3(dataset_train_trend, dataset_val_trend)
-    infer.evalute_Movement_3(dataset_val=dataset_val_trend)
-    infer.evalute_Movement_3(dataset_val=dataset_test_trend)
+        train.train_Movement_3(dataset_train_trend, dataset_val_trend, features)
+    infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = features)
+    infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = features)
 
 def train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_train):
     window_size = cf["data"]["window_size"]
@@ -391,13 +391,9 @@ if __name__ == "__main__":
     data_df, num_data_points, data_date = utils.download_data_api()
     # data_df = utils.get_new_df(data_df, '2018-01-01')
     # train_random_tree_classifier_14(data_df, num_data_points, data_date)
-    # train_lstm_classifier_14(data_df, num_data_points, data_date, is_train = False)
-    # train_lstm_classifier_7(data_df, num_data_points, data_date, is_train = False)
-    # train_lstm_classifier_1(data_df, num_data_points, data_date, is_train = False)   
-    # train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = True)
 
-    train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, is_train = True)
-    train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_train = False)
-    train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train = False)
-    train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
-    train_assemble(data_df, num_data_points, data_date, is_train = False)    
+    train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, show_heat_map = False, is_train = False)
+    # train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_train = False)
+    # train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train = False)
+    # train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
+    # train_assemble(data_df, num_data_points, data_date, is_train = False)    
