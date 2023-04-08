@@ -272,19 +272,6 @@ class Conv1DAutoencoder(nn.Module):
         self.relu3 = nn.ReLU()
         self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
         
-        # Decoder layers
-        self.tconv3 = nn.ConvTranspose1d(in_channels=256, out_channels=128, kernel_size=3, padding=1)
-        self.tbn3 = nn.BatchNorm1d(num_features=128)
-        self.trelu3 = nn.ReLU()
-        self.tconv2 = nn.ConvTranspose1d(in_channels=128, out_channels=64, kernel_size=3, padding=1)
-        self.tbn2 = nn.BatchNorm1d(num_features=64)
-        self.trelu2 = nn.ReLU()
-        self.tconv1 = nn.ConvTranspose1d(in_channels=64, out_channels=32, kernel_size=3, padding=1)
-        self.tbn1 = nn.BatchNorm1d(num_features=32)
-        self.trelu1 = nn.ReLU()
-        self.up = nn.Upsample(scale_factor=2, mode='nearest')
-        self.sigmoid = nn.Sigmoid()
-        
     def forward(self, x):
         # Encoder
         x1 = self.conv1(x)
