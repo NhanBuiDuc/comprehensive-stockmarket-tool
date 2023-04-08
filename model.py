@@ -6,21 +6,22 @@ import math
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import seaborn as sns
+import math
 class Assembly_regression(nn.Module):
     def __init__(self, dropout_rate=0.1):
         super().__init__()
-        self.regression_model = LSTM_Regression()
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "diff_1"
+        self.regression_model = Diff_1()
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
         checkpoint = torch.load('./models/' + model_name)
         self.regression_model.load_state_dict(checkpoint['model_state_dict'])
 
         self.forecasting_model_3 = m.Movement_3()
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_3"
         checkpoint = torch.load('./models/' + model_name)
         self.forecasting_model_3.load_state_dict(checkpoint['model_state_dict'])
-        
+        self.forecasting_data_mask_3 = checkpoint['features']
         self.forecasting_model_7 = m.Movement_7()
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_7"
         checkpoint = torch.load('./models/' + model_name)
         self.forecasting_model_7.load_state_dict(checkpoint['model_state_dict'])
 
@@ -67,35 +68,35 @@ class Assembly_regression(nn.Module):
         combined_delta = torch.cat([delta_1, delta_3, delta_7, delta_14, latest_data_point], dim=1)
         
         # Adding dropout to the combined delta
-        combined_delta = self.dropout(combined_delta)
         
         delta = self.linear_1(combined_delta)
-        delta = self.dropout_1(delta)
-
-        # last_val = torch.cat([latest_data_point, delta], dim=1)
-        # last_val = self.linear_2(last_val)
         return delta
 
 
 class Movement_3(nn.Module):
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, attn_num_heads):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
         super().__init__()
-        self.input_size = (window_size, input_size)
+        self.input_size = input_size
+        self.input_shape = (window_size, input_size)
         self.window_size = window_size
         self.lstm_hidden_layer_size = lstm_hidden_layer_size
         self.lstm_num_layers = lstm_num_layers
         self.output_steps = output_steps
+        self.use_attn = use_attn
         self.attn_num_heads = attn_num_heads
-
+        self.autoencoder_final_dim = 32
+        self.attn_multi_head_scaler = attn_multi_head_scaler
+        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
         self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
-        self.lstm = nn.LSTM(input_size = 32, hidden_size=14, num_layers=14, batch_first=True)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=30, num_heads=self.attn_num_heads)
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=self.input_size, num_heads=self.embed_dim)
+        self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        if(self.use_attn):
+            self.linear = nn.Linear(self.input_size, 3)
+        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
+        self.tanh = nn.Tanh()
 
-        self.linear_2 = nn.Linear(196, 3)
-        self.tanh_2 = nn.Tanh()
-
-        self.relu_3 = nn.ReLU()
-        self.softmax_3 = nn.Softmax(dim=1)  # Apply softmax activation
+        self.relu = nn.ReLU()
+        self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
 
@@ -109,46 +110,53 @@ class Movement_3(nn.Module):
                  nn.init.orthogonal_(param)
     def forward(self, x):
         batchsize = x.shape[0]
+        if(self.use_attn):
+            #Data extract
+            x = self.autoencoder(x)
+            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
+            attn_output, attn_weights = self.multihead_attn(x, x, x)
+            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
+            lstm_out, (h_n, c_n) = self.lstm(x)
+            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+            x = self.linear(x)
+            x = x.clone()
+            x[:, :2] = self.softmax(x[:, :2])
+            x[:, 2:] = self.relu(x[:, 2:])
+            return x
+
         #Data extract
         x = self.autoencoder(x)
-        # x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
-        # attn_output, attn_weights = self.multihead_attn(x, x, x)
-        # x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear_2(x)
+        x = self.linear(x)
         x = x.clone()
-        x[:, :2] = self.softmax_3(x[:, :2])
-        x[:, 2:] = self.relu_3(x[:, 2:])
+        x[:, :2] = self.softmax(x[:, :2])
+        x[:, 2:] = self.relu(x[:, 2:])
         return x
-    
-
 class Movement_7(nn.Module):
-    def __init__(self, input_size=14, window_size=14, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2, num_heads=3):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
         super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-        self.num_heads = 3
+        self.input_size = input_size
+        self.input_shape = (window_size, input_size)
+        self.window_size = window_size
+        self.lstm_hidden_layer_size = lstm_hidden_layer_size
+        self.lstm_num_layers = lstm_num_layers
+        self.output_steps = output_steps
+        self.use_attn = use_attn
+        self.attn_num_heads = attn_num_heads
+        self.autoencoder_final_dim = 32
+        self.attn_multi_head_scaler = attn_multi_head_scaler
+        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
+        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
+        self.multihead_attn = nn.MultiheadAttention(embed_dim = self.input_size // 2, num_heads=1)
+        self.lstm = nn.LSTM(input_size = self.input_size // 2, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        if(self.use_attn):
+            self.linear = nn.Linear(self.input_size, 3)
+        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
+        self.tanh = nn.Tanh()
 
-        self.linear_1 = nn.Linear(14, 2)
-        self.sigmoid_1 = nn.Sigmoid()
-        self.tanh_1 = nn.Tanh()
-        self.dropout_1 = nn.Dropout(0.2)
-
-        # self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3)
-        # self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3)
-        # self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        # self.fc1 = nn.Linear(64 * 6 * 6, 512)
-        # self.fc2 = nn.Linear(512, num_classes)
-
-        self.autoencoder = Conv1DAutoencoder()
-        self.lstm = nn.LSTM(input_size = 36, hidden_size=14, num_layers=14, batch_first=True)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=36, num_heads=self.num_heads)
-
-        self.linear_2 = nn.Linear(196, 3)
-        self.tanh_2 = nn.Tanh()
-
-        self.relu_3 = nn.ReLU()
-        self.softmax_3 = nn.Softmax(dim=1)  # Apply softmax activation
+        self.relu = nn.ReLU()
+        self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
 
@@ -162,40 +170,55 @@ class Movement_7(nn.Module):
                  nn.init.orthogonal_(param)
     def forward(self, x):
         batchsize = x.shape[0]
+        if(self.use_attn):
+            #Data extract
+            x = self.autoencoder(x)
+            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
+            attn_output, attn_weights = self.multihead_attn(x, x, x)
+            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
+            lstm_out, (h_n, c_n) = self.lstm(x)
+            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+            x = self.linear(x)
+            x = x.clone()
+            x[:, :2] = self.softmax(x[:, :2])
+            x[:, 2:] = self.relu(x[:, 2:])
+            return x
 
-        # x = self.linear_1(x)
-        # x = self.sigmoid_1(x)
-        # x = self.dropout_1(x)
-        # x = self.tanh_1(x)
-
+        #Data extract
         x = self.autoencoder(x)
-        x = x.permute(1, 0, 2, 3).reshape(14, batchsize, -1)  # (seq_len, batch_size, embed_dim)
-        attn_output, attn_weights = self.multihead_attn(x, x, x)
-        x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear_2(x)
+        x = self.linear(x)
         x = x.clone()
-        x[:, :2] = self.softmax_3(x[:, :2])
-        x[:, 2:] = self.relu_3(x[:, 2:])
+        x[:, :2] = self.softmax(x[:, :2])
+        x[:, 2:] = self.relu(x[:, 2:])
         return x
     
 
 class Movement_14(nn.Module):
-    def __init__(self, input_size=14, window_size=14, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2, num_heads=3):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
         super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-        self.num_heads = 3
-
+        self.input_size = input_size
+        self.input_shape = (window_size, input_size)
+        self.window_size = window_size
+        self.lstm_hidden_layer_size = lstm_hidden_layer_size
+        self.lstm_num_layers = lstm_num_layers
+        self.output_steps = output_steps
+        self.use_attn = use_attn
+        self.attn_num_heads = attn_num_heads
+        self.autoencoder_final_dim = 32
+        self.attn_multi_head_scaler = attn_multi_head_scaler
+        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
         self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
-        self.lstm = nn.LSTM(input_size = 36, hidden_size=14, num_layers=14, batch_first=True)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=32, num_heads=self.num_heads)
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=self.input_size, num_heads=self.embed_dim)
+        self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        if(self.use_attn):
+            self.linear = nn.Linear(self.input_size, 3)
+        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
+        self.tanh = nn.Tanh()
 
-        self.linear_2 = nn.Linear(196, 3)
-        self.tanh_2 = nn.Tanh()
-
-        self.relu_3 = nn.ReLU()
-        self.softmax_3 = nn.Softmax(dim=1)  # Apply softmax activation
+        self.relu = nn.ReLU()
+        self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
 
@@ -209,22 +232,28 @@ class Movement_14(nn.Module):
                  nn.init.orthogonal_(param)
     def forward(self, x):
         batchsize = x.shape[0]
+        if(self.use_attn):
+            #Data extract
+            x = self.autoencoder(x)
+            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
+            attn_output, attn_weights = self.multihead_attn(x, x, x)
+            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
+            lstm_out, (h_n, c_n) = self.lstm(x)
+            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+            x = self.linear(x)
+            x = x.clone()
+            x[:, :2] = self.softmax(x[:, :2])
+            x[:, 2:] = self.relu(x[:, 2:])
+            return x
 
-        # x = self.linear_1(x)
-        # x = self.sigmoid_1(x)
-        # x = self.dropout_1(x)
-        # x = self.tanh_1(x)
-
+        #Data extract
         x = self.autoencoder(x)
-        x = x.permute(1, 0, 2, 3).reshape(14, batchsize, -1)  # (seq_len, batch_size, embed_dim)
-        attn_output, attn_weights = self.multihead_attn(x, x, x)
-        x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear_2(x)
+        x = self.linear(x)
         x = x.clone()
-        x[:, :2] = self.softmax_3(x[:, :2])
-        x[:, 2:] = self.relu_3(x[:, 2:])
+        x[:, :2] = self.softmax(x[:, :2])
+        x[:, 2:] = self.relu(x[:, 2:])
         return x
 
 class Conv1DAutoencoder(nn.Module):
@@ -261,41 +290,45 @@ class Conv1DAutoencoder(nn.Module):
         x1 = self.conv1(x)
         x1 = self.bn1(x1)
         x1 = self.relu1(x1)
+
         x2 = self.conv2(x1)
         x2 = self.bn2(x2)
         x2 = self.relu2(x2)
+
         x3 = self.conv3(x2)
         x3 = self.bn3(x3)
         x3 = self.relu3(x3)
-        x = self.pool(x3)
         
-        # Decoder
-        x = self.up(x)
-        x3 = self.tconv3(x)
-        x3 = self.tbn3(x3)
-        x3 = self.trelu3(x3+x2)
-        x2 = self.tconv2(x3)
-        x2 = self.tbn2(x2)
-        x2 = self.trelu2(x2+x1)
-        x1 = self.tconv1(x2)
-        x1 = self.tbn1(x1)
-        x1 = self.trelu1(x1)
-        x = self.sigmoid(x1)
+        x = self.pool(x3)
+    
         return x
 
 
 
-class LSTM_Regression(nn.Module):
-    def __init__(self, input_size=12, window_size = 14, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
+class Diff_1(nn.Module):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
         super().__init__()
-        self.hidden_layer_size = hidden_layer_size
-        self.num_heads = 3
-        self.lstm = nn.LSTM(input_size = 36, hidden_size=10, num_layers=10, batch_first=True)
-        self.autoencoder = Conv1DAutoencoder()
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=36, num_heads=self.num_heads)
-        self.linear_3 = nn.Linear(100, 1)
-        self.dropout_3 = nn.Dropout(0.2)
+        self.input_size = input_size
+        self.input_shape = (window_size, input_size)
+        self.window_size = window_size
+        self.lstm_hidden_layer_size = lstm_hidden_layer_size
+        self.lstm_num_layers = lstm_num_layers
+        self.output_steps = output_steps
+        self.use_attn = use_attn
+        self.attn_num_heads = attn_num_heads
+        self.autoencoder_final_dim = 32
+        self.attn_multi_head_scaler = attn_multi_head_scaler
+        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
+        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
+        self.multihead_attn = nn.MultiheadAttention(embed_dim=self.input_size, num_heads=self.embed_dim)
+        self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        if(self.use_attn):
+            self.linear = nn.Linear(self.input_size, 1)
+        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
+        self.relu = nn.ReLU()
+
         self.init_weights()
+
 
     def init_weights(self):
         for name, param in self.lstm.named_parameters():
@@ -308,16 +341,35 @@ class LSTM_Regression(nn.Module):
 
     def forward(self, x):
         batchsize = x.shape[0]
-        x = self.autoencoder(x)
-        x = x.permute(1, 0, 2, 3).reshape(14, batchsize, -1)  # (seq_len, batch_size, embed_dim)
-        attn_output, attn_weights = self.multihead_attn(x, x, x)
-        x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
-        lstm_out, (h_n, c_n) = self.lstm(x)
+        if(self.use_attn):
+            #Data extract
+            x = self.autoencoder(x)
+            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
+            attn_output, attn_weights = self.multihead_attn(x, x, x)
+            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
+            lstm_out, (h_n, c_n) = self.lstm(x)
+            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+            x = self.linear(x)
+            x = self.relu(x[:, 2:])
+            return x
 
-        # reshape output from hidden cell into [batch, features] for `linear_2`
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1) 
-        
-        # layer 2
-        x = self.linear_3(x)
-        x = self.dropout_3(x)
+        #Data extract
+        x = self.autoencoder(x)
+        lstm_out, (h_n, c_n) = self.lstm(x)
+        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+        x = self.linear(x)
+        x = x.clone()
+        x = self.relu(x[:, 2:])
         return x
+
+
+def find_divisor(a):
+    # Start with a divisor of 2 (the smallest even number)
+    divisor = 2
+    # Keep looping until we find a divisor that works
+    while True:
+        # Check if a is divisible by the current divisor
+        if a % divisor == 0:
+            return divisor
+        # If not, increment the divisor and try again
+        divisor += 1

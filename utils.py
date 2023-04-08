@@ -124,7 +124,7 @@ def prepare_timeseries_data_y(num_rows, data, window_size, output_size):
     return output
 
 def prepare_timeseries_data_y_diff(num_rows, data, window_size):
-    output_size = cf["model"]["lstm_regression"]["output_dates"]
+    output_size = cf["model"]["diff_1"]["output_steps"]
     output = np.empty((num_rows, 1))
     # Iterate over original array and extract windows of size 3
     for i in range(num_rows):

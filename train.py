@@ -146,20 +146,25 @@ def train_random_forest_regressior(X_train, y_train):
     model.fit(X_train[:-1], y_train)
     return model
 
-def train_LSTM_regression_1 (dataset_train, dataset_val, is_training=True):
-    model_name = cf["alpha_vantage"]["symbol"] + "_" + "diff_1"
-    regression_model = model.LSTM_Regression(
-        input_size = cf["model"]["lstm_regression"]["input_size"],
-        window_size = cf["data"]["window_size"],
-        hidden_layer_size = cf["model"]["lstm_regression"]["lstm_size"], 
-        num_layers = cf["model"]["lstm_regression"]["num_lstm_layers"], 
-        output_size = cf["model"]["lstm_regression"]["output_dates"],
-        dropout = cf["model"]["lstm_regression"]["dropout"]
+def train_LSTM_regression_1 (dataset_train, dataset_val,features, is_training=True):
+    use_attn = cf["model"]["diff_1"]["use_attn"],
+    if(use_attn):
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
+    model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "diff_1"
+    diff_1 = model.Diff_1(
+        input_size = len(features),
+        window_size = cf["model"]["diff_1"]["window_size"],
+        lstm_hidden_layer_size = cf["model"]["diff_1"]["lstm_hidden_layer_size"], 
+        lstm_num_layers = cf["model"]["diff_1"]["lstm_num_layers"], 
+        output_steps = cf["model"]["diff_1"]["output_steps"],
+        use_attn = cf["model"]["diff_1"]["use_attn"],
+        attn_num_heads = cf["model"]["diff_1"]["attn_num_heads"],
+        attn_multi_head_scaler = cf["model"]["diff_1"]["attn_multi_head_scaler"],
     )
-    regression_model.to("cuda")
+    diff_1.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["lstm_regression"]["batch_size"])
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_regression"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["diff_1"]["batch_size"])
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["diff_1"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -174,7 +179,7 @@ def train_LSTM_regression_1 (dataset_train, dataset_val, is_training=True):
     eps: eps is a small constant added to the denominator of the Adam update formula to avoid division by zero.
     It is typically set to a very small value (e.g. 1e-8 or 1e-9) to ensure numerical stability.
     """
-    optimizer = optim.Adam(regression_model.parameters(), lr=cf["training"]["lstm_regression"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
+    optimizer = optim.Adam(diff_1.parameters(), lr=cf["training"]["diff_1"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
 
     """
     For example, suppose step_size=10 and gamma=0.1.
@@ -182,16 +187,16 @@ def train_LSTM_regression_1 (dataset_train, dataset_val, is_training=True):
     If the initial learning rate is 0.1, then the learning rate will be reduced to 0.01 after 10 epochs, 0.001 after 20 epochs, and so on.
     """
 
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["lstm_regression"]["scheduler_step_size"], verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["diff_1"]["scheduler_step_size"], verbose=True)
 
     best_loss = sys.float_info.max
     stop = False
-    patient = cf["training"]["lstm_regression"]["patient"]
+    patient = cf["training"]["diff_1"]["patient"]
     patient_count = 0
     # begin training
-    for epoch in range(cf["training"]["lstm_regression"]["num_epoch"]):
-        loss_train, lr_train = run_epoch(regression_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
-        loss_val, lr_val = run_epoch(regression_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
+    for epoch in range(cf["training"]["diff_1"]["num_epoch"]):
+        loss_train, lr_train = run_epoch(diff_1,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
+        loss_val, lr_val = run_epoch(diff_1, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step(loss_val)
         # loss_train_history.append(loss_train)
         # loss_val_history.append(loss_val)
@@ -200,21 +205,31 @@ def train_LSTM_regression_1 (dataset_train, dataset_val, is_training=True):
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=regression_model, name = model_name, num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=diff_1,
+                            name = model_name,
+                            num_epochs=epoch,
+                            optimizer=optimizer,
+                            val_loss=loss_val,
+                            training_loss=loss_train,
+                            learning_rate=lr_train,
+                            features=features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
-                .format(epoch+1, cf["training"]["lstm_regression"]["num_epoch"], loss_train, loss_val, lr_train))
+                .format(epoch+1, cf["training"]["diff_1"]["num_epoch"], loss_train, loss_val, lr_train))
         
         print("patient", patient_count)
         if(stop == True):
             print("Early Stopped At Epoch: {}", epoch)
             stopped_epoch = patient_count
             break
-    return regression_model
+    return diff_1
 
 def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
+    use_attn = cf["model"]["movement_3"]["use_attn"],
+    if(use_attn):
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_3"
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
     movement_3 = model.Movement_3(
         input_size = len(features),
@@ -222,7 +237,9 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
         lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
         output_steps = cf["model"]["movement_3"]["output_steps"],
+        use_attn = cf["model"]["movement_3"]["use_attn"],
         attn_num_heads = cf["model"]["movement_3"]["attn_num_heads"],
+        attn_multi_head_scaler = cf["model"]["movement_3"]["attn_multi_head_scaler"],
     )
     movement_3.to("cuda")
     # create `DataLoader`
@@ -254,7 +271,14 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=movement_3, name=model_name, num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=movement_3,
+                            name=model_name,
+                            num_epochs=epoch,
+                            optimizer=optimizer,
+                            val_loss=loss_val,
+                            training_loss=loss_train,
+                            learning_rate=lr_train,
+                            features = features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -270,14 +294,19 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
 
 
 def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
-    model_name = cf["alpha_vantage"]["symbol"] + "_" + "movement_7"
+    use_attn = cf["model"]["movement_7"]["use_attn"]
+    if(use_attn):
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_7"
+    model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
     movement_7 = model.Movement_7(
         input_size = len(features),
-        window_size = cf["model"]["movement_3"]["window_size"],
-        lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
-        lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_3"]["output_steps"],
-        attn_num_heads = cf["model"]["movement_3"]["attn_num_heads"],
+        window_size = cf["model"]["movement_7"]["window_size"],
+        lstm_hidden_layer_size = cf["model"]["movement_7"]["lstm_hidden_layer_size"], 
+        lstm_num_layers = cf["model"]["movement_7"]["lstm_num_layers"], 
+        output_steps = cf["model"]["movement_7"]["output_steps"],
+        use_attn = cf["model"]["movement_7"]["use_attn"],
+        attn_num_heads = cf["model"]["movement_7"]["attn_num_heads"],
+        attn_multi_head_scaler = cf["model"]["movement_7"]["attn_multi_head_scaler"],
     )
     movement_7.to("cuda")
     # create `DataLoader`
@@ -309,7 +338,14 @@ def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=movement_7, name=model_name, num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=movement_7, 
+                            name=model_name,
+                            num_epochs=epoch,
+                            optimizer=optimizer,
+                            val_loss=loss_val,
+                            training_loss=loss_train,
+                            learning_rate=lr_train,
+                            features = features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -321,20 +357,25 @@ def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
             print("Early Stopped At Epoch: {}", epoch)
             stopped_epoch = patient_count
             break
-    return binary_model
+    return movement_7
 
 
-def train_Movement_14(dataset_train, dataset_val, is_training=True):
+def train_Movement_14(dataset_train, dataset_val, features, is_training=True):
+    use_attn = cf["model"]["movement_14"]["use_attn"]
+    if(use_attn):
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_14"
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
-    binary_model = model.Movement_14(
-        input_size = cf["model"]["movement_14"]["input_size"],
-        window_size = cf["data"]["window_size"],
-        hidden_layer_size = cf["model"]["movement_14"]["lstm_size"], 
-        num_layers = cf["model"]["movement_14"]["num_lstm_layers"], 
-        output_size = cf["model"]["movement_14"]["output_dates"],
-        dropout = cf["model"]["movement_14"]["dropout"]
+    movement_14 = model.Movement_7(
+        input_size = len(features),
+        window_size = cf["model"]["movement_14"]["window_size"],
+        lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
+        lstm_num_layers = cf["model"]["movement_14"]["lstm_num_layers"], 
+        output_steps = cf["model"]["movement_14"]["output_steps"],
+        use_attn = cf["model"]["movement_14"]["use_attn"],
+        attn_num_heads = cf["model"]["movement_14"]["attn_num_heads"],
+        attn_multi_head_scaler = cf["model"]["movement_14"]["attn_multi_head_scaler"],
     )
-    binary_model.to("cuda")
+    movement_14.to("cuda")
     # create `DataLoader`
     train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_14"]["batch_size"])
     val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True)
@@ -343,7 +384,7 @@ def train_Movement_14(dataset_train, dataset_val, is_training=True):
     criterion = UAL()
     # optimizer = optim.SGD(binary_model.parameters(), lr=cf["training"]["movement_14"]["learning_rate"], momentum=0.9)
 
-    optimizer = optim.Adam(binary_model.parameters(), lr=cf["training"]["movement_14"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
+    optimizer = optim.Adam(movement_14.parameters(), lr=cf["training"]["movement_14"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
     """
     For example, suppose step_size=10 and gamma=0.1.
     This means that the learning rate will be multiplied by 0.1 every 10 epochs.
@@ -358,13 +399,20 @@ def train_Movement_14(dataset_train, dataset_val, is_training=True):
 
     # begin training
     for epoch in range(cf["training"]["movement_14"]["num_epoch"]):
-        loss_train, lr_train = run_epoch(binary_model,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
-        loss_val, lr_val = run_epoch(binary_model, val_dataloader, optimizer, criterion, scheduler, is_training=False)
+        loss_train, lr_train = run_epoch(movement_14,  train_dataloader, optimizer, criterion, scheduler, is_training=True)
+        loss_val, lr_val = run_epoch(movement_14, val_dataloader, optimizer, criterion, scheduler, is_training=False)
         scheduler.step(metrics=loss_val)
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=binary_model, name=model_name, num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=movement_14, 
+                            name=model_name,
+                            num_epochs=epoch,
+                            optimizer=optimizer,
+                            val_loss=loss_val,
+                            training_loss=loss_train,
+                            learning_rate=lr_train,
+                            features = features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -376,7 +424,7 @@ def train_Movement_14(dataset_train, dataset_val, is_training=True):
             print("Early Stopped At Epoch: {}", epoch)
             stopped_epoch = patient_count
             break
-    return binary_model
+    return movement_14
 
 
 def lr_lambda(epoch):
@@ -426,14 +474,15 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
     return epoch_loss, lr
 
 
-def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate):
+def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate, features):
     torch.save({
         'epoch': num_epochs,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'valid_loss': val_loss,
         'training_loss': training_loss,
-        'learning_rate': learning_rate
+        'learning_rate': learning_rate,
+        'features': features,        
     }, "./models/" + name)
     
 def check_best_loss(best_loss, loss):

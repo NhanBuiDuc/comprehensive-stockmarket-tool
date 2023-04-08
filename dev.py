@@ -46,167 +46,48 @@ def train_random_tree_classifier_14(data_df, num_data_points, data_date):
     # random_tree_classifier = train.train_random_forest_classfier(X_train, y_train, X_val, y_val, X_test, y_test)
     svm_classifier = train.train_svm_classfier(X_train, y_train, X_val, y_val, X_test, y_test)
     
-def train_lstm_classifier_14(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
-
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
-    X = dataset_df.to_numpy()
-
-    n_row = X.shape[0] - window_size
-
-    close_df = pd.DataFrame({'close': dataset_df['close']})
-    close = close_df.to_numpy()
-    y_trend_14 = utils.prepare_timeseries_data_y_trend(n_row, close, 14)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
-    split_index = int(y_trend_14.shape[0]*cf["data"]["train_split_size"])
-
-    X_train_first = X_set[:split_index]
-    X_test = X_set[split_index:]
-    y_train_first = y_trend_14[:split_index]
-    y_test = y_trend_14[split_index:]
-    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
-    X_train = X_train_first[:split_index]
-    X_val = X_train_first[split_index:]
-    y_train = y_train_first[:split_index]
-    y_val = y_train_first[split_index:]
-
-    dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
-    dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
-    dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
-    if is_train:
-        train.train_LSTM_classifier_14(dataset_train_trend, dataset_val_trend)
-    infer.evalute_classifier_14(dataset_val=dataset_val_trend)
-    infer.evalute_classifier_14(dataset_val=dataset_test_trend)
-
-def train_lstm_classifier_1(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
-
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
-    X = dataset_df.to_numpy()
-
-    n_row = X.shape[0] - window_size
-
-    close_df = pd.DataFrame({'close': dataset_df['close']})
-    close = close_df.to_numpy()
-    y_trend_1 = utils.prepare_timeseries_data_y_trend(n_row, close, 1)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
-    split_index = int(y_trend_1.shape[0]*cf["data"]["train_split_size"])
-
-    X_train_first = X_set[:split_index]
-    X_test = X_set[split_index:]
-    y_train_first = y_trend_1[:split_index]
-    y_test = y_trend_1[split_index:]
-    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
-    X_train = X_train_first[:split_index]
-    X_val = X_train_first[split_index:]
-    y_train = y_train_first[:split_index]
-    y_val = y_train_first[split_index:]
-
-    dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
-    dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
-    dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
-    if is_train:
-        train.train_LSTM_classifier_1(dataset_train_trend, dataset_val_trend)
-    infer.evalute_classifier_1(dataset_val=dataset_val_trend)
-    infer.evalute_classifier_1(dataset_val=dataset_test_trend)
-
-def train_lstm_classifier_7(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
-
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
-    X = dataset_df.to_numpy()
-
-    n_row = X.shape[0] - window_size
-
-    close_df = pd.DataFrame({'close': dataset_df['close']})
-    close = close_df.to_numpy()
-    y_trend_7 = utils.prepare_timeseries_data_y_trend(n_row, close, 7)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
-    split_index = int(y_trend_7.shape[0]*cf["data"]["train_split_size"])
-
-    X_train_first = X_set[:split_index]
-    X_test = X_set[split_index:]
-    y_train_first = y_trend_7[:split_index]
-    y_test = y_trend_7[split_index:]
-    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
-    X_train = X_train_first[:split_index]
-    X_val = X_train_first[split_index:]
-    y_train = y_train_first[:split_index]
-    y_val = y_train_first[split_index:]
-
-    dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
-    dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
-    dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
-    if is_train:
-        train.train_LSTM_classifier_7(dataset_train_trend, dataset_val_trend)
-    infer.evalute_classifier_7(dataset_val=dataset_val_trend)
-    infer.evalute_classifier_7(dataset_val=dataset_test_trend)
-
 def train_assemble(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
+    data_df.set_index('date', inplace=True)
+    window_size = cf["model"]["assemble_1"]["window_size"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-    # dataset_df = dataset_df[15:]
-    dataset_df = dataset_df.dropna()
-    X = dataset_df.to_numpy()
-
-    n_row = X.shape[0] - window_size
-
+    # prepare y df
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
-    y_real_1 = utils.prepare_timeseries_data_y(n_row, close, window_size, 1)
+    n_row = len(dataset_df) - window_size
+    # calculate y
+    y_real_1 = utils.prepare_timeseries_data_y(num_rows=n_row, data=close, window_size=window_size, output_size=1)
+
+    # coppy dataframe
+    dataset_df = dataset_df[window_size:]
+    X = dataset_df.to_numpy()
+
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_real_1.shape[0]*cf["data"]["train_split_size"])
-    dates = data_date[15:-window_size]
-    train_dates_first = dates[:split_index]
-    test_dates = dates[split_index:]
+
     X_train_first = X_set[:split_index]
     X_test = X_set[split_index:]
     y_train_first = y_real_1[:split_index]
     y_test = y_real_1[split_index:]
+
+    dates = data_date[15:-window_size]
+    train_dates_first = dates[:split_index]
+    test_dates = dates[split_index:]
+
     split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
+    
     train_dates = train_dates_first[:split_index]
     val_dates = train_dates_first[split_index:]
+    test_dates = dates[split_index:]
+
     X_train = X_train_first[:split_index]
     X_val = X_train_first[split_index:]
     y_train = y_train_first[:split_index]
     y_val = y_train_first[split_index:]
+    dataset_train = TimeSeriesDataset(X_train, y_train)
+    dataset_val = TimeSeriesDataset(X_val, y_val)
+    dataset_test = TimeSeriesDataset(X_test, y_test)
 
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_val, y_val)
@@ -216,29 +97,29 @@ def train_assemble(data_df, num_data_points, data_date, is_train):
     infer.evalute_assembly_regression(dataset_val=dataset_val)
     infer.evalute_assembly_regression(dataset_val=dataset_test)
     to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, test_dates, val_dates)
+def train_diff_1(data_df, num_data_points, data_date, show_heat_map, is_train):
+    window_size = cf["model"]["diff_1"]["window_size"]
+    max_features = cf["model"]["diff_1"]["max_features"]
+    thresh_hold = cf["training"]["diff_1"]["corr_thresh_hold"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
-
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-
-    # dataset_df = dataset_df[15:]
-    dataset_df = dataset_df.dropna()
-    X = dataset_df.to_numpy()
-
-    n_row = X.shape[0] - window_size
-
+    # prepare y df
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
-    y_diff_1 = utils.prepare_timeseries_data_y_diff(n_row, close, window_size)
+    n_row = len(dataset_df) - window_size
+    # calculate y
+    y_diff_1 = utils.prepare_timeseries_data_y_diff(num_rows=n_row, data=close, window_size=window_size)
+
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
+    temp_df["target"] = y_diff_1
+    dataset_df, features = utils.correlation_filter(dataframe=temp_df, 
+                                                    main_columns=["target"], 
+                                                    max_columns = max_features, 
+                                                    threshold=thresh_hold, 
+                                                    show_heat_map = show_heat_map)
+    X = dataset_df.to_numpy()
+
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_diff_1.shape[0]*cf["data"]["train_split_size"])
 
@@ -251,19 +132,18 @@ def train_lstm_regressor_1(data_df, num_data_points, data_date, is_train):
     X_val = X_train_first[split_index:]
     y_train = y_train_first[:split_index]
     y_val = y_train_first[split_index:]
-
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_val, y_val)
     dataset_test = TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_LSTM_regression(dataset_train, dataset_val)
-    infer.evalute_regression(dataset_val=dataset_val)
-    infer.evalute_regression(dataset_val=dataset_test)
+        train.train_LSTM_regression_1(dataset_train, dataset_val, features=features)
+    infer.evalute_regression_1(dataset_val=dataset_val, features=features)
+    infer.evalute_regression_1(dataset_val=dataset_test, features=features)
 
-def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, show_heat_map, is_train):
-    data_df.set_index('date', inplace=True)
-    window_size = 3
-
+def train_movement_3(data_df, num_data_points, data_date, show_heat_map, is_train):
+    window_size = cf["model"]["movement_3"]["window_size"]
+    max_features = cf["model"]["movement_3"]["max_features"]
+    thresh_hold = cf["training"]["movement_3"]["corr_thresh_hold"]
     dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
     # prepare y df
@@ -271,17 +151,21 @@ def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, show
     close = close_df.to_numpy()
     n_row = len(dataset_df) - window_size
     # calculate y
-    y_trend_percentage_3 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, 3)
+    y_trend_percentage_3 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, output_size=3)
 
     # coppy dataframe
     temp_df = dataset_df.copy()[window_size:]
-    temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
-    temp_df["target_trend_up"] = y_trend_percentage_3[:, 1:2]
+    # temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
+    temp_df["target_increasing"] = y_trend_percentage_3[:, 1:2]
     temp_df["target_percentage"] = y_trend_percentage_3[:, 2:]
-    dataset_df, features = utils.correlation_filter(dataframe=temp_df, main_columns=["target_trend_down", "target_trend_up", "target_percentage"], max_columns = 40, show_heat_map = show_heat_map)
+    dataset_df, features = utils.correlation_filter(dataframe=temp_df, 
+                                                    main_columns=["target_increasing","target_percentage"], 
+                                                    max_columns = max_features,
+                                                    threshold=thresh_hold, 
+                                                    show_heat_map = show_heat_map)
     X = dataset_df.to_numpy()
 
-    X_set = utils.prepare_timeseries_data_x(X, window_size=14)
+    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_trend_percentage_3.shape[0]*cf["data"]["train_split_size"])
 
     X_train_first = X_set[:split_index]
@@ -301,27 +185,33 @@ def train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, show
         train.train_Movement_3(dataset_train_trend, dataset_val_trend, features)
     infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = features)
     infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = features)
+    
+def train_movement_7(data_df, num_data_points, data_date, show_heat_map, is_train):
 
-def train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
+    window_size = cf["model"]["movement_7"]["window_size"]
+    max_features = cf["model"]["movement_7"]["max_features"]
+    thresh_hold = cf["training"]["movement_7"]["corr_thresh_hold"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
-    X = dataset_df.to_numpy()
-
-    n_row = X.shape[0] - window_size
-
+    # prepare y df
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
-    y_trend_percentage_7 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, 7)
+    n_row = len(dataset_df) - window_size
+    # calculate y
+    y_trend_percentage_7 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, output_size=7)
+
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
+    # temp_df["target_trend_down"] = y_trend_percentage_7[:, :1]
+    temp_df["target_increasing"] = y_trend_percentage_7[:, 1:2]
+    temp_df["target_percentage"] = y_trend_percentage_7[:, 2:]
+    dataset_df, features = utils.correlation_filter(dataframe=temp_df,
+                                                    main_columns=["target_increasing", "target_percentage"],
+                                                    max_columns = max_features,
+                                                    threshold = thresh_hold,
+                                                    show_heat_map = show_heat_map)
+    X = dataset_df.to_numpy()
+
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_trend_percentage_7.shape[0]*cf["data"]["train_split_size"])
 
@@ -339,33 +229,43 @@ def train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_t
     dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_Movement_7(dataset_train_trend, dataset_val_trend)
-    infer.evalute_Movement_7(dataset_val=dataset_val_trend)
-    infer.evalute_Movement_7(dataset_val=dataset_test_trend)
+        train.train_Movement_7(dataset_train_trend, dataset_val_trend, features)
+    infer.evalute_Movement_7(dataset_val=dataset_val_trend, features = features)
+    infer.evalute_Movement_7(dataset_val=dataset_test_trend, features = features)
+def train_movement_14(data_df, num_data_points, data_date, show_heat_map, is_train):
+    window_size = cf["model"]["movement_14"]["window_size"]
+    max_features = cf["model"]["movement_14"]["max_features"]
+    thresh_hold = cf["training"]["movement_14"]["corr_thresh_hold"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-
-def train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train):
-    window_size = cf["data"]["window_size"]
-    sma_14 = utils.SMA(data_df['4. close'].values, window_size)
-    sma_7 = utils.SMA(data_df['4. close'].values, 7)
-    sma_3 = utils.SMA(data_df['4. close'].values, 3)
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], window_size)
-    rsi = utils.RSI(data_df, window_size)
-    vwap = utils.VWAP(data_df, window_size)
-    hma = utils.HMA(data_df['4. close'], window_size)
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
-
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'], 'open': data_df['1. open'], 'high': data_df['2. high'], 'low': data_df['3. low'], 'adjusted close': data_df['5. adjusted close'], 'volume': data_df['6. volume'], 'upward': upward, 'sma_3' : sma_3, 'sma_7' : sma_7, 'sma_14' : sma_14, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-
-    # dataset_df = dataset_df[15:]
-    dataset_df = dataset_df.dropna()
-    X = dataset_df.to_numpy()
-
-    n_row = X.shape[0] - window_size
-
+    # prepare y df
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
-    y_trend_percentage_14 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, 14)
+    n_row = len(dataset_df) - window_size
+    # calculate y
+    y_trend_percentage_14 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, output_size= 14)
+    count_10 = 0
+    count_01 = 0
+    for element in y_trend_percentage_14[:, :2]:
+        if element[0] == 1 and element[1] == 0:
+            count_10 += 1
+        else:
+            count_01 += 1
+
+    print(f"Number of (1,0) occurrences: {count_10}")
+    print(f"Number of (0,1) occurrences: {count_01}")
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
+    # temp_df["target_trend_down"] = y_trend_percentage_14[:, :1]
+    temp_df["target_increasing"] = y_trend_percentage_14[:, 1:2]
+    temp_df["target_percentage"] = y_trend_percentage_14[:, 2:]
+    dataset_df, features = utils.correlation_filter(dataframe=temp_df,
+                                                    main_columns=["target_increasing", "target_percentage"],
+                                                    max_columns = max_features,
+                                                    threshold=thresh_hold,
+                                                    show_heat_map = show_heat_map)
+    X = dataset_df.to_numpy()
+
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_trend_percentage_14.shape[0]*cf["data"]["train_split_size"])
 
@@ -383,17 +283,19 @@ def train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_
     dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_Movement_14(dataset_train_trend, dataset_val_trend)
-    infer.evalute_Movement_14(dataset_val=dataset_val_trend)
-    infer.evalute_Movement_14(dataset_val=dataset_test_trend)
+        train.train_Movement_14(dataset_train_trend, dataset_val_trend, features)
+    infer.evalute_Movement_14(dataset_val=dataset_val_trend, features = features)
+    infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = features)
+
 
 if __name__ == "__main__":
     data_df, num_data_points, data_date = utils.download_data_api()
+    data_df.set_index('date', inplace=True)
     # data_df = utils.get_new_df(data_df, '2018-01-01')
     # train_random_tree_classifier_14(data_df, num_data_points, data_date)
 
-    train_lstm_classifier_percentage_3(data_df, num_data_points, data_date, show_heat_map = False, is_train = False)
-    # train_lstm_classifier_percentage_7(data_df, num_data_points, data_date, is_train = False)
-    # train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_train = False)
-    # train_lstm_regressor_1(data_df, num_data_points, data_date, is_train = False)
-    # train_assemble(data_df, num_data_points, data_date, is_train = False)    
+    # train_movement_3(data_df, num_data_points, data_date, show_heat_map = False, is_train = False)
+    # train_movement_7(data_df, num_data_points, data_date, show_heat_map = False, is_train = False)
+    train_movement_14(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
+    # train_diff_1(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
+    # train_assemble(data_df, num_data_points, data_date, is_train = False)

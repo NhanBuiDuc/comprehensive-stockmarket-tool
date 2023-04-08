@@ -30,145 +30,111 @@ config = {
             "output_steps": 3,
             "window_size": 14  
         },
-        "lstm_regression_1":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 32,
-            "dropout": 0.5,
-            "output_dates": 1    
-        },
-        "lstm_classification_1":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 32,
-            "dropout": 0.5, 
-            "output_dates": 1
-        },
-        "lstm_classification_7":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 14,
-            "dropout": 0.2, 
-            "output_dates": 7
-        },
-        "lstm_classification_14":{
-            "input_size": 14,
-            "num_lstm_layers": 1,
-            "lstm_size": 14,
-            "dropout": 0.5, 
-            "output_dates": 14
-        },
         "movement_3":{
             "lstm_num_layers": 2,
             "lstm_hidden_layer_size": 7,
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14,
-            "attn_num_heads": 3
+            "use_attn": True,
+            "attn_num_heads": 3,
+            "attn_multi_head_scaler": 1,
+            "max_features": 40
         },
         "movement_7":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 7,
+            "lstm_num_layers": 2,
+            "lstm_hidden_layer_size": 7,
             "dropout": 0.2, 
-            "output_dates": 14
+            "output_steps": 3,
+            "window_size": 14,
+            "use_attn": True,
+            "attn_num_heads": 3,
+            "attn_multi_head_scaler": 1,
+            "max_features": 40
         },
         "movement_14":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 7,
+            "lstm_num_layers": 2,
+            "lstm_hidden_layer_size": 7,
             "dropout": 0.2, 
-            "output_dates": 14
+            "output_steps": 3,
+            "window_size": 14,
+            "use_attn": True,
+            "attn_num_heads": 3,
+            "attn_multi_head_scaler": 1,
+            "max_features": 40
+        },
+        "diff_1":{
+            "lstm_num_layers": 2,
+            "lstm_hidden_layer_size": 7,
+            "dropout": 0.2, 
+            "output_steps": 1,
+            "window_size": 14,
+            "use_attn": True,
+            "attn_num_heads": 3,
+            "attn_multi_head_scaler": 1,
+            "max_features": 40
         },
     },
     "training": {
-        "assemble_regressor":
+        "assemble_1":
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
-            "num_epoch": 3000,
+            "num_epoch": 100,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 2000,
             "best_model": False,
-            "early_stop": True
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
         },
-        "lstm_regression":
+        "diff_1":
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 500,
+            "num_epoch": 100,
             "learning_rate": 0.1,
             "scheduler_step_size": 100,
             "patient": 2000,
             "best_model": False,
-            "early_stop": True
-        },
-        "lstm_classification1":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 5000,
-            "learning_rate": 0.1,
-            "scheduler_step_size": 100,
-            "patient": 1000,
-            "best_model": False,
-            "early_stop": True
-        },
-        "lstm_classification7":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 3000,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 100,
-            "patient": 1000,
-            "best_model": False,
-            "early_stop": True
-        },
-        "lstm_classification14":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 10000,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 500,
-            "patient": 2000,
-            "best_model": False,
-            "early_stop": True
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
         },
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
-            "num_epoch": 500,
+            "num_epoch": 100,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
-            "early_stop": True
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
         },
         "movement_7":
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
-            "num_epoch": 500,
+            "num_epoch": 100,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
-            "early_stop": True
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
         },
         "movement_14":
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 128,
             "num_epoch": 500,
-            "learning_rate": 0.01,
+            "learning_rate": 0.1,
             "scheduler_step_size": 50,
-            "patient": 200,
+            "patient": 500,
             "best_model": False,
-            "early_stop": True
+            "early_stop": True,
+            "corr_thresh_hold": 0.5
         }
     }
 }
