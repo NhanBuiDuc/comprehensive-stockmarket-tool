@@ -74,7 +74,7 @@ class Assembly_regression(nn.Module):
 
 
 class Movement_3(nn.Module):
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
         super().__init__()
         self.input_size = input_size
         self.input_shape = (window_size, input_size)
@@ -82,16 +82,9 @@ class Movement_3(nn.Module):
         self.lstm_hidden_layer_size = lstm_hidden_layer_size
         self.lstm_num_layers = lstm_num_layers
         self.output_steps = output_steps
-        self.use_attn = use_attn
-        self.attn_num_heads = attn_num_heads
         self.autoencoder_final_dim = 32
-        self.attn_multi_head_scaler = attn_multi_head_scaler
-        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
-        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=self.input_size, num_heads=self.embed_dim)
+        self.autoencoder = CausalDilatedConvNet(window_size=self.window_size, input_size=self.input_size)
         self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        if(self.use_attn):
-            self.linear = nn.Linear(self.input_size, 3)
         self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
         self.tanh = nn.Tanh()
 
@@ -101,7 +94,7 @@ class Movement_3(nn.Module):
         self.init_weights()
 
     def init_weights(self):
-        for name, param in self.multihead_attn.named_parameters():
+        for name, param in self.lstm.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0.0)
             elif 'weight' in name:
@@ -110,20 +103,6 @@ class Movement_3(nn.Module):
                  nn.init.orthogonal_(param)
     def forward(self, x):
         batchsize = x.shape[0]
-        if(self.use_attn):
-            #Data extract
-            x = self.autoencoder(x)
-            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
-            attn_output, attn_weights = self.multihead_attn(x, x, x)
-            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
-            lstm_out, (h_n, c_n) = self.lstm(x)
-            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-            x = self.linear(x)
-            x = x.clone()
-            x[:, :2] = self.softmax(x[:, :2])
-            x[:, 2:] = self.relu(x[:, 2:])
-            return x
-
         #Data extract
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
@@ -134,7 +113,7 @@ class Movement_3(nn.Module):
         x[:, 2:] = self.relu(x[:, 2:])
         return x
 class Movement_7(nn.Module):
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
         super().__init__()
         self.input_size = input_size
         self.input_shape = (window_size, input_size)
@@ -142,16 +121,9 @@ class Movement_7(nn.Module):
         self.lstm_hidden_layer_size = lstm_hidden_layer_size
         self.lstm_num_layers = lstm_num_layers
         self.output_steps = output_steps
-        self.use_attn = use_attn
-        self.attn_num_heads = attn_num_heads
         self.autoencoder_final_dim = 32
-        self.attn_multi_head_scaler = attn_multi_head_scaler
-        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
-        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim = self.input_size // 2, num_heads=1)
-        self.lstm = nn.LSTM(input_size = self.input_size // 2, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        if(self.use_attn):
-            self.linear = nn.Linear(self.input_size, 3)
+        self.autoencoder = CausalDilatedConvNet(window_size=self.window_size, input_size=self.input_size)
+        self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
         self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
         self.tanh = nn.Tanh()
 
@@ -161,7 +133,7 @@ class Movement_7(nn.Module):
         self.init_weights()
 
     def init_weights(self):
-        for name, param in self.multihead_attn.named_parameters():
+        for name, param in self.lstm.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0.0)
             elif 'weight' in name:
@@ -170,20 +142,6 @@ class Movement_7(nn.Module):
                  nn.init.orthogonal_(param)
     def forward(self, x):
         batchsize = x.shape[0]
-        if(self.use_attn):
-            #Data extract
-            x = self.autoencoder(x)
-            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
-            attn_output, attn_weights = self.multihead_attn(x, x, x)
-            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
-            lstm_out, (h_n, c_n) = self.lstm(x)
-            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-            x = self.linear(x)
-            x = x.clone()
-            x[:, :2] = self.softmax(x[:, :2])
-            x[:, 2:] = self.relu(x[:, 2:])
-            return x
-
         #Data extract
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
@@ -193,10 +151,9 @@ class Movement_7(nn.Module):
         x[:, :2] = self.softmax(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
-    
 
 class Movement_14(nn.Module):
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
         super().__init__()
         self.input_size = input_size
         self.input_shape = (window_size, input_size)
@@ -204,16 +161,9 @@ class Movement_14(nn.Module):
         self.lstm_hidden_layer_size = lstm_hidden_layer_size
         self.lstm_num_layers = lstm_num_layers
         self.output_steps = output_steps
-        self.use_attn = use_attn
-        self.attn_num_heads = attn_num_heads
         self.autoencoder_final_dim = 32
-        self.attn_multi_head_scaler = attn_multi_head_scaler
-        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
-        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=self.input_size, num_heads=self.embed_dim)
+        self.autoencoder = CausalDilatedConvNet(window_size=self.window_size, input_size=self.input_size)
         self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        if(self.use_attn):
-            self.linear = nn.Linear(self.input_size, 3)
         self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
         self.tanh = nn.Tanh()
 
@@ -223,7 +173,7 @@ class Movement_14(nn.Module):
         self.init_weights()
 
     def init_weights(self):
-        for name, param in self.multihead_attn.named_parameters():
+        for name, param in self.lstm.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0.0)
             elif 'weight' in name:
@@ -232,20 +182,6 @@ class Movement_14(nn.Module):
                  nn.init.orthogonal_(param)
     def forward(self, x):
         batchsize = x.shape[0]
-        if(self.use_attn):
-            #Data extract
-            x = self.autoencoder(x)
-            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
-            attn_output, attn_weights = self.multihead_attn(x, x, x)
-            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
-            lstm_out, (h_n, c_n) = self.lstm(x)
-            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-            x = self.linear(x)
-            x = x.clone()
-            x[:, :2] = self.softmax(x[:, :2])
-            x[:, 2:] = self.relu(x[:, 2:])
-            return x
-
         #Data extract
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
@@ -256,44 +192,34 @@ class Movement_14(nn.Module):
         x[:, 2:] = self.relu(x[:, 2:])
         return x
 
-class Conv1DAutoencoder(nn.Module):
-    def __init__(self, window_size):
-        super(Conv1DAutoencoder, self).__init__()
-        
-        # Encoder layers
-        self.conv1 = nn.Conv1d(in_channels=window_size, out_channels=64, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm1d(num_features=64)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv1d(in_channels=64, out_channels=128, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm1d(num_features=128)
-        self.relu2 = nn.ReLU()
-        self.conv3 = nn.Conv1d(in_channels=128, out_channels=256, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm1d(num_features=256)
-        self.relu3 = nn.ReLU()
-        self.pool = nn.MaxPool1d(kernel_size=2, stride=2)
-        
-    def forward(self, x):
-        # Encoder
-        x1 = self.conv1(x)
-        x1 = self.bn1(x1)
-        x1 = self.relu1(x1)
-
-        x2 = self.conv2(x1)
-        x2 = self.bn2(x2)
-        x2 = self.relu2(x2)
-
-        x3 = self.conv3(x2)
-        x3 = self.bn3(x3)
-        x3 = self.relu3(x3)
-        
-        x = self.pool(x3)
+class CausalDilatedConv1d(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, dilation, padding):
+        super(CausalDilatedConv1d, self).__init__()
+        self.padding = padding
+        self.conv = nn.Conv1d(in_channels, out_channels, kernel_size, padding=self.padding, dilation=dilation)
     
+    def forward(self, x):
+        x = self.conv(x)
+        return x
+    
+class CausalDilatedConvNet(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, num_layers, dilation_base):
+        super(CausalDilatedConvNet, self).__init__()
+        self.layers = nn.ModuleList()
+        self.dilation_base = dilation_base
+        for i in range(num_layers):
+            dilation = self.dilation_base ** i # exponentially increasing dilation
+            padding = self.dilation_base ** (i) ** (kernel_size - 1)
+            layer = CausalDilatedConv1d(in_channels, out_channels, kernel_size, dilation, padding)
+            self.layers.append(layer)
+    
+    def forward(self, x):
+        for layer in self.layers:
+            x = layer(x)
         return x
 
-
-
 class Diff_1(nn.Module):
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, use_attn, attn_num_heads, attn_multi_head_scaler):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
         super().__init__()
         self.input_size = input_size
         self.input_shape = (window_size, input_size)
@@ -301,16 +227,9 @@ class Diff_1(nn.Module):
         self.lstm_hidden_layer_size = lstm_hidden_layer_size
         self.lstm_num_layers = lstm_num_layers
         self.output_steps = output_steps
-        self.use_attn = use_attn
-        self.attn_num_heads = attn_num_heads
         self.autoencoder_final_dim = 32
-        self.attn_multi_head_scaler = attn_multi_head_scaler
-        self.embed_dim = attn_multi_head_scaler * find_divisor(self.input_size)
-        self.autoencoder = Conv1DAutoencoder(window_size=self.window_size)
-        self.multihead_attn = nn.MultiheadAttention(embed_dim=self.input_size, num_heads=self.embed_dim)
+        self.autoencoder = CausalDilatedConvNet(window_size=self.window_size)
         self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        if(self.use_attn):
-            self.linear = nn.Linear(self.input_size, 1)
         self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
         self.relu = nn.ReLU()
 
@@ -328,18 +247,6 @@ class Diff_1(nn.Module):
 
     def forward(self, x):
         batchsize = x.shape[0]
-        if(self.use_attn):
-            #Data extract
-            x = self.autoencoder(x)
-            x = x.permute(1, 0, 2)  # (seq_len, batch_size, embed_dim)
-            attn_output, attn_weights = self.multihead_attn(x, x, x)
-            x = attn_output.permute(1, 0, 2)  # (batch_size, seq_len, embed_dim)
-            lstm_out, (h_n, c_n) = self.lstm(x)
-            x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-            x = self.linear(x)
-            x = self.relu(x[:, 2:])
-            return x
-
         #Data extract
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
@@ -360,3 +267,4 @@ def find_divisor(a):
             return divisor
         # If not, increment the divisor and try again
         divisor += 1
+

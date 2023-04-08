@@ -36,9 +36,6 @@ config = {
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14,
-            "use_attn": True,
-            "attn_num_heads": 3,
-            "attn_multi_head_scaler": 1,
             "max_features": 40
         },
         "movement_7":{
@@ -47,9 +44,6 @@ config = {
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14,
-            "use_attn": True,
-            "attn_num_heads": 3,
-            "attn_multi_head_scaler": 1,
             "max_features": 40
         },
         "movement_14":{
@@ -58,9 +52,6 @@ config = {
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14,
-            "use_attn": True,
-            "attn_num_heads": 3,
-            "attn_multi_head_scaler": 1,
             "max_features": 40
         },
         "diff_1":{
@@ -122,7 +113,7 @@ config = {
             "patient": 200,
             "best_model": False,
             "early_stop": True,
-            "corr_thresh_hold": 0.1
+            "corr_thresh_hold": 0.5
         },
         "movement_14":
         {

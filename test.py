@@ -1,20 +1,20 @@
+from model import CausalDilatedConvNet
 import torch
-import torch.nn as nn
+import math
 
-# Input array
-x = torch.tensor([[2, 1], [0, 1]])
+input_size = 11
+sequence_size = 14
+kernel_size = 3
+dilation_base = 3
 
-# Transposed convolution kernel
-kernel = torch.tensor([[3, 1], [1, 5]])
+# Calculate the number of layers
+num_layers = int(
 
-# Define transposed convolution layer
-conv_transpose = nn.ConvTranspose2d(in_channels=1, out_channels=1, kernel_size=2, stride=1, padding=0, output_padding=1, bias=False)
+    (math.log( ( ((input_size - 1) * (dilation_base - 1)) / (kernel_size - 1) ) + 1)) / (math.log(dilation_base))
+)
 
-# Set the weights of the convolution layer to the kernel
-conv_transpose.weight = nn.Parameter(kernel.unsqueeze(0).unsqueeze(0).float())
+model = CausalDilatedConvNet(in_channels = sequence_size, out_channels = sequence_size, kernel_size = kernel_size, num_layers=num_layers, dilation_base=dilation_base)
 
-# Apply transposed convolution to input array
-output = conv_transpose(x.unsqueeze(0).unsqueeze(0).float())
-
-# Print the output
-print(output.squeeze().int())
+random_tensor = torch.randn(1, sequence_size, input_size)
+output = model(random_tensor)
+print(output.shape)

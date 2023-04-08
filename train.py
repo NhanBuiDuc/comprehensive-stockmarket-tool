@@ -147,19 +147,16 @@ def train_random_forest_regressior(X_train, y_train):
     return model
 
 def train_LSTM_regression_1 (dataset_train, dataset_val,features, is_training=True):
-    use_attn = cf["model"]["diff_1"]["use_attn"],
-    if(use_attn):
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
+    # use_attn = cf["model"]["diff_1"]["use_attn"],
+    # if(use_attn):
+    #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "diff_1"
     diff_1 = model.Diff_1(
         input_size = len(features),
         window_size = cf["model"]["diff_1"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["diff_1"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["diff_1"]["lstm_num_layers"], 
-        output_steps = cf["model"]["diff_1"]["output_steps"],
-        use_attn = cf["model"]["diff_1"]["use_attn"],
-        attn_num_heads = cf["model"]["diff_1"]["attn_num_heads"],
-        attn_multi_head_scaler = cf["model"]["diff_1"]["attn_multi_head_scaler"],
+        output_steps = cf["model"]["diff_1"]["output_steps"]
     )
     diff_1.to("cuda")
     # create `DataLoader`
@@ -227,19 +224,16 @@ def train_LSTM_regression_1 (dataset_train, dataset_val,features, is_training=Tr
     return diff_1
 
 def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
-    use_attn = cf["model"]["movement_3"]["use_attn"],
-    if(use_attn):
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_3"
+    # use_attn = cf["model"]["movement_3"]["use_attn"],
+    # if(use_attn):
+    #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_3"
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
     movement_3 = model.Movement_3(
         input_size = len(features),
         window_size = cf["model"]["movement_3"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_3"]["output_steps"],
-        use_attn = cf["model"]["movement_3"]["use_attn"],
-        attn_num_heads = cf["model"]["movement_3"]["attn_num_heads"],
-        attn_multi_head_scaler = cf["model"]["movement_3"]["attn_multi_head_scaler"],
+        output_steps = cf["model"]["movement_3"]["output_steps"]
     )
     movement_3.to("cuda")
     # create `DataLoader`
@@ -294,19 +288,16 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
 
 
 def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
-    use_attn = cf["model"]["movement_7"]["use_attn"]
-    if(use_attn):
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_7"
+    # use_attn = cf["model"]["movement_7"]["use_attn"]
+    # if(use_attn):
+    #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_7"
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
     movement_7 = model.Movement_7(
         input_size = len(features),
         window_size = cf["model"]["movement_7"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_7"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_7"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_7"]["output_steps"],
-        use_attn = cf["model"]["movement_7"]["use_attn"],
-        attn_num_heads = cf["model"]["movement_7"]["attn_num_heads"],
-        attn_multi_head_scaler = cf["model"]["movement_7"]["attn_multi_head_scaler"],
+        output_steps = cf["model"]["movement_7"]["output_steps"]
     )
     movement_7.to("cuda")
     # create `DataLoader`
@@ -361,19 +352,16 @@ def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
 
 
 def train_Movement_14(dataset_train, dataset_val, features, is_training=True):
-    use_attn = cf["model"]["movement_14"]["use_attn"]
-    if(use_attn):
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_14"
+    # use_attn = cf["model"]["movement_14"]["use_attn"]
+    # if(use_attn):
+    #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_14"
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
     movement_14 = model.Movement_7(
         input_size = len(features),
         window_size = cf["model"]["movement_14"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_14"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_14"]["output_steps"],
-        use_attn = cf["model"]["movement_14"]["use_attn"],
-        attn_num_heads = cf["model"]["movement_14"]["attn_num_heads"],
-        attn_multi_head_scaler = cf["model"]["movement_14"]["attn_multi_head_scaler"],
+        output_steps = cf["model"]["movement_14"]["output_steps"]
     )
     movement_14.to("cuda")
     # create `DataLoader`
