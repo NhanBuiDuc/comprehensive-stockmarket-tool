@@ -7,34 +7,67 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
-class Assembly_regression(nn.Module):
+class Assemble(nn.Module):
     def __init__(self, dropout_rate=0.1):
         super().__init__()
-        self.regression_model = Diff_1()
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
+
+        # Diff 1
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "diff_1"
         checkpoint = torch.load('./models/' + model_name)
+        self.regression_data_features_1 = checkpoint['features']
+        self.regression_data_mask_1 = checkpoint['mask']
+        self.regression_model = Diff_1(
+            input_size = len(self.regression_data_features_1 ),
+            window_size = cf["model"]["diff_1"]["window_size"],
+            lstm_hidden_layer_size = cf["model"]["diff_1"]["lstm_hidden_layer_size"], 
+            lstm_num_layers = cf["model"]["diff_1"]["lstm_num_layers"], 
+            output_steps = cf["model"]["diff_1"]["output_steps"]
+        )
         self.regression_model.load_state_dict(checkpoint['model_state_dict'])
-        
-
-        self.forecasting_model_3 = m.Movement_3()
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_3"
+        # Diff 3
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
         checkpoint = torch.load('./models/' + model_name)
+        self.forecasting_data_features_3 = checkpoint['features']
+        self.forecasting_data_mask_3 = checkpoint['mask']
+        self.forecasting_model_3 = m.Movement_3(
+            input_size = len(self.forecasting_data_features_3),
+            window_size = cf["model"]["movement_3"]["window_size"],
+            lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
+            lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
+            output_steps = cf["model"]["movement_3"]["output_steps"]
+        )
         self.forecasting_model_3.load_state_dict(checkpoint['model_state_dict'])
-        self.forecasting_data_mask_3 = checkpoint['features']
-
-        self.forecasting_model_7 = m.Movement_7()
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_7"
+        #Diff 7
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
         checkpoint = torch.load('./models/' + model_name)
+        self.forecasting_data_features_7 = checkpoint['features']
+        self.forecasting_data_mask_7 = checkpoint['mask']
+        self.forecasting_model_7 = m.Movement_7(
+            input_size = len(self.forecasting_data_features_3),
+            window_size = cf["model"]["movement_7"]["window_size"],
+            lstm_hidden_layer_size = cf["model"]["movement_7"]["lstm_hidden_layer_size"], 
+            lstm_num_layers = cf["model"]["movement_7"]["lstm_num_layers"], 
+            output_steps = cf["model"]["movement_7"]["output_steps"]
+        )
         self.forecasting_model_7.load_state_dict(checkpoint['model_state_dict'])
-        self.forecasting_data_mask_7 = checkpoint['features']
-        
-        self.forecasting_model_14 = m.Movement_14()
+
+
+        # Diff 14
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
         checkpoint = torch.load('./models/' + model_name)
+        self.forecasting_data_features_14 = checkpoint['features']
+        self.forecasting_data_mask_14 = checkpoint['mask']
+        self.forecasting_model_14 = m.Movement_14(
+            input_size = len(self.forecasting_data_features_3),
+            window_size = cf["model"]["movement_14"]["window_size"],
+            lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
+            lstm_num_layers = cf["model"]["movement_14"]["lstm_num_layers"], 
+            output_steps = cf["model"]["movement_14"]["output_steps"]
+        )
         self.forecasting_model_14.load_state_dict(checkpoint['model_state_dict'])
-        self.forecasting_data_mask_14 = checkpoint['features']
 
-        self.linear_1 = nn.Linear(5, 1)
+        self.linear_1 = nn.Linear(4, 1)
+        self.relu = nn.ReLU()
         self.dropout_1 = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
         
@@ -44,16 +77,26 @@ class Assembly_regression(nn.Module):
 
     def forward(self, x):
         batch_size = x.shape[0]
+
+        x1 = x.clone()
+        x1 = x1[:, :, self.forecasting_data_mask_3]
+        x2 = x.clone()
+        x2 = x2[:, :, self.forecasting_data_mask_7]
+        x3 = x.clone()
+        x3 = x3[:, :, self.forecasting_data_mask_14]
+        x4 = x.clone()
+        x4 = x4[:, :, self.regression_data_mask_1]
+
         latest_data_point = x[:, -1, 0].unsqueeze(1) 
         # Run the short-term and long-term forecasting models
-        prob_3 = self.forecasting_model_3(x)[:, :2]
-        delta_3 = self.forecasting_model_3(x)[:, 2:]
+        prob_3 = self.forecasting_model_3(x1)[:, :2]
+        delta_3 = self.forecasting_model_3(x1)[:, 2:]
 
-        prob_7 = self.forecasting_model_7(x)[:, :2]
-        delta_7 = self.forecasting_model_7(x)[:, 2:]
+        prob_7 = self.forecasting_model_7(x2)[:, :2]
+        delta_7 = self.forecasting_model_7(x2)[:, 2:]
 
-        prob_14 = self.forecasting_model_14(x)[:, :2]
-        delta_14 = self.forecasting_model_14(x)[:, 2:]
+        prob_14 = self.forecasting_model_14(x3)[:, :2]
+        delta_14 = self.forecasting_model_14(x3)[:, 2:]
         
         max_probs, max_indices = torch.max(prob_3, dim=1)
         direction_3 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
@@ -67,14 +110,16 @@ class Assembly_regression(nn.Module):
         direction_14 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
         delta_14 = latest_data_point + (direction_14 * delta_14 / 100) * latest_data_point
         # Run the regression model
-        delta_1 = self.regression_model(x)
+        delta_1 = self.regression_model(x4)
     
-        combined_delta = torch.cat([delta_1, delta_3, delta_7, delta_14, latest_data_point], dim=1)
+        combined_delta = torch.cat([delta_1, delta_3, delta_7, delta_14], dim=1)
         
         # Adding dropout to the combined delta
         
         delta = self.linear_1(combined_delta)
-        return delta
+        delta = self.relu(delta)
+        real_value = latest_data_point + delta
+        return real_value
 
 
 class Movement_3(nn.Module):
@@ -125,6 +170,7 @@ class Movement_3(nn.Module):
         x[:, :2] = self.softmax(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
+
 class Movement_7(nn.Module):
     def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
         super().__init__()
@@ -144,7 +190,7 @@ class Movement_7(nn.Module):
             (math.log( ( ((self.window_size - 1) * (self.dilation_base - 1)) / (self.kernel_size - 1) ) + 1)) / (math.log(self.dilation_base))
         )
 
-        self.autoencoder = CausalDilatedConvNet(input_size = self.input_size, in_channels = self.window_size, out_channels = self.window_size, kernel_size = self.kernel_size, num_layers=num_layers, dilation_base=self.dilation_base)
+        self.autoencoder = CausalDilatedConvNet(window_size= self.window_size, out_channels = self.window_size, kernel_size = self.kernel_size, num_layers=num_layers, dilation_base=self.dilation_base)
         self.lstm = nn.LSTM(50, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
         self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
         self.tanh = nn.Tanh()
@@ -173,6 +219,7 @@ class Movement_7(nn.Module):
         x[:, :2] = self.softmax(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
+
 class Movement_14(nn.Module):
     def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
         super().__init__()
@@ -192,7 +239,7 @@ class Movement_14(nn.Module):
             (math.log( ( ((self.window_size - 1) * (self.dilation_base - 1)) / (self.kernel_size - 1) ) + 1)) / (math.log(self.dilation_base))
         )
 
-        self.autoencoder = CausalDilatedConvNet(input_size = self.input_size, in_channels = self.window_size, out_channels = self.window_size, kernel_size = self.kernel_size, num_layers=num_layers, dilation_base=self.dilation_base)
+        self.autoencoder = CausalDilatedConvNet(window_size= self.window_size, out_channels = self.window_size, kernel_size = self.kernel_size, num_layers=num_layers, dilation_base=self.dilation_base)
         self.lstm = nn.LSTM(50, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
         self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
         self.tanh = nn.Tanh()
@@ -221,52 +268,7 @@ class Movement_14(nn.Module):
         x[:, :2] = self.softmax(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
-        super().__init__()
-        self.input_size = input_size
-        self.input_shape = (window_size, input_size)
-        self.window_size = window_size
-        self.lstm_hidden_layer_size = lstm_hidden_layer_size
-        self.lstm_num_layers = lstm_num_layers
-        self.output_steps = output_steps
-        self.autoencoder_final_dim = 32
-        self.kernel_size = self.input_size
-        self.dilation_base = 3
 
-        # Calculate the number of layers
-        num_layers = int(
-            (math.log( ( ((self.input_size - 1) * (self.dilation_base - 1)) / (self.kernel_size - 1) ) + 1)) / (math.log(self.dilation_base))
-        )
-
-        self.autoencoder = CausalDilatedConvNet(input_size = self.input_size, in_channels = self.window_size, out_channels = self.window_size, kernel_size = self.kernel_size, num_layers=num_layers, dilation_base=self.dilation_base)
-        self.lstm = nn.LSTM(31, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
-        self.tanh = nn.Tanh()
-
-        self.relu = nn.ReLU()
-        self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
-
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm.named_parameters():
-            if 'bias' in name:
-                nn.init.constant_(param, 0.0)
-            elif 'weight' in name:
-                nn.init.xavier_uniform_(param)
-            elif 'weight_hh' in name:
-                 nn.init.orthogonal_(param)
-    def forward(self, x):
-        batchsize = x.shape[0]
-        #Data extract
-        x = self.autoencoder(x)
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear(x)
-        x = x.clone()
-        x[:, :2] = self.softmax(x[:, :2])
-        x[:, 2:] = self.relu(x[:, 2:])
-        return x
 class CausalDilatedConv1d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, dilation, padding):
         super(CausalDilatedConv1d, self).__init__()
@@ -303,10 +305,10 @@ class CausalDilatedConvNet(nn.Module):
         self.out_channels = out_channels
         self.dilation_base = dilation_base
         self.num_layers = num_layers
+        self.output_size = 20
         self.pool1 = nn.MaxPool1d(kernel_size=2)
-        self.linear = nn.Linear(in_features=132,out_features=50)
-
         self.relu = nn.ReLU()
+        
         for i in range(num_layers):
             dilation = self.dilation_base ** i # exponentially increasing dilation
             padding = ((self.dilation_base ** i)) * (kernel_size - 1)
@@ -325,23 +327,33 @@ class CausalDilatedConvNet(nn.Module):
             kernel_size = self.window_size
             padding = kernel_size -1
             layer = CausalConv1d(self.window_size, out_channels, kernel_size = kernel_size, padding = padding)
-            self.causal_full_layers.append(layer) 
+            self.causal_full_layers.append(layer)
 
+        # use adaptive pooling to ensure that the output of each branch has the same shape
+        # self.adaptive_pool = nn.AdaptiveAvgPool1d(self.output_size)
+        self.linear = nn.Linear(143, 50)
+        self.relu = nn.ReLU()
     def forward(self, x):
         x1 = x.clone()
         x2 = x.clone()
         x3 = x.clone()
         for layer in self.dilation_layers:
             x1 = layer(x1)
-        for layer in self.dilation_layers:
-            x2 = layer(x2)
+        # x1 = self.adaptive_pool(x1)
+        
+        for layer in self.causal_1d_layers:
+            x2 = layer(x)
+        # x2 = self.adaptive_pool(x2)
+
         for layer in self.causal_full_layers:
-            x3 = layer(x3)
-            
+            x3 = layer(x)
+        # x3 = self.adaptive_pool(x3)
+
         concat = torch.cat([x1, x2, x3], dim=2)
-        concat = self.linear(concat)
-        concat = self.relu(concat)
-        return concat
+        out = self.linear(concat)
+        out = self.relu(out)
+        return out
+    
 class Diff_1(nn.Module):
     def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
         super().__init__()
@@ -362,8 +374,8 @@ class Diff_1(nn.Module):
             / (math.log(self.dilation_base))
         )
 
-        self.autoencoder = CausalDilatedConvNet(in_channels = self.window_size, out_channels = self.window_size, kernel_size = self.kernel_size, num_layers=num_layers, dilation_base=self.dilation_base)
-        self.lstm = nn.LSTM(input_size = self.input_size, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        self.autoencoder = CausalDilatedConvNet(window_size = self.window_size, out_channels = self.window_size, kernel_size = self.kernel_size, num_layers=num_layers, dilation_base=self.dilation_base)
+        self.lstm = nn.LSTM(input_size = 50, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
         self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
         self.relu = nn.ReLU()
 

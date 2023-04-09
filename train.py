@@ -20,11 +20,11 @@ def train_assemble_model_1(dataset_train, dataset_val, features):
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "assemble_1"
     lr=cf["training"]["assemble_1"]["learning_rate"]
     epochs=cf["training"]["assemble_1"]["num_epoch"]
-    regression_model = model.Assembly_regression()
+    regression_model = model.Assemble()
     regression_model.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=64, shuffle=True)
-    val_dataloader = DataLoader(dataset_val, batch_size=64, shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=64, shuffle=False, drop_last=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=64, shuffle=True, drop_last=True)
 
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -40,10 +40,10 @@ def train_assemble_model_1(dataset_train, dataset_val, features):
     # epochs: the total number of epochs to train the model for.
     # steps_per_epoch: the number of steps (batches) per epoch.
 
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["assemble_regressor"]["scheduler_step_size"], verbose=True)
+    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=cf["training"]["assemble_1"]["scheduler_step_size"], verbose=True)
     best_loss = sys.float_info.max
     stop = False
-    patient = cf["training"]["assemble_regressor"]["patient"]
+    patient = cf["training"]["assemble_1"]["patient"]
     patient_count = 0
     # begin training
     for epoch in range(epochs):
@@ -53,12 +53,20 @@ def train_assemble_model_1(dataset_train, dataset_val, features):
         if(check_best_loss(best_loss=best_loss, loss=loss_val)):
             best_loss = loss_val
             patient_count = 0
-            save_best_model(model=regression_model, name = "assembly_regression", num_epochs=epoch, optimizer=optimizer, val_loss=loss_val, training_loss=loss_train, learning_rate=lr_train)
+            save_best_model(model=regression_model, 
+                            name = model_name,
+                            num_epochs=epoch,
+                            optimizer=optimizer,
+                            val_loss=loss_val,
+                            training_loss=loss_train,
+                            features=features,
+                            mask=None,
+                            learning_rate=lr_train)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
         print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
-                .format(epoch+1, cf["training"]["lstm_regression"]["num_epoch"], loss_train, loss_val, lr_train))
+                .format(epoch+1, cf["training"]["assemble_1"]["num_epoch"], loss_train, loss_val, lr_train))
         
         print("patient", patient_count)
         if(stop == True):
@@ -147,7 +155,7 @@ def train_random_forest_regressior(X_train, y_train):
     model.fit(X_train[:-1], y_train)
     return model
 
-def train_LSTM_regression_1 (dataset_train, dataset_val,features, mask, is_training=True):
+def train_LSTM_regression_1 (dataset_train, dataset_val, features, mask, is_training=True):
     # use_attn = cf["model"]["diff_1"]["use_attn"],
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
@@ -161,8 +169,8 @@ def train_LSTM_regression_1 (dataset_train, dataset_val,features, mask, is_train
     )
     diff_1.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["diff_1"]["batch_size"])
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["diff_1"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["diff_1"]["batch_size"], drop_last=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["diff_1"]["batch_size"], shuffle=True, drop_last=True)
 
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -210,7 +218,8 @@ def train_LSTM_regression_1 (dataset_train, dataset_val,features, mask, is_train
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            mask=mask)
+                            features = features,
+                            mask = mask)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -238,8 +247,8 @@ def train_Movement_3(dataset_train, dataset_val, features, mask, is_training=Tru
     )
     movement_3.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_3"]["batch_size"])
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_3"]["batch_size"], drop_last=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True, drop_last=True)
 
     # define optimizer, scheduler and loss function
     criterion = UAL()
@@ -273,6 +282,7 @@ def train_Movement_3(dataset_train, dataset_val, features, mask, is_training=Tru
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
+                            features=features,                           
                             mask = mask)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
@@ -302,8 +312,8 @@ def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=Tru
     )
     movement_7.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_7"]["batch_size"])
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_7"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_7"]["batch_size"], drop_last=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_7"]["batch_size"], shuffle=True, drop_last=True)
 
     # define optimizer, scheduler and loss function
     criterion = UAL()
@@ -337,6 +347,7 @@ def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=Tru
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
+                            features=features,
                             mask = mask)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
@@ -352,12 +363,12 @@ def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=Tru
     return movement_7
 
 
-def train_Movement_14(dataset_train, dataset_val, features, is_training=True):
+def train_Movement_14(dataset_train, dataset_val, features, mask, is_training=True):
     # use_attn = cf["model"]["movement_14"]["use_attn"]
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_14"
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
-    movement_14 = model.Movement_7(
+    movement_14 = model.Movement_14(
         input_size = len(features),
         window_size = cf["model"]["movement_14"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
@@ -366,8 +377,8 @@ def train_Movement_14(dataset_train, dataset_val, features, is_training=True):
     )
     movement_14.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_14"]["batch_size"])
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_14"]["batch_size"], drop_last=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True, drop_last=True)
 
     # define optimizer, scheduler and loss function
     criterion = UAL()
@@ -401,7 +412,8 @@ def train_Movement_14(dataset_train, dataset_val, features, is_training=True):
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features = features)
+                            features=features,
+                            mask = mask)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -439,7 +451,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
             optimizer.zero_grad()
 
         batchsize = x.shape[0]
-
+        # print(x.shape)
         x = x.to("cuda")
         y = y.to("cuda")
 
@@ -463,7 +475,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
     return epoch_loss, lr
 
 
-def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate, mask):
+def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate, features, mask):
     torch.save({
         'epoch': num_epochs,
         'model_state_dict': model.state_dict(),
@@ -471,6 +483,7 @@ def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss,
         'valid_loss': val_loss,
         'training_loss': training_loss,
         'learning_rate': learning_rate,
+        'features': features,
         'mask': mask,        
     }, "./models/" + name)
     

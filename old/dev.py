@@ -117,59 +117,39 @@ def train_diff_1(data_df,
     window_size = cf["model"]["diff_1"]["window_size"]
     max_features = cf["model"]["diff_1"]["max_features"]
     thresh_hold = cf["training"]["diff_1"]["corr_thresh_hold"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-    train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
-    valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
-    test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
     # prepare y df
-    train_close_df = pd.DataFrame({'close': train_df['close']})
-    valid_close_df = pd.DataFrame({'close': valid_df['close']})
-    test_close_df = pd.DataFrame({'close': test_df['close']})
-
-    train_close = train_close_df.to_numpy()
-    valid_close = valid_close_df.to_numpy()
-    test_close = test_close_df.to_numpy()
-
-    train_n_row = len(train_close) - window_size
-    valid_n_row = len(valid_close) - window_size
-    test_n_row = len(test_close) - window_size
-
+    close_df = pd.DataFrame({'close': dataset_df['close']})
+    close = close_df.to_numpy()
+    n_row = len(dataset_df) - window_size
     # calculate y
-    y_train = utils.prepare_timeseries_data_y_diff(train_n_row, train_close, output_size = 1)
-    y_valid = utils.prepare_timeseries_data_y_diff(valid_n_row, valid_close, output_size = 1)
-    y_test = utils.prepare_timeseries_data_y_diff(test_n_row, test_close, output_size = 1)
+    y_diff_1 = utils.prepare_timeseries_data_y_diff(num_rows=n_row, data=close, window_size=window_size)
 
-    # Re allocated df with lossing data points
-    train_df = train_df[window_size:]
-    valid_df = valid_df[window_size:]
-    test_df = test_df[window_size:]
-    train_close_df = train_close_df[window_size:]
-    valid_close_df = valid_close_df[window_size:]
-    test_close_df = test_close_df[window_size:]
-
-    # copy dataframe
-    temp_df = train_df.copy()
-    # temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
-    temp_df["target"] = y_train
-    train_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
+    temp_df["target"] = y_diff_1
+    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
                                                     main_columns=["target"], 
-                                                    max_columns = max_features,
+                                                    max_columns = max_features, 
                                                     threshold=thresh_hold, 
                                                     show_heat_map = show_heat_map)
-    X_train = train_df.to_numpy()
-    X_valid = valid_df.to_numpy()
-    X_test = test_df.to_numpy()
+    X = dataset_df.to_numpy()
 
-    X_train = utils.prepare_timeseries_data_x(X_train, window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(X_valid, window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(X_test, window_size = window_size)
+    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    split_index = int(y_diff_1.shape[0]*cf["data"]["train_split_size"])
 
-    y_train = y_train[window_size:]
-    y_valid = y_valid[window_size:]
-    y_test = y_test[window_size:]
-
+    X_train_first = X_set[:split_index]
+    X_test = X_set[split_index:]
+    y_train_first = y_diff_1[:split_index]
+    y_test = y_diff_1[split_index:]
+    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
+    X_train = X_train_first[:split_index]
+    X_val = X_train_first[split_index:]
+    y_train = y_train_first[:split_index]
+    y_val = y_train_first[split_index:]
     dataset_train = TimeSeriesDataset(X_train, y_train)
-    dataset_val = TimeSeriesDataset(X_valid, y_valid)
+    dataset_val = TimeSeriesDataset(X_val, y_val)
     dataset_test = TimeSeriesDataset(X_test, y_test)
     if is_train:
         train.train_LSTM_regression_1(dataset_train, dataset_val, features = features, mask = mask)
@@ -181,212 +161,161 @@ def train_movement_3(data_df,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
                     data_dates, show_heat_map = False, is_train = False):
-    
     window_size = cf["model"]["movement_3"]["window_size"]
     max_features = cf["model"]["movement_3"]["max_features"]
     thresh_hold = cf["training"]["movement_3"]["corr_thresh_hold"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-    train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
-    valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
-    test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
     # prepare y df
-    train_close_df = pd.DataFrame({'close': train_df['close']})
-    valid_close_df = pd.DataFrame({'close': valid_df['close']})
-    test_close_df = pd.DataFrame({'close': test_df['close']})
-
-    train_close = train_close_df.to_numpy()
-    valid_close = valid_close_df.to_numpy()
-    test_close = test_close_df.to_numpy()
-
-    train_n_row = len(train_close) - window_size
-    valid_n_row = len(valid_close) - window_size
-    test_n_row = len(test_close) - window_size
-
+    close_df = pd.DataFrame({'close': dataset_df['close']})
+    close = close_df.to_numpy()
+    n_row = len(dataset_df) - window_size
     # calculate y
-    y_train = utils.prepare_timeseries_data_y_trend_percentage(train_n_row, train_close, output_size = 3)
-    y_valid = utils.prepare_timeseries_data_y_trend_percentage(valid_n_row, valid_close, output_size = 3)
-    y_test = utils.prepare_timeseries_data_y_trend_percentage(test_n_row, test_close, output_size = 3)
+    y_trend_percentage_3 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, output_size=3)
 
-    # Re allocated df with lossing data points
-    train_df = train_df[window_size:]
-    valid_df = valid_df[window_size:]
-    test_df = test_df[window_size:]
-    train_close_df = train_close_df[window_size:]
-    valid_close_df = valid_close_df[window_size:]
-    test_close_df = test_close_df[window_size:]
-
-    # copy dataframe
-    temp_df = train_df.copy()
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
     # temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
-    temp_df["target_increasing"] = y_train[:, 1:2]
-    temp_df["target_percentage"] = y_train[:, 2:]
-    train_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
+    temp_df["target_increasing"] = y_trend_percentage_3[:, 1:2]
+    temp_df["target_percentage"] = y_trend_percentage_3[:, 2:]
+    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
                                                     main_columns=["target_increasing","target_percentage"], 
                                                     max_columns = max_features,
                                                     threshold=thresh_hold, 
                                                     show_heat_map = show_heat_map)
-    X_train = train_df.to_numpy()
-    X_valid = valid_df.to_numpy()
-    X_test = test_df.to_numpy()
+    X = dataset_df.to_numpy()
 
-    X_train = utils.prepare_timeseries_data_x(X_train, window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(X_valid, window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(X_test, window_size = window_size)
+    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    split_index = int(y_trend_percentage_3.shape[0]*cf["data"]["train_split_size"])
 
-    y_train = y_train[window_size:]
-    y_valid = y_valid[window_size:]
-    y_test = y_test[window_size:]
+    X_train_first = X_set[:split_index]
+    X_test = X_set[split_index:]
+    y_train_first = y_trend_percentage_3[:split_index]
+    y_test = y_trend_percentage_3[split_index:]
+    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
+    X_train = X_train_first[:split_index]
+    X_val = X_train_first[split_index:]
+    y_train = y_train_first[:split_index]
+    y_val = y_train_first[split_index:]
 
     dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
-    dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
+    dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
-
     if is_train:
         train.train_Movement_3(dataset_train_trend, dataset_val_trend, features, mask)
     infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = features)
     infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = features)
-
+    
 def train_movement_7(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
                     data_dates, show_heat_map = False, is_train = False):
-    
+
     window_size = cf["model"]["movement_7"]["window_size"]
     max_features = cf["model"]["movement_7"]["max_features"]
     thresh_hold = cf["training"]["movement_7"]["corr_thresh_hold"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-    train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
-    valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
-    test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
     # prepare y df
-    train_close_df = pd.DataFrame({'close': train_df['close']})
-    valid_close_df = pd.DataFrame({'close': valid_df['close']})
-    test_close_df = pd.DataFrame({'close': test_df['close']})
-
-    train_close = train_close_df.to_numpy()
-    valid_close = valid_close_df.to_numpy()
-    test_close = test_close_df.to_numpy()
-
-    train_n_row = len(train_close) - window_size
-    valid_n_row = len(valid_close) - window_size
-    test_n_row = len(test_close) - window_size
-
+    close_df = pd.DataFrame({'close': dataset_df['close']})
+    close = close_df.to_numpy()
+    n_row = len(dataset_df) - window_size
     # calculate y
-    y_train = utils.prepare_timeseries_data_y_trend_percentage(train_n_row, train_close, output_size = 7)
-    y_valid = utils.prepare_timeseries_data_y_trend_percentage(valid_n_row, valid_close, output_size = 7)
-    y_test = utils.prepare_timeseries_data_y_trend_percentage(test_n_row, test_close, output_size = 7)
+    y_trend_percentage_7 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, output_size=7)
 
-    # Re allocated df with lossing data points
-    train_df = train_df[window_size:]
-    valid_df = valid_df[window_size:]
-    test_df = test_df[window_size:]
-    train_close_df = train_close_df[window_size:]
-    valid_close_df = valid_close_df[window_size:]
-    test_close_df = test_close_df[window_size:]
-
-    # copy dataframe
-    temp_df = train_df.copy()
-    # temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
-    temp_df["target_increasing"] = y_train[:, 1:2]
-    temp_df["target_percentage"] = y_train[:, 2:]
-    train_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
+    # temp_df["target_trend_down"] = y_trend_percentage_7[:, :1]
+    temp_df["target_increasing"] = y_trend_percentage_7[:, 1:2]
+    temp_df["target_percentage"] = y_trend_percentage_7[:, 2:]
+    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                    main_columns=["target_increasing", "target_percentage"],
                                                     max_columns = max_features,
-                                                    threshold=thresh_hold, 
+                                                    threshold = thresh_hold,
                                                     show_heat_map = show_heat_map)
-    X_train = train_df.to_numpy()
-    X_valid = valid_df.to_numpy()
-    X_test = test_df.to_numpy()
+    X = dataset_df.to_numpy()
 
-    X_train = utils.prepare_timeseries_data_x(X_train, window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(X_valid, window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(X_test, window_size = window_size)
+    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    split_index = int(y_trend_percentage_7.shape[0]*cf["data"]["train_split_size"])
 
-    y_train = y_train[window_size:]
-    y_valid = y_valid[window_size:]
-    y_test = y_test[window_size:]
+    X_train_first = X_set[:split_index]
+    X_test = X_set[split_index:]
+    y_train_first = y_trend_percentage_7[:split_index]
+    y_test = y_trend_percentage_7[split_index:]
+    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
+    X_train = X_train_first[:split_index]
+    X_val = X_train_first[split_index:]
+    y_train = y_train_first[:split_index]
+    y_val = y_train_first[split_index:]
 
     dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
-    dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
+    dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
-
     if is_train:
         train.train_Movement_7(dataset_train_trend, dataset_val_trend, features, mask)
     infer.evalute_Movement_7(dataset_val=dataset_val_trend, features = features)
     infer.evalute_Movement_7(dataset_val=dataset_test_trend, features = features)
-
-
 def train_movement_14(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
                     data_dates, show_heat_map = False, is_train = False):
-    
     window_size = cf["model"]["movement_14"]["window_size"]
     max_features = cf["model"]["movement_14"]["max_features"]
     thresh_hold = cf["training"]["movement_14"]["corr_thresh_hold"]
+    dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
-    train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
-    valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
-    test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
     # prepare y df
-    train_close_df = pd.DataFrame({'close': train_df['close']})
-    valid_close_df = pd.DataFrame({'close': valid_df['close']})
-    test_close_df = pd.DataFrame({'close': test_df['close']})
-
-    train_close = train_close_df.to_numpy()
-    valid_close = valid_close_df.to_numpy()
-    test_close = test_close_df.to_numpy()
-
-    train_n_row = len(train_close) - window_size
-    valid_n_row = len(valid_close) - window_size
-    test_n_row = len(test_close) - window_size
-
+    close_df = pd.DataFrame({'close': dataset_df['close']})
+    close = close_df.to_numpy()
+    n_row = len(dataset_df) - window_size
     # calculate y
-    y_train = utils.prepare_timeseries_data_y_trend_percentage(train_n_row, train_close, output_size = 14)
-    y_valid = utils.prepare_timeseries_data_y_trend_percentage(valid_n_row, valid_close, output_size = 14)
-    y_test = utils.prepare_timeseries_data_y_trend_percentage(test_n_row, test_close, output_size = 14)
+    y_trend_percentage_14 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, output_size= 14)
+    count_10 = 0
+    count_01 = 0
+    for element in y_trend_percentage_14[:, :2]:
+        if element[0] == 1 and element[1] == 0:
+            count_10 += 1
+        else:
+            count_01 += 1
 
-    # Re allocated df with lossing data points
-    train_df = train_df[window_size:]
-    valid_df = valid_df[window_size:]
-    test_df = test_df[window_size:]
-    train_close_df = train_close_df[window_size:]
-    valid_close_df = valid_close_df[window_size:]
-    test_close_df = test_close_df[window_size:]
-
-    # copy dataframe
-    temp_df = train_df.copy()
-    # temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
-    temp_df["target_increasing"] = y_train[:, 1:2]
-    temp_df["target_percentage"] = y_train[:, 2:]
-    train_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
+    print(f"Number of (1,0) occurrences: {count_10}")
+    print(f"Number of (0,1) occurrences: {count_01}")
+    # coppy dataframe
+    temp_df = dataset_df.copy()[window_size:]
+    # temp_df["target_trend_down"] = y_trend_percentage_14[:, :1]
+    temp_df["target_increasing"] = y_trend_percentage_14[:, 1:2]
+    temp_df["target_percentage"] = y_trend_percentage_14[:, 2:]
+    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                    main_columns=["target_increasing", "target_percentage"],
                                                     max_columns = max_features,
-                                                    threshold=thresh_hold, 
+                                                    threshold=thresh_hold,
                                                     show_heat_map = show_heat_map)
-    X_train = train_df.to_numpy()
-    X_valid = valid_df.to_numpy()
-    X_test = test_df.to_numpy()
+    X = dataset_df.to_numpy()
 
-    X_train = utils.prepare_timeseries_data_x(X_train, window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(X_valid, window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(X_test, window_size = window_size)
+    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    split_index = int(y_trend_percentage_14.shape[0]*cf["data"]["train_split_size"])
 
-    y_train = y_train[window_size:]
-    y_valid = y_valid[window_size:]
-    y_test = y_test[window_size:]
+    X_train_first = X_set[:split_index]
+    X_test = X_set[split_index:]
+    y_train_first = y_trend_percentage_14[:split_index]
+    y_test = y_trend_percentage_14[split_index:]
+    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
+    X_train = X_train_first[:split_index]
+    X_val = X_train_first[split_index:]
+    y_train = y_train_first[:split_index]
+    y_val = y_train_first[split_index:]
 
     dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
-    dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
+    dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
-
     if is_train:
         train.train_Movement_14(dataset_train_trend, dataset_val_trend, features, mask)
     infer.evalute_Movement_14(dataset_val=dataset_val_trend, features = features)
     infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = features)
-    
+
+
 if __name__ == "__main__":
     data_df, num_data_points, data_dates = utils.download_data_api()
     # data_df, num_data_points, data_dates = utils.get_new_df(data_df, '2018-01-01')
@@ -399,24 +328,24 @@ if __name__ == "__main__":
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)
     train_movement_7(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)
     train_movement_14(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)
     train_diff_1(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)
     train_assemble(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)

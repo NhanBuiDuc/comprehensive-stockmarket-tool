@@ -10,7 +10,7 @@ from matplotlib.pyplot import figure
 # predict on the unseen data, tomorrow's price 
 def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, test_dates, val_dates):
 
-    test_model = model.Assembly_regression()
+    test_model = model.Assemble()
     checkpoint = torch.load('./models/assembly_regression')
     test_model.load_state_dict(checkpoint['model_state_dict'])
     test_model.eval()

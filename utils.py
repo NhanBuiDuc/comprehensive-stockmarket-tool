@@ -26,17 +26,18 @@ def download_data_api():
     #df['date'] = df['date'].apply(str_to_datetime)
     #df["date"] = df["date"].dt.strftime("%Y-%m-%d")
     df = df.iloc[::-1].reset_index(drop=True)
-    data_date = [date for date in df["date"]]
-    num_data_points = len(data_date)
-    return df, num_data_points, data_date
+    data_dates = [date for date in df["date"]]
+    num_data_points = len(data_dates)
+    return df, num_data_points, data_dates
 
 def get_new_df(df, new_date):
     df['date'] = pd.to_datetime(df['date'])
-    new_date = pd.to_datetime(new_date)
+    new_dates = pd.to_datetime(new_date)
     df = df.loc[df['date'] >= new_date]
     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
     df = df.drop(columns = ['7. dividend amount', '8. split coefficient'])
-    return df
+    num_data_points = len(df)
+    return df, num_data_points, new_dates
 
 def str_to_datetime(s):
   split = s.split('-')
@@ -85,18 +86,6 @@ def prepare_timeseries_data_x(x, window_size):
     x = np.array(x)
     num_features = x.shape[-1]
     n_row = x.shape[0] - window_size
-    # Example: window_size = 20, x with shape = (100, 20) -> n_row = 100 - 20 + 1 = 81
-    # output shape = (81, 20), strides = (8, 8)
-    # -> output will move up one by one until the 100th element(last element) from the original x,
-    # each row of output will have 20 elements
-    #   x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    # output = array([[1, 2, 3, 4],
-    #                 [2, 3, 4, 5],
-    #                 [3, 4, 5, 6],
-    #                 [4, 5, 6, 7],
-    #                 [5, 6, 7, 8],
-    #                 [6, 7, 8, 9],
-    #                 [7, 8, 9, 10]])
     output = np.zeros((n_row, window_size, num_features))
     for i in range(n_row):
         for j in range(window_size):
@@ -186,7 +175,11 @@ def correlation_filter(dataframe, main_columns, max_columns, threshold=0.5, show
     for column in main_columns:
         corr_matrix = dataframe.corr(method='spearman')
         corr_values = corr_matrix[column].sort_values(ascending=False)
-        correlated_columns += [col for col in corr_values[abs(corr_values) >= threshold].index.tolist() if col not in main_columns]
+        for col in corr_matrix:
+            if col not in correlated_columns and col not in main_columns:
+                if abs(corr_values[col]) > threshold:
+                    correlated_columns.append(col)
+        # correlated_columns += [col for col in corr_values[abs(corr_values) >= threshold].index.tolist() if col not in main_columns]
     result_df = dataframe[correlated_columns[:max_columns]]
     if show_heat_map == True:
         heatmap_df = pd.concat([result_df, dataframe[main_columns]], axis=1)
@@ -209,6 +202,7 @@ def correlation_filter(dataframe, main_columns, max_columns, threshold=0.5, show
         sns.heatmap(corr_filtered.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
         plt.title('Correlation Heatmap for Main Columns and Removed Columns in the Original DataFrame')
         plt.show()
+    dataframe = dataframe.drop(main_columns, axis = 1)
     orgin_columns = set(dataframe.columns)
     new_columns = set(result_df.columns)
     mask = [True if col in new_columns else False for col in orgin_columns]
@@ -400,3 +394,27 @@ def prepare_dataset_and_indicators(data_df, window_size):
     dataset_df = dataset_df.interpolate(method='linear', limit_direction='forward')
     dataset_df = dataset_df.dropna()
     return dataset_df
+def split_train_valid_test_dataframe(data_df, num_data_points, data_dates):
+    # Split train val 80%
+    trainval_test_split_index = int(num_data_points * cf["data"]["train_split_size"])
+    # 0 - 80
+    train_valid_df = data_df[:trainval_test_split_index]
+    # train with val dates 
+    train_valid_dates = data_dates[:trainval_test_split_index]
+    # test 80 - 100%
+    test_df = data_df[trainval_test_split_index:]
+    # test dates splitted
+    test_dates = data_dates[trainval_test_split_index:]
+    # New index for train and valid only
+    train_valid_split_index = int(len(train_valid_df) * cf["data"]["train_split_size"])
+    # Train and valid df splitted up
+    # 0 - 80
+    train_df = train_valid_df[:train_valid_split_index]
+    # 80 - 100%
+    valid_df = train_valid_df[train_valid_split_index:]
+    # Train and valid dates df splitted up
+    train_dates = train_valid_dates[:train_valid_split_index]
+    valid_dates = train_valid_dates[train_valid_split_index:] 
+    
+    return train_df, valid_df, test_df, train_dates, valid_dates, test_df
+

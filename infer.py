@@ -6,7 +6,7 @@ from config import config as cf
 import numpy as np
 import torch.nn as nn
 import torch
-from model import Diff_1, Assembly_regression, Movement_3,Movement_7,Movement_14
+from model import Diff_1, Assemble, Movement_3,Movement_7,Movement_14
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 def test_random_forest_classfier(model, X_test, y_test):
@@ -20,11 +20,17 @@ def test_random_forest_classfier(model, X_test, y_test):
 
     return accuracy, f1
 
-def evalute_regression_1(dataset_val, features):
-    batch_size = cf["training"]["lstm_regression"]["batch_size"]
+def evalute_diff_1(dataset_val, features):
+
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = Diff_1()
+    model = Diff_1(
+        input_size = len(features),
+        window_size = cf["model"]["diff_1"]["window_size"],
+        lstm_hidden_layer_size = cf["model"]["diff_1"]["lstm_hidden_layer_size"], 
+        lstm_num_layers = cf["model"]["diff_1"]["lstm_num_layers"], 
+        output_steps = cf["model"]["diff_1"]["output_steps"]
+    )
     model_name = cf["alpha_vantage"]["symbol"] + "_" + "diff_1"
     
     checkpoint = torch.load('./models/' + model_name)
@@ -32,8 +38,9 @@ def evalute_regression_1(dataset_val, features):
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
     model.to("cuda")
+
     # create `DataLoader`
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_regression"]["batch_size"], shuffle=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["diff_1"]["batch_size"], shuffle=True, drop_last=True)
     num_data = len(val_dataloader) * val_dataloader.batch_size
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -69,11 +76,11 @@ def evalute_regression_1(dataset_val, features):
         RMSE_val_loss += loss3.detach().item()  / batchsize
 
 
-    print('Regressor MSE Valid loss:{:.6f}%, MAE Valid loss:{:.6f}%, RMSE Valid loss:{:.6f}%'
+    print('Diff 1 MSE Valid loss:{:.6f}%, MAE Valid loss:{:.6f}%, RMSE Valid loss:{:.6f}%'
                     .format(MSE_val_loss * 100 / num_data, 
                             MAE_val_loss * 100 / num_data,
                             RMSE_val_loss * 100 / num_data))
-    print('Regressor MSE Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
+    print('Diff MSE Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
                     .format(MSE_val_loss, 
                             MAE_val_loss,
                             RMSE_val_loss))
@@ -81,19 +88,19 @@ def evalute_regression_1(dataset_val, features):
     #                 .format(val_loss))
     return MSE_val_loss, MAE_val_loss, RMSE_val_loss, y_true, y_pred
 
-def evalute_assembly_regression(dataset_val):
+def evalute_assembly_regression(dataset_val, features):
     model_name = cf["alpha_vantage"]["symbol"] + "_" + "assemble_1"
-    batch_size = cf["training"]["lstm_regression"]["batch_size"]
+    batch_size = cf["training"]["assemble_1"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = Assembly_regression()
+    model = Assemble()
     checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
     model.to("cuda")
     # create `DataLoader`
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["lstm_regression"]["batch_size"], shuffle=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["assemble_1"]["batch_size"], shuffle=True, drop_last=True)
     num_data = len(val_dataloader) * val_dataloader.batch_size
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -305,7 +312,7 @@ def evalute_Movement_3(dataset_val, features):
     model.eval()
     model.to("cuda")
     # create `DataLoader`
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True, drop_last=True)
     num_data = len(val_dataloader) * val_dataloader.batch_size
     # define optimizer, scheduler and loss function
     criterion1 = nn.BCELoss()
@@ -412,7 +419,7 @@ def evalute_Movement_14(dataset_val, features):
     model.eval()
     model.to("cuda")
     # create `DataLoader`
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True, drop_last=True)
     num_data = len(val_dataloader) * val_dataloader.batch_size
     # define optimizer, scheduler and loss function
     criterion1 = nn.BCELoss()
