@@ -209,8 +209,11 @@ def correlation_filter(dataframe, main_columns, max_columns, threshold=0.5, show
         sns.heatmap(corr_filtered.astype(float), annot=False, cmap='coolwarm', center=0, vmin=-1, vmax=1, square=True)
         plt.title('Correlation Heatmap for Main Columns and Removed Columns in the Original DataFrame')
         plt.show()
-    
-    return result_df, result_df.columns.values
+    orgin_columns = set(dataframe.columns)
+    new_columns = set(result_df.columns)
+    mask = [True if col in new_columns else False for col in orgin_columns]
+
+    return result_df, result_df.columns.values, mask
 
 
 

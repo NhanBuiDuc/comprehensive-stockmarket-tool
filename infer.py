@@ -297,10 +297,7 @@ def evalute_Movement_3(dataset_val, features):
         window_size = cf["model"]["movement_3"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_3"]["output_steps"],
-        use_attn = cf["model"]["movement_3"]["use_attn"],
-        attn_num_heads = cf["model"]["movement_3"]["attn_num_heads"],
-        attn_multi_head_scaler = cf["model"]["movement_3"]["attn_multi_head_scaler"],
+        output_steps = cf["model"]["movement_3"]["output_steps"]
     )
     checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -354,10 +351,7 @@ def evalute_Movement_7(dataset_val, features):
         window_size = cf["model"]["movement_7"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_7"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_7"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_7"]["output_steps"],
-        use_attn = cf["model"]["movement_7"]["use_attn"],
-        attn_num_heads = cf["model"]["movement_7"]["attn_num_heads"],
-        attn_multi_head_scaler = cf["model"]["movement_7"]["attn_multi_head_scaler"],
+        output_steps = cf["model"]["movement_7"]["output_steps"]
     )
     checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -410,10 +404,7 @@ def evalute_Movement_14(dataset_val, features):
         window_size = cf["model"]["movement_14"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_14"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_14"]["output_steps"],
-        use_attn = cf["model"]["movement_14"]["use_attn"],
-        attn_num_heads = cf["model"]["movement_14"]["attn_num_heads"],
-        attn_multi_head_scaler = cf["model"]["movement_14"]["attn_multi_head_scaler"],
+        output_steps = cf["model"]["movement_14"]["output_steps"]
     )
     checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])

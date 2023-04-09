@@ -16,9 +16,10 @@ import sys
 from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, OneCycleLR
 from sklearn.svm import SVC
 from loss import Unified_Adversarial_Loss as UAL
-def train_assemble_model(dataset_train, dataset_val):
-    lr=cf["training"]["assemble_regressor"]["learning_rate"]
-    epochs=cf["training"]["assemble_regressor"]["num_epoch"]
+def train_assemble_model_1(dataset_train, dataset_val, features):
+    model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "assemble_1"
+    lr=cf["training"]["assemble_1"]["learning_rate"]
+    epochs=cf["training"]["assemble_1"]["num_epoch"]
     regression_model = model.Assembly_regression()
     regression_model.to("cuda")
     # create `DataLoader`
@@ -146,7 +147,7 @@ def train_random_forest_regressior(X_train, y_train):
     model.fit(X_train[:-1], y_train)
     return model
 
-def train_LSTM_regression_1 (dataset_train, dataset_val,features, is_training=True):
+def train_LSTM_regression_1 (dataset_train, dataset_val,features, mask, is_training=True):
     # use_attn = cf["model"]["diff_1"]["use_attn"],
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
@@ -209,7 +210,7 @@ def train_LSTM_regression_1 (dataset_train, dataset_val,features, is_training=Tr
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features=features)
+                            mask=mask)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -223,7 +224,7 @@ def train_LSTM_regression_1 (dataset_train, dataset_val,features, is_training=Tr
             break
     return diff_1
 
-def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
+def train_Movement_3(dataset_train, dataset_val, features, mask, is_training=True):
     # use_attn = cf["model"]["movement_3"]["use_attn"],
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_3"
@@ -272,7 +273,7 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features = features)
+                            mask = mask)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -287,7 +288,7 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
     return movement_3
 
 
-def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
+def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=True):
     # use_attn = cf["model"]["movement_7"]["use_attn"]
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_7"
@@ -336,7 +337,7 @@ def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features = features)
+                            mask = mask)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -462,7 +463,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
     return epoch_loss, lr
 
 
-def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate, features):
+def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate, mask):
     torch.save({
         'epoch': num_epochs,
         'model_state_dict': model.state_dict(),
@@ -470,7 +471,7 @@ def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss,
         'valid_loss': val_loss,
         'training_loss': training_loss,
         'learning_rate': learning_rate,
-        'features': features,        
+        'mask': mask,        
     }, "./models/" + name)
     
 def check_best_loss(best_loss, loss):

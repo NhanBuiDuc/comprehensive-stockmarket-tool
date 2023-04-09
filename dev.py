@@ -48,12 +48,12 @@ def train_random_tree_classifier_14(data_df, num_data_points, data_date):
     
 def train_assemble(data_df, num_data_points, data_date, is_train):
 
-    data_df.set_index('date', inplace=True)
     window_size = cf["model"]["assemble_1"]["window_size"]
     dataset_df = utils.prepare_dataset_and_indicators(data_df, window_size)
 
     # prepare y df
     close_df = pd.DataFrame({'close': dataset_df['close']})
+    features = data_df.columns.values
     close = close_df.to_numpy()
     n_row = len(dataset_df) - window_size
     # calculate y
@@ -93,9 +93,9 @@ def train_assemble(data_df, num_data_points, data_date, is_train):
     dataset_val = TimeSeriesDataset(X_val, y_val)
     dataset_test = TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_assemble_model(dataset_train, dataset_val)
-    infer.evalute_assembly_regression(dataset_val=dataset_val)
-    infer.evalute_assembly_regression(dataset_val=dataset_test)
+        train.train_assemble_model_1(dataset_train, dataset_val, features)
+    infer.evalute_assembly_regression(dataset_val=dataset_val , features = features)
+    infer.evalute_assembly_regression(dataset_val=dataset_test, features = features)
     to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, test_dates, val_dates)
 def train_diff_1(data_df, num_data_points, data_date, show_heat_map, is_train):
     window_size = cf["model"]["diff_1"]["window_size"]
@@ -158,7 +158,7 @@ def train_movement_3(data_df, num_data_points, data_date, show_heat_map, is_trai
     # temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
     temp_df["target_increasing"] = y_trend_percentage_3[:, 1:2]
     temp_df["target_percentage"] = y_trend_percentage_3[:, 2:]
-    dataset_df, features = utils.correlation_filter(dataframe=temp_df, 
+    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
                                                     main_columns=["target_increasing","target_percentage"], 
                                                     max_columns = max_features,
                                                     threshold=thresh_hold, 
@@ -182,7 +182,7 @@ def train_movement_3(data_df, num_data_points, data_date, show_heat_map, is_trai
     dataset_val_trend = Classification_TimeSeriesDataset(X_val, y_val)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_Movement_3(dataset_train_trend, dataset_val_trend, features)
+        train.train_Movement_3(dataset_train_trend, dataset_val_trend, features, mask)
     infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = features)
     infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = features)
     
@@ -295,7 +295,7 @@ if __name__ == "__main__":
     # train_random_tree_classifier_14(data_df, num_data_points, data_date)
 
     train_movement_3(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
-    train_movement_7(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
-    train_movement_14(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
-    train_diff_1(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
-    train_assemble(data_df, num_data_points, data_date, is_train = False)
+    # train_movement_7(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
+    # train_movement_14(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
+    # train_diff_1(data_df, num_data_points, data_date, show_heat_map = False, is_train = True)
+    # train_assemble(data_df, num_data_points, data_date, is_train = False)
