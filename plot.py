@@ -11,7 +11,7 @@ from matplotlib.pyplot import figure
 def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, test_dates, val_dates):
 
     test_model = model.Assemble()
-    checkpoint = torch.load('./models/assembly_regression')
+    checkpoint = torch.load('./models/assemble_1')
     test_model.load_state_dict(checkpoint['model_state_dict'])
     test_model.eval()
     test_model.to("cuda")

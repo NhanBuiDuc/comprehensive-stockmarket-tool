@@ -7,7 +7,7 @@ config = {
     },
     "data": {
         "window_size": 14,
-        "train_split_size": 0.80,
+        "train_split_size": 0.7,
         "smoothing": 2
     }, 
     "plots": {
@@ -70,8 +70,8 @@ config = {
         "assemble_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 1,
-            "num_epoch": 200,
+            "batch_size": 65,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 2000,
@@ -82,8 +82,8 @@ config = {
         "diff_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 1,
-            "num_epoch": 200,
+            "batch_size": 65,
+            "num_epoch": 1,
             "learning_rate": 0.1,
             "scheduler_step_size": 100,
             "patient": 2000,
@@ -94,20 +94,20 @@ config = {
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 200,
+            "batch_size": 65,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
-            "best_model": False,
+            "best_model": True,
             "early_stop": True,
-            "corr_thresh_hold": 0.0
+            "corr_thresh_hold": 0.1
         },
         "movement_7":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 1,
-            "num_epoch": 200,
+            "batch_size": 65,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -118,8 +118,8 @@ config = {
         "movement_14":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 1,
-            "num_epoch": 200,
+            "batch_size": 64,
+            "num_epoch": 1,
             "learning_rate": 0.1,
             "scheduler_step_size": 50,
             "patient": 500,

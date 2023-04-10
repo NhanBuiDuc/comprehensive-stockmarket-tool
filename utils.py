@@ -174,13 +174,14 @@ def correlation_filter(dataframe, main_columns, max_columns, threshold=0.5, show
     correlated_columns = []
     for column in main_columns:
         corr_matrix = dataframe.corr(method='spearman')
-        corr_values = corr_matrix[column].sort_values(ascending=False)
-        for col in corr_matrix:
-            if col not in correlated_columns and col not in main_columns:
-                if abs(corr_values[col]) > threshold:
-                    correlated_columns.append(col)
-        # correlated_columns += [col for col in corr_values[abs(corr_values) >= threshold].index.tolist() if col not in main_columns]
-    result_df = dataframe[correlated_columns[:max_columns]]
+        corr_values = corr_matrix[column]
+        # Sort the correlation values by their absolute value in descending order
+        sorted_corr_values = corr_values.abs().sort_values(ascending=False)
+        # Get the top half of the sorted correlation values that are not in the main columns and have not already been selected
+        correlated_cols = sorted_corr_values.index[~sorted_corr_values.index.isin(main_columns+correlated_columns)][:max_columns//len(main_columns)]
+        correlated_columns.extend(correlated_cols)
+    
+    result_df = dataframe[correlated_columns]
     if show_heat_map == True:
         heatmap_df = pd.concat([result_df, dataframe[main_columns]], axis=1)
         
