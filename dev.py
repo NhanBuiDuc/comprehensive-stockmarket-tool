@@ -46,7 +46,7 @@ def train_random_tree_classifier_14(data_df, num_data_points, data_date):
     # random_tree_classifier = train.train_random_forest_classfier(X_train, y_train, X_val, y_val, X_test, y_test)
     svm_classifier = train.train_svm_classfier(X_train, y_train, X_val, y_val, X_test, y_test)
     
-def train_assemble(data_df, 
+def  train_assemble(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
@@ -58,6 +58,11 @@ def train_assemble(data_df,
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
 
+    # date modified 
+    train_date = train_date[ int(len(train_date) - len(train_df)) :]
+    valid_date = valid_date[ int(len(valid_date) - len(valid_df)) :]
+
+    test_date = test_date[ int(len(test_date) - len(test_df)) :]
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
@@ -71,6 +76,11 @@ def train_assemble(data_df,
     y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
     y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size,output_size=1)
     y_test = utils.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(), window_size= window_size, output_size=1)
+
+    # date modified 
+    train_date = train_date[ int(len(train_date) - len(y_train)) :]
+    valid_date = valid_date[ int(len(valid_date) - len(y_valid)) :]
+    test_date = test_date[ int(len(test_date) - len(y_test)) :]
     # close_df and dataset_df should be the same
     X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
     X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)

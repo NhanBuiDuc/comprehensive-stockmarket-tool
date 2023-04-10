@@ -417,5 +417,5 @@ def split_train_valid_test_dataframe(data_df, num_data_points, data_dates):
     train_dates = train_valid_dates[:train_valid_split_index]
     valid_dates = train_valid_dates[train_valid_split_index:] 
     
-    return train_df, valid_df, test_df, train_dates, valid_dates, test_df
+    return train_df, valid_df, test_df, train_dates, valid_dates, test_dates
 
