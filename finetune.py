@@ -192,11 +192,12 @@ def train_movement_7(data_df,
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
 
+    full_features = train_df.columns.values
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
-
+    
     train_n_row = len(train_close_df) - window_size
     valid_n_row = len(valid_close_df) - window_size
     test_n_row = len(test_close_df) - window_size
@@ -232,9 +233,7 @@ def train_movement_7(data_df,
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if search:
-        train.train_Movement_7(dataset_train_trend, dataset_val_trend, features, mask)
-    infer.evalute_Movement_7(dataset_val=dataset_val_trend, features = features)
-    infer.evalute_Movement_7(dataset_val=dataset_test_trend, features = features)
+        gs.gridsearch_movement_7(dataset_train_trend, dataset_val_trend, full_features, mask)
 
 
 def train_movement_14(data_df, 
@@ -250,6 +249,8 @@ def train_movement_14(data_df,
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
+
+    full_features = train_df.columns.values
 
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
@@ -291,9 +292,7 @@ def train_movement_14(data_df,
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if search:
-        train.train_Movement_14(dataset_train_trend, dataset_val_trend, features, mask)
-    infer.evalute_Movement_14(dataset_val=dataset_val_trend, features = features)
-    infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = features)
+        gs.gridsearch_movement_14(dataset_train_trend, dataset_val_trend, full_features, mask)
 
 if __name__ == "__main__":
     data_df, num_data_points, data_dates = utils.download_data_api()
