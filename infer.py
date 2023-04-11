@@ -346,6 +346,8 @@ def evalute_Movement_3(dataset_val, features):
     print('Binary movement_3 infer percentage MSE loss:{:.6f}'
                     .format(mean_squared_error_val_loss))
 
+    cm = confusion_matrix(y_true, y_pred)
+    print(cm)
     return binary_cross_entropy_val_loss, mean_squared_error_val_loss
 
 def evalute_Movement_7(dataset_val, features):
@@ -399,6 +401,10 @@ def evalute_Movement_7(dataset_val, features):
                     .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
     print('Binary movement_7 infer percentage MSE loss:{:.6f}'
                     .format(mean_squared_error_val_loss))
+
+    # # Compute the confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    print(cm)
     return binary_cross_entropy_val_loss, mean_squared_error_val_loss
 
 def evalute_Movement_14(dataset_val, features):
@@ -437,7 +443,6 @@ def evalute_Movement_14(dataset_val, features):
 
         x = x.to("cuda")
         y = y.to("cuda")
-
 
         out = model(x)
         _, prob_predict = torch.max(out[:, :2], dim=1)

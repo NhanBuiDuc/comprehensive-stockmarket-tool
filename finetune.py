@@ -10,47 +10,13 @@ from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
 from plot import to_plot
 import pandas_ta as ta
+import gridsearch as gs
 
-def train_random_tree_classifier_14(data_df, num_data_points, data_date):
-    # data_df = utils.get_new_df(data_df, '2018-01-01')
-
-    sma = utils.SMA(data_df['4. close'].values, cf['data']['window_size'])
-    ema = utils.EMA(np.array(data_df['4. close']), cf['data']['smoothing'], cf['data']['window_size'])
-    rsi = utils.RSI(data_df, cf['data']['window_size'])
-    vwap = utils.VWAP(data_df, cf['data']['window_size'])
-    hma = utils.HMA(data_df['4. close'], cf['data']['window_size'])
-    upward = utils.upward(data_df['1. open'], data_df['4. close'])
-
-    dataset_df = pd.DataFrame({ 'close': data_df['4. close'],'upward': upward, 'sma' : sma, 'ema' : ema, 'rsi' : rsi, 'vwap' : vwap, 'hma' : hma})
-    dataset_df = dataset_df[15:]
-    X = dataset_df.to_numpy()
-
-    window_size = cf["data"]["window_size"]
-    n_row = X.shape[0] - window_size
-
-    close_df = pd.DataFrame({'close': dataset_df['close']})
-    close = close_df.to_numpy()
-    y_trend_14 = utils.prepare_tree_data_y_trend(n_row, close, 14)
-    X = X[:-14]
-    split_index = int(y_trend_14.shape[0]*cf["data"]["train_split_size"])
-
-    X_train_first = X[:split_index]
-    X_test = X[split_index:]
-    y_train_first = y_trend_14[:split_index]
-    y_test = y_trend_14[split_index:]
-    split_index = int(y_train_first.shape[0]*cf["data"]["train_split_size"])
-    X_train = X_train_first[:split_index]
-    X_val = X_train_first[split_index:]
-    y_train = y_train_first[:split_index]
-    y_val = y_train_first[split_index:]
-    # random_tree_classifier = train.train_random_forest_classfier(X_train, y_train, X_val, y_val, X_test, y_test)
-    svm_classifier = train.train_svm_classfier(X_train, y_train, X_val, y_val, X_test, y_test)
-    
 def  train_assemble(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False):
+                    data_dates, show_heat_map = False, search = False):
 
     window_size = cf["model"]["assemble_1"]["window_size"]
 
@@ -89,7 +55,7 @@ def  train_assemble(data_df,
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
-    if is_train:
+    if search:
         train.train_assemble_model_1(dataset_train, dataset_val, features = train_df.columns.values)
     infer.evalute_assembly_regression(dataset_val=dataset_val , features = train_df.columns.values)
     infer.evalute_assembly_regression(dataset_val=dataset_test, features = train_df.columns.values)
@@ -99,6 +65,8 @@ def train_diff_1(data_df,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
                     data_dates, show_heat_map = False, is_train = False):
+    
+
     window_size = cf["model"]["diff_1"]["window_size"]
     max_features = cf["model"]["diff_1"]["max_features"]
     thresh_hold = cf["training"]["diff_1"]["corr_thresh_hold"]
@@ -145,7 +113,7 @@ def train_diff_1(data_df,
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_LSTM_regression_1(dataset_train, dataset_val, features = features, mask = mask)
+        train.train_LSTM_regression_1(dataset_train, dataset_val, features = full_features, mask = mask)
     infer.evalute_diff_1(dataset_val=dataset_val, features=features)
     infer.evalute_diff_1(dataset_val=dataset_test, features=features)
 
@@ -153,7 +121,7 @@ def train_movement_3(data_df,
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False):
+                    data_dates, show_heat_map = False, search = False):
     
     window_size = cf["model"]["movement_3"]["window_size"]
     max_features = cf["model"]["movement_3"]["max_features"]
@@ -163,6 +131,7 @@ def train_movement_3(data_df,
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
 
+    full_features = train_df.columns.values
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
@@ -189,10 +158,10 @@ def train_movement_3(data_df,
                                                     main_columns=["target_increasing","target_percentage"], 
                                                     max_columns = max_features,
                                                     threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
-    train_df = train_df[features]
-    valid_df = valid_df[features]
-    test_df = test_df[features]
+                                                    show_heat_map = show_heat_map,)
+    # train_df = train_df[features]
+    # valid_df = valid_df[features]
+    # test_df = test_df[features]
 
     X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
     X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
@@ -202,10 +171,10 @@ def train_movement_3(data_df,
     dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
-    if is_train:
-        train.train_Movement_3(dataset_train_trend, dataset_val_trend, features, mask)
-    infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = features)
-    infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = features)
+    if search:
+        gs.gridsearch_movement_3(dataset_train_trend, dataset_val_trend, full_features, mask)
+    # infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = features)
+    # infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = features)
 
 
 
@@ -213,7 +182,7 @@ def train_movement_7(data_df,
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False):
+                    data_dates, show_heat_map = False, search = False):
     
     window_size = cf["model"]["movement_7"]["window_size"]
     max_features = cf["model"]["movement_7"]["max_features"]
@@ -262,7 +231,7 @@ def train_movement_7(data_df,
     dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
-    if is_train:
+    if search:
         train.train_Movement_7(dataset_train_trend, dataset_val_trend, features, mask)
     infer.evalute_Movement_7(dataset_val=dataset_val_trend, features = features)
     infer.evalute_Movement_7(dataset_val=dataset_test_trend, features = features)
@@ -272,7 +241,7 @@ def train_movement_14(data_df,
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False):
+                    data_dates, show_heat_map = False, search = False):
     
     window_size = cf["model"]["movement_14"]["window_size"]
     max_features = cf["model"]["movement_14"]["max_features"]
@@ -321,7 +290,7 @@ def train_movement_14(data_df,
     dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
-    if is_train:
+    if search:
         train.train_Movement_14(dataset_train_trend, dataset_val_trend, features, mask)
     infer.evalute_Movement_14(dataset_val=dataset_val_trend, features = features)
     infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = features)
@@ -339,17 +308,17 @@ if __name__ == "__main__":
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False)
+                    data_dates, show_heat_map = False, search = True)
     train_movement_7(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False)
+                    data_dates, show_heat_map = False, search = False)
     train_movement_14(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, search = True)
     # train_diff_1(data_df, 
     #                 num_data_points,
     #                 train_df, valid_df,
@@ -359,4 +328,4 @@ if __name__ == "__main__":
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, search = True)

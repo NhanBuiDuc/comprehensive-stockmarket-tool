@@ -6,7 +6,7 @@ config = {
         "key_adjusted_close": "5. adjusted close",
     },
     "data": {
-        "window_size": 14,
+        "window_size": 3,
         "train_split_size": 0.7,
         "smoothing": 2
     }, 
@@ -28,7 +28,8 @@ config = {
             "lstm_size": 7,
             "dropout": 0.2, 
             "output_steps": 3,
-            "window_size": 14  
+            "window_size": 14,
+
         },
         "movement_3":{
             "lstm_num_layers": 2,
@@ -36,23 +37,29 @@ config = {
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14,
-            "max_features": 10
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
         },
         "movement_7":{
             "lstm_num_layers": 2,
             "lstm_hidden_layer_size": 7,
             "dropout": 0.2, 
-            "output_steps": 3,
+            "output_steps": 7,
             "window_size": 14,
-            "max_features": 10
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
         },
         "movement_14":{
             "lstm_num_layers": 2,
             "lstm_hidden_layer_size": 7,
             "dropout": 0.2, 
-            "output_steps": 3,
+            "output_steps": 14,
             "window_size": 14,
-            "max_features": 10
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
         },
         "diff_1":{
             "lstm_num_layers": 2,
@@ -63,7 +70,7 @@ config = {
             "use_attn": True,
             "attn_num_heads": 3,
             "attn_multi_head_scaler": 1,
-            "max_features": 10
+            "max_features": 5
         },
     },
     "training": {
@@ -71,7 +78,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 65,
-            "num_epoch": 200,
+            "num_epoch": 300,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 2000,
@@ -82,10 +89,10 @@ config = {
         "diff_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 65,
-            "num_epoch": 200,
-            "learning_rate": 0.1,
-            "scheduler_step_size": 100,
+            "batch_size": 64,
+            "num_epoch": 300,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
             "patient": 2000,
             "best_model": False,
             "early_stop": True,
@@ -94,8 +101,8 @@ config = {
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 65,
-            "num_epoch": 200,
+            "batch_size": 64,
+            "num_epoch": 500,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -106,8 +113,8 @@ config = {
         "movement_7":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 65,
-            "num_epoch": 200,
+            "batch_size": 64,
+            "num_epoch": 500,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -119,10 +126,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 200,
-            "learning_rate": 0.1,
+            "num_epoch": 500,
+            "learning_rate": 0.01,
             "scheduler_step_size": 50,
-            "patient": 500,
+            "patient": 200,
             "best_model": False,
             "early_stop": True,
             "corr_thresh_hold": 0.5
