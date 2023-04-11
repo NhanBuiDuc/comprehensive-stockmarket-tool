@@ -6,7 +6,7 @@ config = {
         "key_adjusted_close": "5. adjusted close",
     },
     "data": {
-        "window_size": 3,
+        "window_size": 14,
         "train_split_size": 0.7,
         "smoothing": 2
     }, 
