@@ -169,7 +169,7 @@ def train_movement_3(data_df,
 
     dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
     dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
-    dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
+    # dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if search:
         gs.gridsearch_movement_3(dataset_train_trend, dataset_val_trend, full_features, mask)
