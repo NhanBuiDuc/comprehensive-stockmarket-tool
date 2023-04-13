@@ -312,7 +312,8 @@ class CausalDilatedConvNet(nn.Module):
         
         self.tcd_receptive_field_size = int( ((self.window_size + (self.kernel_size - 1) * sum(self.dilation_base ** i for i in range(self.num_layers)))) / (self.max_pooling_size))
         self.scd_receptive_field_size = int( (self.input_channels + (self.kernel_size - 1) * sum(self.dilation_base ** i for i in range(self.num_layers))) / (self.max_pooling_size))
-        self.c1d_receptive_field_size = int( (self.input_channels) / (self.max_pooling_size * 1))
+        # self.c1d_receptive_field_size = int(self.input_channels - 3 + 1)/ (self.max_pooling_size)
+        self.c1d_receptive_field_size = int((self.input_channels - 3 + 1)/ (self.max_pooling_size))
         self.f1d_receptive_field_size = int( (self.input_channels + (self.input_channels - 1) * (2 - 1)) / (self.max_pooling_size ** 1))
         self.receptive_field_size =  int(self.scd_receptive_field_size + self.c1d_receptive_field_size + self.f1d_receptive_field_size)
         
@@ -337,7 +338,7 @@ class CausalDilatedConvNet(nn.Module):
                                         padding = padding)
             self.spatial_dilation_layers.append(layer)
         for i in range(1):
-            kernel_size = 1
+            kernel_size = 3
             padding = 0
             layer = CausalConv1d(self.window_size, self.window_size, kernel_size = kernel_size, padding = padding)
             self.causal_1d_layers.append(layer)   
