@@ -1,7 +1,7 @@
 config = {
     "alpha_vantage": {
         "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "IBM",
+        "symbol": "JNJ",
         "outputsize": "full",
         "key_adjusted_close": "5. adjusted close",
     },

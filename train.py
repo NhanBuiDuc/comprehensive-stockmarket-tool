@@ -155,7 +155,7 @@ def train_random_forest_regressior(X_train, y_train):
     model.fit(X_train[:-1], y_train)
     return model
 
-def train_LSTM_regression_1 (dataset_train, dataset_val, features, mask, is_training=True):
+def train_LSTM_regression_1 (dataset_train, dataset_val, features, is_training=True):
     # use_attn = cf["model"]["diff_1"]["use_attn"],
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_diff_1"
@@ -218,8 +218,7 @@ def train_LSTM_regression_1 (dataset_train, dataset_val, features, mask, is_trai
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features = features,
-                            mask = mask)
+                            features = features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -233,7 +232,7 @@ def train_LSTM_regression_1 (dataset_train, dataset_val, features, mask, is_trai
             break
     return diff_1
 
-def train_Movement_3(dataset_train, dataset_val, features, mask, is_training=True):
+def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
     # use_attn = cf["model"]["movement_3"]["use_attn"],
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_3"
@@ -284,8 +283,7 @@ def train_Movement_3(dataset_train, dataset_val, features, mask, is_training=Tru
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features=features,                           
-                            mask = mask)
+                            features=features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -300,7 +298,7 @@ def train_Movement_3(dataset_train, dataset_val, features, mask, is_training=Tru
     return movement_3
 
 
-def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=True):
+def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
     # use_attn = cf["model"]["movement_7"]["use_attn"]
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_7"
@@ -351,8 +349,7 @@ def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=Tru
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features=features,
-                            mask = mask)
+                            features=features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
@@ -367,7 +364,7 @@ def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=Tru
     return movement_7
 
 
-def train_Movement_14(dataset_train, dataset_val, features, mask, is_training=True):
+def train_Movement_14(dataset_train, dataset_val, features, is_training=True):
     # use_attn = cf["model"]["movement_14"]["use_attn"]
     # if(use_attn):
     #     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "attn_movement_14"
@@ -418,8 +415,7 @@ def train_Movement_14(dataset_train, dataset_val, features, mask, is_training=Tr
                             val_loss=loss_val,
                             training_loss=loss_train,
                             learning_rate=lr_train,
-                            features=features,
-                            mask = mask)
+                            features=features)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
 
