@@ -10,11 +10,6 @@ from keras.layers import LSTM, Dense, Dropout
 from config import config as cf
 from keras.optimizers import Adam
 import numpy as np
-<<<<<<< HEAD
-def bench_mark_random_forest(dataset_train, dataset_val, dataset_test):
-    pass
-nhanhh gaaaaa con ga nhaaaannnn
-=======
 from sklearn.ensemble import RandomForestRegressor
 
 def bench_mark_random_forest(X_train, y_train, X_val, y_val, X_test, y_test):
@@ -32,7 +27,6 @@ def bench_mark_random_forest(X_train, y_train, X_val, y_val, X_test, y_test):
     # evaluate the regressor on the test data
     test_error = mean_squared_error(y_test, rf.predict(X_test))
 
->>>>>>> f5f3af045f2a76499e07eeee61e605822a495fd0
 def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test):
     model = Sequential()
 
@@ -51,4 +45,5 @@ def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test):
 
     history_LSTM = model.fit(X_train, y_train, epochs=100, batch_size=cf['training']['movement_3']['batch_size'], validation_data=(X_val, y_val))
     loss, _ = model.evaluate(X_test, y_test)
+    print('Test Loss MSE: ', loss)
     return model, history_LSTM, loss
