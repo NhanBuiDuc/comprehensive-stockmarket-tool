@@ -190,9 +190,9 @@ def train_movement_3(data_df,
                                                     max_columns = max_features,
                                                     threshold=thresh_hold, 
                                                     show_heat_map = show_heat_map)
-    train_df = train_df[features]
-    valid_df = valid_df[features]
-    test_df = test_df[features]
+    # train_df = train_df[features]
+    # valid_df = valid_df[features]
+    # test_df = test_df[features]
 
     X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
     X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
@@ -250,9 +250,9 @@ def train_movement_7(data_df,
                                                     max_columns = max_features,
                                                     threshold=thresh_hold, 
                                                     show_heat_map = show_heat_map)
-    train_df = train_df[features]
-    valid_df = valid_df[features]
-    test_df = test_df[features]
+    # train_df = train_df[features]
+    # valid_df = valid_df[features]
+    # test_df = test_df[features]
 
     X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
     X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
@@ -309,9 +309,9 @@ def train_movement_14(data_df,
                                                     max_columns = max_features,
                                                     threshold=thresh_hold, 
                                                     show_heat_map = show_heat_map)
-    train_df = train_df[features]
-    valid_df = valid_df[features]
-    test_df = test_df[features]
+    # train_df = train_df[features]
+    # valid_df = valid_df[features]
+    # test_df = test_df[features]
 
     X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
     X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
@@ -339,12 +339,12 @@ if __name__ == "__main__":
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False)
+                    data_dates, show_heat_map = False, is_train = True)
     train_movement_7(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False)
+                    data_dates, show_heat_map = False, is_train = True)
     train_movement_14(data_df, 
                     num_data_points,
                     train_df, valid_df,

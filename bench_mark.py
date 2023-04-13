@@ -11,7 +11,7 @@ import infer
 from plot import to_plot
 import pandas_ta as ta
 from bench_mark_model import bench_mark_random_forest, create_lstm_model
-
+import tensorflow as tf
 def train_random_forest(data_df, 
                     num_data_points,
                     train_df, valid_df,
@@ -100,10 +100,11 @@ def train_lstm(data_df,
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
-    val_error, test_error = create_lstm_model(dataset_train.x, dataset_train.y, dataset_val.x, dataset_val.y,
+    model, history_LSTM, loss = create_lstm_model(dataset_train.x, dataset_train.y, dataset_val.x, dataset_val.y,
                                             dataset_test.x, dataset_test.y)
-    print("val_error", val_error)
-    print("test_error", test_error) 
+    tf.keras.models.save_model(model, './lstm.h5', save_format='h5')
+
+    print("test_error", loss) 
 
 if __name__ == "__main__":
     data_df, num_data_points, data_dates = utils.download_data_api()

@@ -12,7 +12,7 @@ def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, te
 
     test_model = model.Assemble()
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "assemble_1"
-    checkpoint = torch.load('./models/' + model_name)
+    checkpoint = torch.load('./models_IBM/' + model_name)
     test_model.load_state_dict(checkpoint['model_state_dict'])
     test_model.eval()
     test_model.to("cuda")

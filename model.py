@@ -27,7 +27,7 @@ class Assemble(nn.Module):
         # self.regression_model.load_state_dict(checkpoint['model_state_dict'])
         # Diff 3
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
-        checkpoint = torch.load('./models/' + model_name)
+        checkpoint = torch.load('./models_IBM/' + model_name)
         self.forecasting_data_features_3 = checkpoint['features']
         self.forecasting_data_mask_3 = checkpoint['mask']
         self.forecasting_model_3 = m.Movement_3(
@@ -35,12 +35,14 @@ class Assemble(nn.Module):
             window_size = cf["model"]["movement_3"]["window_size"],
             lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
             lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
-            output_steps = cf["model"]["movement_3"]["output_steps"]
+            output_steps = cf["model"]["movement_3"]["output_steps"],
+            kernel_size=4,
+            dilation_base=3
         )
         self.forecasting_model_3.load_state_dict(checkpoint['model_state_dict'])
         #Diff 7
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
-        checkpoint = torch.load('./models/' + model_name)
+        checkpoint = torch.load('./models_IBM/' + model_name)
         self.forecasting_data_features_7 = checkpoint['features']
         self.forecasting_data_mask_7 = checkpoint['mask']
         self.forecasting_model_7 = m.Movement_7(
@@ -48,14 +50,16 @@ class Assemble(nn.Module):
             window_size = cf["model"]["movement_7"]["window_size"],
             lstm_hidden_layer_size = cf["model"]["movement_7"]["lstm_hidden_layer_size"], 
             lstm_num_layers = cf["model"]["movement_7"]["lstm_num_layers"], 
-            output_steps = cf["model"]["movement_7"]["output_steps"]
+            output_steps = cf["model"]["movement_7"]["output_steps"],
+            kernel_size=4,
+            dilation_base=3
         )
         self.forecasting_model_7.load_state_dict(checkpoint['model_state_dict'])
 
 
         # Diff 14
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
-        checkpoint = torch.load('./models/' + model_name)
+        checkpoint = torch.load('./models_IBM/' + model_name)
         self.forecasting_data_features_14 = checkpoint['features']
         self.forecasting_data_mask_14 = checkpoint['mask']
         self.forecasting_model_14 = m.Movement_14(
@@ -63,7 +67,9 @@ class Assemble(nn.Module):
             window_size = cf["model"]["movement_14"]["window_size"],
             lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
             lstm_num_layers = cf["model"]["movement_14"]["lstm_num_layers"], 
-            output_steps = cf["model"]["movement_14"]["output_steps"]
+            output_steps = cf["model"]["movement_14"]["output_steps"],
+            kernel_size=4,
+            dilation_base=3
         )
         self.forecasting_model_14.load_state_dict(checkpoint['model_state_dict'])
 
@@ -80,11 +86,11 @@ class Assemble(nn.Module):
         batch_size = x.shape[0]
 
         x1 = x.clone()
-        x1 = x1[:, :, self.forecasting_data_mask_3]
+        #x1 = x1[:, :, self.forecasting_data_mask_3]
         x2 = x.clone()
-        x2 = x2[:, :, self.forecasting_data_mask_7]
+        #x2 = x2[:, :, self.forecasting_data_mask_7]
         x3 = x.clone()
-        x3 = x3[:, :, self.forecasting_data_mask_14]
+        #x3 = x3[:, :, self.forecasting_data_mask_14]
         # x4 = x.clone()
         # x4 = x4[:, :, self.regression_data_mask_1]
 
@@ -171,8 +177,9 @@ class Movement_3(nn.Module):
         x[:, :2] = self.softmax(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
+
 class Movement_7(nn.Module):
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, kernel_size, dilation_base):
         super().__init__()
         self.input_size = input_size
         self.input_shape = (window_size, input_size)
@@ -181,9 +188,8 @@ class Movement_7(nn.Module):
         self.lstm_num_layers = lstm_num_layers
         self.output_steps = output_steps
         self.autoencoder_final_dim = 32
-
-        self.kernel_size = 4
-        self.dilation_base = 3
+        self.kernel_size = kernel_size
+        self.dilation_base = dilation_base
 
         self.autoencoder = CausalDilatedConvNet(window_size= self.window_size,
                                                 input_channels = self.input_size,
@@ -219,7 +225,7 @@ class Movement_7(nn.Module):
         x[:, 2:] = self.relu(x[:, 2:])
         return x
 class Movement_14(nn.Module):
-    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps):
+    def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, kernel_size, dilation_base):
         super().__init__()
         self.input_size = input_size
         self.input_shape = (window_size, input_size)
@@ -228,9 +234,8 @@ class Movement_14(nn.Module):
         self.lstm_num_layers = lstm_num_layers
         self.output_steps = output_steps
         self.autoencoder_final_dim = 32
-
-        self.kernel_size = 4
-        self.dilation_base = 3
+        self.kernel_size = kernel_size
+        self.dilation_base = dilation_base
 
         self.autoencoder = CausalDilatedConvNet(window_size= self.window_size,
                                                 input_channels = self.input_size,

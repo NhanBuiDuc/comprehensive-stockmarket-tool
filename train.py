@@ -243,7 +243,9 @@ def train_Movement_3(dataset_train, dataset_val, features, mask, is_training=Tru
         window_size = cf["model"]["movement_3"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_3"]["output_steps"]
+        output_steps = cf["model"]["movement_3"]["output_steps"],
+        kernel_size=4,
+        dilation_base=3
     )
     movement_3.to("cuda")
     # create `DataLoader`
@@ -308,7 +310,9 @@ def train_Movement_7(dataset_train, dataset_val, features, mask, is_training=Tru
         window_size = cf["model"]["movement_7"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_7"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_7"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_7"]["output_steps"]
+        output_steps = cf["model"]["movement_7"]["output_steps"],
+        kernel_size=4,
+        dilation_base=3
     )
     movement_7.to("cuda")
     # create `DataLoader`
@@ -373,7 +377,9 @@ def train_Movement_14(dataset_train, dataset_val, features, mask, is_training=Tr
         window_size = cf["model"]["movement_14"]["window_size"],
         lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
         lstm_num_layers = cf["model"]["movement_14"]["lstm_num_layers"], 
-        output_steps = cf["model"]["movement_14"]["output_steps"]
+        output_steps = cf["model"]["movement_14"]["output_steps"],
+        kernel_size=4,
+        dilation_base=3
     )
     movement_14.to("cuda")
     # create `DataLoader`
@@ -485,7 +491,7 @@ def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss,
         'learning_rate': learning_rate,
         'features': features,
         'mask': mask,        
-    }, "./models/" + name)
+    }, "./models_IBM/" + name)
     
 def check_best_loss(best_loss, loss):
     if loss < best_loss:
