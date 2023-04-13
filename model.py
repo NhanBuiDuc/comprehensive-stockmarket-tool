@@ -27,9 +27,8 @@ class Assemble(nn.Module):
         # self.regression_model.load_state_dict(checkpoint['model_state_dict'])
         # Diff 3
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
-        checkpoint = torch.load('./models_IBM/' + model_name)
+        checkpoint = torch.load('./models/' + model_name)
         self.forecasting_data_features_3 = checkpoint['features']
-        self.forecasting_data_mask_3 = checkpoint['mask']
         self.forecasting_model_3 = m.Movement_3(
             input_size = len(self.forecasting_data_features_3),
             window_size = cf["model"]["movement_3"]["window_size"],
@@ -42,9 +41,9 @@ class Assemble(nn.Module):
         self.forecasting_model_3.load_state_dict(checkpoint['model_state_dict'])
         #Diff 7
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
-        checkpoint = torch.load('./models_IBM/' + model_name)
+        checkpoint = torch.load('./models/' + model_name)
         self.forecasting_data_features_7 = checkpoint['features']
-        self.forecasting_data_mask_7 = checkpoint['mask']
+        # self.forecasting_data_mask_7 = checkpoint['mask']
         self.forecasting_model_7 = m.Movement_7(
             input_size = len(self.forecasting_data_features_3),
             window_size = cf["model"]["movement_7"]["window_size"],
@@ -59,9 +58,9 @@ class Assemble(nn.Module):
 
         # Diff 14
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
-        checkpoint = torch.load('./models_IBM/' + model_name)
+        checkpoint = torch.load('./models/' + model_name)
         self.forecasting_data_features_14 = checkpoint['features']
-        self.forecasting_data_mask_14 = checkpoint['mask']
+        # self.forecasting_data_mask_14 = checkpoint['mask']
         self.forecasting_model_14 = m.Movement_14(
             input_size = len(self.forecasting_data_features_3),
             window_size = cf["model"]["movement_14"]["window_size"],

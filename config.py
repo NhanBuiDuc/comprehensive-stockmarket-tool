@@ -1,7 +1,7 @@
 config = {
     "alpha_vantage": {
         "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "IBM",
+        "symbol": "JNJ",
         "outputsize": "full",
         "key_adjusted_close": "5. adjusted close",
     },
@@ -78,7 +78,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 200,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -102,7 +102,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 200,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -114,7 +114,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 200,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -126,7 +126,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 200,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,

@@ -137,15 +137,15 @@ def train_diff_1(data_df,
     valid_df = valid_df[features]
     test_df = test_df[features]
 
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
 
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_LSTM_regression_1(dataset_train, dataset_val, features = full_features, mask = mask)
+        train.train_LSTM_regression_1(dataset_train, dataset_val, features = full_features)
     infer.evalute_diff_1(dataset_val=dataset_val, features=full_features)
     infer.evalute_diff_1(dataset_val=dataset_test, features=full_features)
 
@@ -195,16 +195,16 @@ def train_movement_3(data_df,
     # valid_df = valid_df[features]
     # test_df = test_df[features]
 
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
 
     dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
     dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if is_train:
-        train.train_Movement_3(dataset_train_trend, dataset_val_trend, full_features, mask)
+        train.train_Movement_3(dataset_train_trend, dataset_val_trend, full_features)
     infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = full_features)
     infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = full_features)
 
@@ -243,28 +243,28 @@ def train_movement_7(data_df,
     # because It has no X until form a window size of data
     temp_df = train_df.copy()[window_size:]
 
-    temp_df["target_increasing"] = y_train[:, 1:2]
-    temp_df["target_percentage"] = y_train[:, 2:]
+    # temp_df["target_increasing"] = y_train[:, 1:2]
+    # temp_df["target_percentage"] = y_train[:, 2:]
 
-    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    # temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
+    #                                                 main_columns=["target_increasing","target_percentage"], 
+    #                                                 max_columns = max_features,
+    #                                                 threshold=thresh_hold, 
+    #                                                 show_heat_map = show_heat_map)
     # train_df = train_df[features]
     # valid_df = valid_df[features]
     # test_df = test_df[features]
 
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
 
     dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
     dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if is_train:
-        train.train_Movement_7(dataset_train_trend, dataset_val_trend, full_features, mask)
+        train.train_Movement_7(dataset_train_trend, dataset_val_trend, full_features)
     infer.evalute_Movement_7(dataset_val=dataset_val_trend, features = full_features)
     infer.evalute_Movement_7(dataset_val=dataset_test_trend, features = full_features)
 
@@ -301,30 +301,30 @@ def train_movement_14(data_df,
     # copy dataframe
     # to merge targets to dataframe we need to drop first 14 targets 
     # because It has no X until form a window size of data
-    temp_df = train_df.copy()[window_size:]
+    # temp_df = train_df.copy()[window_size:]
 
-    temp_df["target_increasing"] = y_train[:, 1:2]
-    temp_df["target_percentage"] = y_train[:, 2:]
+    # temp_df["target_increasing"] = y_train[:, 1:2]
+    # temp_df["target_percentage"] = y_train[:, 2:]
 
-    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    # temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
+    #                                                 main_columns=["target_increasing","target_percentage"], 
+    #                                                 max_columns = max_features,
+    #                                                 threshold=thresh_hold, 
+    #                                                 show_heat_map = show_heat_map)
     # train_df = train_df[features]
     # valid_df = valid_df[features]
     # test_df = test_df[features]
 
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
 
     dataset_train_trend = Classification_TimeSeriesDataset(X_train, y_train)
     dataset_val_trend = Classification_TimeSeriesDataset(X_valid, y_valid)
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if is_train:
-        train.train_Movement_14(dataset_train_trend, dataset_val_trend, full_features, mask)
+        train.train_Movement_14(dataset_train_trend, dataset_val_trend, full_features)
     infer.evalute_Movement_14(dataset_val=dataset_val_trend, features = full_features)
     infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = full_features)
 
@@ -352,11 +352,6 @@ if __name__ == "__main__":
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
                     data_dates, show_heat_map = False, is_train = True)
-    # train_diff_1(data_df, 
-    #                 num_data_points,
-    #                 train_df, valid_df,
-    #                 test_df, train_date,valid_date, test_date,
-    #                 data_dates, show_heat_map = False, is_train = True)
     train_assemble(data_df, 
                     num_data_points,
                     train_df, valid_df,
