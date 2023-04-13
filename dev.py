@@ -106,7 +106,7 @@ def train_diff_1(data_df,
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
-
+    full_features = train_df.columns.values
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
@@ -145,9 +145,9 @@ def train_diff_1(data_df,
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
     if is_train:
-        train.train_LSTM_regression_1(dataset_train, dataset_val, features = features, mask = mask)
-    infer.evalute_diff_1(dataset_val=dataset_val, features=features)
-    infer.evalute_diff_1(dataset_val=dataset_test, features=features)
+        train.train_LSTM_regression_1(dataset_train, dataset_val, features = full_features, mask = mask)
+    infer.evalute_diff_1(dataset_val=dataset_val, features=full_features)
+    infer.evalute_diff_1(dataset_val=dataset_test, features=full_features)
 
 def train_movement_3(data_df, 
                     num_data_points,
@@ -163,6 +163,7 @@ def train_movement_3(data_df,
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
 
+    full_features = train_df.columns.values
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
@@ -203,9 +204,9 @@ def train_movement_3(data_df,
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if is_train:
-        train.train_Movement_3(dataset_train_trend, dataset_val_trend, features, mask)
-    infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = features)
-    infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = features)
+        train.train_Movement_3(dataset_train_trend, dataset_val_trend, full_features, mask)
+    infer.evalute_Movement_3(dataset_val=dataset_val_trend, features = full_features)
+    infer.evalute_Movement_3(dataset_val=dataset_test_trend, features = full_features)
 
 
 
@@ -222,7 +223,7 @@ def train_movement_7(data_df,
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
-
+    full_features = train_df.columns.values
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
@@ -263,9 +264,9 @@ def train_movement_7(data_df,
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if is_train:
-        train.train_Movement_7(dataset_train_trend, dataset_val_trend, features, mask)
-    infer.evalute_Movement_7(dataset_val=dataset_val_trend, features = features)
-    infer.evalute_Movement_7(dataset_val=dataset_test_trend, features = features)
+        train.train_Movement_7(dataset_train_trend, dataset_val_trend, full_features, mask)
+    infer.evalute_Movement_7(dataset_val=dataset_val_trend, features = full_features)
+    infer.evalute_Movement_7(dataset_val=dataset_test_trend, features = full_features)
 
 
 def train_movement_14(data_df, 
@@ -282,6 +283,7 @@ def train_movement_14(data_df,
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
 
+    full_features = train_df.columns.values
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
@@ -322,9 +324,9 @@ def train_movement_14(data_df,
     dataset_test_trend = Classification_TimeSeriesDataset(X_test, y_test)
 
     if is_train:
-        train.train_Movement_14(dataset_train_trend, dataset_val_trend, features, mask)
-    infer.evalute_Movement_14(dataset_val=dataset_val_trend, features = features)
-    infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = features)
+        train.train_Movement_14(dataset_train_trend, dataset_val_trend, full_features, mask)
+    infer.evalute_Movement_14(dataset_val=dataset_val_trend, features = full_features)
+    infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = full_features)
 
 if __name__ == "__main__":
     data_df, num_data_points, data_dates = utils.download_data_api()
