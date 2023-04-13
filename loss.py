@@ -12,10 +12,10 @@ class Unified_Adversarial_Loss(nn.Module):
     def forward(self, output, target):
 
         # Calculate the binary cross-entropy loss for the classification part
-        bce_loss = self.bce_loss(output[:, :2].clone(), target[:, :2].clone())
+        bce_loss = self.bce_loss(output[:, :2], target[:, :2])
 
         # Calculate the mean squared error loss for the regression part
-        mse_loss = self.mse_loss(output[:, 2:].clone(), target[:, 2:].clone())
+        mse_loss = self.mse_loss(output[:, 2:], target[:, 2:])
 
         # Calculate the hard negative loss for the classification part
         target_cls_int = torch.argmax(target[:, :2].clone(), dim=1)  # Convert the one-hot encoding to integers
