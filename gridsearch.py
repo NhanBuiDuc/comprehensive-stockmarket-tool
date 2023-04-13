@@ -24,10 +24,10 @@ def save_best_param(model_name, best_params, best_score):
 
 def gridsearch_movement_3(dataset_train, dataset_val, features, mask, is_training=True):
     param_grid = {
-        'lstm_hidden_layer_size': [16, 32, 64],
+        'lstm_hidden_layer_size': [16, 32, 64, 128],
         'lstm_num_layers': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'kernel_size': [3, 4, 5, 6, 7, 8, 9, 10],
-        'dilation_base': [2, 3, 4, 5, 6, 7, 8, 9, 10]
+        'kernel_size': [3, 4, 5,],
+        'dilation_base': [3, 4, 5]
     }
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
     # calculate number of combinations to test
