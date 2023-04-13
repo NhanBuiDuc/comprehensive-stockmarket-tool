@@ -110,11 +110,11 @@ if __name__ == "__main__":
     data_df, num_data_points, data_dates = utils.download_data_api()
     data_df.set_index('date', inplace=True)
     train_df, valid_df, test_df, train_date, valid_date, test_date = utils.split_train_valid_test_dataframe(data_df, num_data_points, data_dates)
-    # train_random_forest(data_df, 
-    #                 num_data_points,
-    #                 train_df, valid_df,
-    #                 test_df, train_date,valid_date, test_date,
-    #                 data_dates, show_heat_map = False, is_train = True)
+    train_random_forest(data_df, 
+                    num_data_points,
+                    train_df, valid_df,
+                    test_df, train_date,valid_date, test_date,
+                    data_dates, show_heat_map = False, is_train = True)
     train_lstm(data_df, 
                     num_data_points,
                     train_df, valid_df,

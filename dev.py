@@ -158,7 +158,7 @@ def train_movement_3(data_df,
     window_size = cf["model"]["movement_3"]["window_size"]
     max_features = cf["model"]["movement_3"]["max_features"]
     thresh_hold = cf["training"]["movement_3"]["corr_thresh_hold"]
-
+    output_step = cf["model"]["movement_3"]["output_steps"]
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
@@ -169,9 +169,9 @@ def train_movement_3(data_df,
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
-    train_n_row = len(train_close_df) - window_size
-    valid_n_row = len(valid_close_df) - window_size
-    test_n_row = len(test_close_df) - window_size
+    train_n_row = len(train_close_df) - window_size - output_step
+    valid_n_row = len(valid_close_df) - window_size - output_step
+    test_n_row = len(test_close_df) - window_size - output_step 
 
     # calculate y
     y_train = utils.prepare_timeseries_data_y_trend_percentage(train_n_row, train_close_df.to_numpy(), output_size = 3)
@@ -181,16 +181,16 @@ def train_movement_3(data_df,
     # copy dataframe
     # to merge targets to dataframe we need to drop first 14 targets 
     # because It has no X until form a window size of data
-    temp_df = train_df.copy()[window_size:]
+    # temp_df = train_df.copy()[window_size:]
 
-    temp_df["target_increasing"] = y_train[:, 1:2]
-    temp_df["target_percentage"] = y_train[:, 2:]
+    # temp_df["target_increasing"] = y_train[:, 1:2]
+    # temp_df["target_percentage"] = y_train[:, 2:]
 
-    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    # temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
+    #                                                 main_columns=["target_increasing","target_percentage"], 
+    #                                                 max_columns = max_features,
+    #                                                 threshold=thresh_hold, 
+    #                                                 show_heat_map = show_heat_map)
     # train_df = train_df[features]
     # valid_df = valid_df[features]
     # test_df = test_df[features]
@@ -219,7 +219,7 @@ def train_movement_7(data_df,
     window_size = cf["model"]["movement_7"]["window_size"]
     max_features = cf["model"]["movement_7"]["max_features"]
     thresh_hold = cf["training"]["movement_7"]["corr_thresh_hold"]
-
+    output_step = cf["model"]["movement_7"]["output_steps"]
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
@@ -229,9 +229,9 @@ def train_movement_7(data_df,
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
-    train_n_row = len(train_close_df) - window_size
-    valid_n_row = len(valid_close_df) - window_size
-    test_n_row = len(test_close_df) - window_size
+    train_n_row = len(train_close_df) - window_size - output_step 
+    valid_n_row = len(valid_close_df) - window_size - output_step 
+    test_n_row = len(test_close_df) - window_size - output_step 
 
     # calculate y
     y_train = utils.prepare_timeseries_data_y_trend_percentage(train_n_row, train_close_df.to_numpy(), output_size = 7)
@@ -278,7 +278,7 @@ def train_movement_14(data_df,
     window_size = cf["model"]["movement_14"]["window_size"]
     max_features = cf["model"]["movement_14"]["max_features"]
     thresh_hold = cf["training"]["movement_14"]["corr_thresh_hold"]
-
+    output_step = cf["model"]["movement_14"]["output_steps"]
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
@@ -289,9 +289,9 @@ def train_movement_14(data_df,
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
-    train_n_row = len(train_close_df) - window_size
-    valid_n_row = len(valid_close_df) - window_size
-    test_n_row = len(test_close_df) - window_size
+    train_n_row = len(train_close_df) - window_size - output_step 
+    valid_n_row = len(valid_close_df) - window_size - output_step 
+    test_n_row = len(test_close_df) - window_size - output_step 
 
     # calculate y
     y_train = utils.prepare_timeseries_data_y_trend_percentage(train_n_row, train_close_df.to_numpy(), output_size = 14)
