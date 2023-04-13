@@ -27,7 +27,7 @@ class Assemble(nn.Module):
         # self.regression_model.load_state_dict(checkpoint['model_state_dict'])
         # Diff 3
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
-        checkpoint = torch.load('./models/' + model_name)
+        checkpoint = torch.load('./models_IBM/' + model_name)
         self.forecasting_data_features_3 = checkpoint['features']
         self.forecasting_data_mask_3 = checkpoint['mask']
         self.forecasting_model_3 = m.Movement_3(
@@ -42,7 +42,7 @@ class Assemble(nn.Module):
         self.forecasting_model_3.load_state_dict(checkpoint['model_state_dict'])
         #Diff 7
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
-        checkpoint = torch.load('./models/' + model_name)
+        checkpoint = torch.load('./models_IBM/' + model_name)
         self.forecasting_data_features_7 = checkpoint['features']
         self.forecasting_data_mask_7 = checkpoint['mask']
         self.forecasting_model_7 = m.Movement_7(
@@ -59,7 +59,7 @@ class Assemble(nn.Module):
 
         # Diff 14
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
-        checkpoint = torch.load('./models/' + model_name)
+        checkpoint = torch.load('./models_IBM/' + model_name)
         self.forecasting_data_features_14 = checkpoint['features']
         self.forecasting_data_mask_14 = checkpoint['mask']
         self.forecasting_model_14 = m.Movement_14(
@@ -86,11 +86,11 @@ class Assemble(nn.Module):
         batch_size = x.shape[0]
 
         x1 = x.clone()
-        x1 = x1[:, :, self.forecasting_data_mask_3]
+        #x1 = x1[:, :, self.forecasting_data_mask_3]
         x2 = x.clone()
-        x2 = x2[:, :, self.forecasting_data_mask_7]
+        #x2 = x2[:, :, self.forecasting_data_mask_7]
         x3 = x.clone()
-        x3 = x3[:, :, self.forecasting_data_mask_14]
+        #x3 = x3[:, :, self.forecasting_data_mask_14]
         # x4 = x.clone()
         # x4 = x4[:, :, self.regression_data_mask_1]
 

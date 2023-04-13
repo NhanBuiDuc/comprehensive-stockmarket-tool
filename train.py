@@ -491,7 +491,7 @@ def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss,
         'learning_rate': learning_rate,
         'features': features,
         'mask': mask,        
-    }, "./models/" + name)
+    }, "./models_IBM/" + name)
     
 def check_best_loss(best_loss, loss):
     if loss < best_loss:

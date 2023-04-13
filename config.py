@@ -1,7 +1,7 @@
 config = {
     "alpha_vantage": {
         "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "MSFT",
+        "symbol": "IBM",
         "outputsize": "full",
         "key_adjusted_close": "5. adjusted close",
     },
@@ -24,16 +24,16 @@ config = {
     "model": {
         "assemble_1":{
             "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 7,
+            "num_lstm_layers": 5,
+            "lstm_size": 64,
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14,
 
         },
         "movement_3":{
-            "lstm_num_layers": 2,
-            "lstm_hidden_layer_size": 7,
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14,
@@ -42,8 +42,8 @@ config = {
             "dilation_base": 3
         },
         "movement_7":{
-            "lstm_num_layers": 2,
-            "lstm_hidden_layer_size": 7,
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
             "dropout": 0.2, 
             "output_steps": 7,
             "window_size": 14,
@@ -52,8 +52,8 @@ config = {
             "dilation_base": 3
         },
         "movement_14":{
-            "lstm_num_layers": 2,
-            "lstm_hidden_layer_size": 7,
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
             "dropout": 0.2, 
             "output_steps": 14,
             "window_size": 14,
@@ -78,10 +78,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
-            "patient": 2000,
+            "patient": 200,
             "best_model": False,
             "early_stop": True,
             "corr_thresh_hold": 0.1
@@ -90,10 +90,10 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
-            "patient": 2000,
+            "patient": 200,
             "best_model": False,
             "early_stop": True,
             "corr_thresh_hold": 0.1
@@ -102,7 +102,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -114,7 +114,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -126,7 +126,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
