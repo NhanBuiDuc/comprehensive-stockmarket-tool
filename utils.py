@@ -135,12 +135,12 @@ def prepare_timeseries_data_y_trend(num_rows, data, output_size):
     return output
 def prepare_timeseries_data_y_trend_percentage(num_rows, data, output_size):
     output = np.empty((num_rows, 3))
-    window_size = cf["model"]["movement_3"]["window_size"]
+    window_size = cf["data"]["window_size"]
     # Iterate over original array and extract windows of size 3
     # (0,1,p) means up
     # (1,0,p) means down
-    for i in range(num_rows - 1 - window_size):
-        change_percentage =  (( data[i + window_size + output_size] - data[window_size + i] ) * 100 ) / data[window_size + i]
+    for i in range(num_rows - 1 - window_size - output_size):
+        change_percentage =  (( data[i + window_size + output_size - 1] - data[window_size + i - 1] ) * 100 ) / data[window_size + i - 1]
         # Go up
         if((change_percentage > 0)):
             output[i] = (0, 1, abs(change_percentage))
