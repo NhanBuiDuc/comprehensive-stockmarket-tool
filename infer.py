@@ -33,7 +33,7 @@ def evalute_diff_1(dataset_val, features):
     )
     model_name = cf["alpha_vantage"]["symbol"] + "_" + "diff_1"
     
-    checkpoint = torch.load('./models_IBM/' + model_name)
+    checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
@@ -94,7 +94,7 @@ def evalute_assembly_regression(dataset_val, features):
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
     model = Assemble()
-    checkpoint = torch.load('./models_IBM/' + model_name)
+    checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
@@ -213,7 +213,7 @@ def evalute_Movement_3(dataset_val, features):
         dilation_base=3
 
     )
-    checkpoint = torch.load('./models_IBM/' + model_name)
+    checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
@@ -271,7 +271,7 @@ def evalute_Movement_7(dataset_val, features):
         kernel_size=4,
         dilation_base=3
     )
-    checkpoint = torch.load('./models_IBM/' + model_name)
+    checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
@@ -330,7 +330,7 @@ def evalute_Movement_14(dataset_val, features):
         kernel_size=4,
         dilation_base=3
     )
-    checkpoint = torch.load('./models_IBM/' + model_name)
+    checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()

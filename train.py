@@ -60,7 +60,6 @@ def train_assemble_model_1(dataset_train, dataset_val, features):
                             val_loss=loss_val,
                             training_loss=loss_train,
                             features=features,
-                            mask=None,
                             learning_rate=lr_train)
         else:
             stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val, patient_count=patient_count, max_patient=patient)
@@ -477,7 +476,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
     return epoch_loss, lr
 
 
-def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate, features, mask):
+def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss, learning_rate, features):
     torch.save({
         'epoch': num_epochs,
         'model_state_dict': model.state_dict(),
@@ -485,9 +484,8 @@ def save_best_model(model, name, num_epochs, optimizer, val_loss, training_loss,
         'valid_loss': val_loss,
         'training_loss': training_loss,
         'learning_rate': learning_rate,
-        'features': features,
-        'mask': mask,        
-    }, "./models_IBM/" + name)
+        'features': features      
+    }, "./models/" + name)
     
 def check_best_loss(best_loss, loss):
     if loss < best_loss:
