@@ -10,8 +10,8 @@ from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
 from plot import to_plot
 import pandas_ta as ta
-import bench_mark_model
-def  train_arima(data_df, 
+from bench_mark_model import bench_mark_arima
+def train_random_forest(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
@@ -50,9 +50,19 @@ def  train_arima(data_df,
     X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
     X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
     X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
-
+    dataset_train = TimeSeriesDataset(X_train, y_train)
+    dataset_val = TimeSeriesDataset(X_valid, y_valid)
+    dataset_test = TimeSeriesDataset(X_test, y_test)
+    val_error, test_error = bench_mark_random_forest(dataset_train, dataset_val, dataset_test)
+    print("val_error", val_error)
+    print("test_error", test_error)   
    
 if __name__ == "__main__":
     data_df, num_data_points, data_dates = utils.download_data_api()
     data_df.set_index('date', inplace=True)
     train_df, valid_df, test_df, train_date, valid_date, test_date = utils.split_train_valid_test_dataframe(data_df, num_data_points, data_dates)
+    train_random_forest(data_df, 
+                    num_data_points,
+                    train_df, valid_df,
+                    test_df, train_date,valid_date, test_date,
+                    data_dates, show_heat_map = False, is_train = True)

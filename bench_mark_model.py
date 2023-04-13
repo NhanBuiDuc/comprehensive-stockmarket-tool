@@ -1,25 +1,10 @@
 import torch
+from sklearn.metrics import mean_squared_error
+import pandas as pd
 import numpy as np
-import statsmodels.api as sm
-
-def bench_mark_arima(X_train, y_train, X_val, y_val, X_test, y_test):
-    
-    # Define the order of the ARIMA model
-    order = (1, 1, 1)
-
-    # Train the ARIMA model on the training set
-    model = sm.tsa.ARIMA(y_train, order=order).fit()
-
-    # Make predictions on the validation and test sets
-    y_val_pred = model.predict(start=X_val.index[0], end=X_val.index[-1], dynamic=False)
-    y_test_pred = model.predict(start=X_test.index[0], end=X_test.index[-1], dynamic=False)
-
-    # Calculate the evaluation metrics
-    val_rmse = torch.sqrt(torch.mean((y_val - y_val_pred)**2))
-    test_rmse = torch.sqrt(torch.mean((y_test - y_test_pred)**2))
-
-    return val_rmse, test_rmse
-
+from statsmodels.tsa.arima.model import ARIMA
+def bench_mark_random_forest(dataset_train, dataset_val, dataset_test):
+    pass
 def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test, input_shape, output_size):
     model = Sequential()
 
