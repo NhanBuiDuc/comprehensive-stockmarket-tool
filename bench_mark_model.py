@@ -1,5 +1,5 @@
 import torch
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error
 import pandas as pd
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
@@ -16,17 +16,17 @@ def bench_mark_random_forest(X_train, y_train, X_val, y_val, X_test, y_test):
 
 
     # create random forest regressor object
-    rf = RandomForestRegressor()
+    model = RandomForestRegressor()
 
     # train the regressor using the training data
-    rf.fit(X_train, y_train)
+    model.fit(X_train, y_train)
 
     # evaluate the regressor on the validation data
-    val_error = mean_squared_error(y_val, rf.predict(X_val))
+    mse = mean_squared_error(y_test, model.predict(X_test))
 
     # evaluate the regressor on the test data
-    test_error = mean_squared_error(y_test, rf.predict(X_test))
-
+    mae = mean_absolute_error(y_test, model.predict(X_test))
+    return model, mse, mae
 def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test):
     model = Sequential()
 
@@ -39,10 +39,10 @@ def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test):
     model.add(Dense(1))
     # Print model summary
     model.summary()
-    model.compile(optimizer=Adam(learning_rate=0.001),
+    model.compile(optimizer=Adam(learning_rate=0.01),
                 loss='mean_squared_error',
-                metrics=['mean_absolute_error'])
+                metrics=['mean_squared_error', 'mean_absolute_error'])
 
-    history_LSTM = model.fit(X_train, y_train, epochs=100, batch_size=cf['training']['movement_3']['batch_size'], validation_data=(X_val, y_val))
-    loss, _ = model.evaluate(X_test, y_test)
-    return model, history_LSTM, loss
+    history_LSTM = model.fit(X_train, y_train, epochs=100, batch_size=64, validation_data=(X_val, y_val))
+    _, mse, mae = model.evaluate(X_test, y_test)
+    return model, mse, mae
