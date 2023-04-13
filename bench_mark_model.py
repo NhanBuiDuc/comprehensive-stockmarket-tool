@@ -12,7 +12,7 @@ from keras.optimizers import Adam
 import numpy as np
 def bench_mark_random_forest(dataset_train, dataset_val, dataset_test):
     pass
-
+nhanhh gaaaaa con ga nhaaaannnn
 def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test):
     model = Sequential()
 
