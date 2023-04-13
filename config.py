@@ -6,7 +6,7 @@ config = {
         "key_adjusted_close": "5. adjusted close",
     },
     "data": {
-        "window_size": 14,
+        "window_size": 3,
         "train_split_size": 0.7,
         "smoothing": 2
     }, 
@@ -77,8 +77,8 @@ config = {
         "assemble_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 65,
-            "num_epoch": 300,
+            "batch_size": 32,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 2000,
@@ -89,8 +89,8 @@ config = {
         "diff_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 300,
+            "batch_size": 32,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 2000,
@@ -101,8 +101,8 @@ config = {
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 500,
+            "batch_size": 32,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -113,8 +113,8 @@ config = {
         "movement_7":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 500,
+            "batch_size": 32,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -125,8 +125,8 @@ config = {
         "movement_14":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 500,
+            "batch_size": 32,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,

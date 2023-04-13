@@ -9,12 +9,25 @@ from itertools import product
 import numpy as np
 import torch
 import json
+
+def save_best_param(model_name, best_params, best_score):
+    filename = model_name + ".json"
+
+    # create dictionary with best parameters and validation score
+    result = {'best_params': best_params, 'best_score': best_score}
+
+    # save dictionary to file
+    with open(filename, 'w') as f:
+        json.dump(result, f)
+
+    print(f"\nBest parameters and validation score saved to file: {filename}")
+
 def gridsearch_movement_3(dataset_train, dataset_val, features, mask, is_training=True):
     param_grid = {
         'lstm_hidden_layer_size': [16, 32, 64],
         'lstm_num_layers': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'kernel_size': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        'dilation_base': [2, 3, 4, 5, 6, 7, 8, 9, 10]
+        #'kernel_size': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        #'dilation_base': [2, 3, 4, 5, 6, 7, 8, 9, 10]
     }
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
     # calculate number of combinations to test
@@ -77,29 +90,21 @@ def gridsearch_movement_3(dataset_train, dataset_val, features, mask, is_trainin
         if val_loss < best_score:
             best_score = val_loss
             best_params = params
+            save_best_param(model_name=model_name, best_params=best_params, best_score=best_score)
 
         # print progress
         print(f"Parameter combination: {params} \t Validation loss: {val_loss:.4f} \t Best validation loss: {best_score:.4f}")
 
     # print best parameters and corresponding validation score
     print(f"\nBest parameters: {best_params} \t Best validation loss: {best_score:.4f}")
-    # define file name
-    filename = model_name + ".json"
 
-    # create dictionary with best parameters and validation score
-    result = {'best_params': best_params, 'best_score': best_score}
 
-    # save dictionary to file
-    with open(filename, 'w') as f:
-        json.dump(result, f)
-
-    print(f"\nBest parameters and validation score saved to file: {filename}")
 def gridsearch_movement_7(dataset_train, dataset_val, features, mask, is_training=True):
     param_grid = {
         'lstm_hidden_layer_size': [16, 32, 64],
         'lstm_num_layers': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'kernel_size': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        'dilation_base': [2, 3, 4, 5, 6, 7, 8, 9, 10]
+        #'kernel_size': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        #'dilation_base': [2, 3, 4, 5, 6, 7, 8, 9, 10]
     }
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
     # calculate number of combinations to test
@@ -162,29 +167,20 @@ def gridsearch_movement_7(dataset_train, dataset_val, features, mask, is_trainin
         if val_loss < best_score:
             best_score = val_loss
             best_params = params
+            save_best_param(model_name=model_name, best_params=best_params, best_score=best_score)
 
         # print progress
         print(f"Parameter combination: {params} \t Validation loss: {val_loss:.4f} \t Best validation loss: {best_score:.4f}")
 
     # print best parameters and corresponding validation score
     print(f"\nBest parameters: {best_params} \t Best validation loss: {best_score:.4f}")
-    # define file name
-    filename = model_name + ".json"
 
-    # create dictionary with best parameters and validation score
-    result = {'best_params': best_params, 'best_score': best_score}
-
-    # save dictionary to file
-    with open(filename, 'w') as f:
-        json.dump(result, f)
-
-    print(f"\nBest parameters and validation score saved to file: {filename}")
 def gridsearch_movement_14(dataset_train, dataset_val, features, mask, is_training=True):
     param_grid = {
         'lstm_hidden_layer_size': [16, 32, 64],
         'lstm_num_layers': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'kernel_size': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-        'dilation_base': [2, 3, 4, 5, 6, 7, 8, 9, 10]
+        #'kernel_size': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+        #'dilation_base': [2, 3, 4, 5, 6, 7, 8, 9, 10]
     }
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
     # calculate number of combinations to test
@@ -247,20 +243,12 @@ def gridsearch_movement_14(dataset_train, dataset_val, features, mask, is_traini
         if val_loss < best_score:
             best_score = val_loss
             best_params = params
+            save_best_param(model_name=model_name, best_params=best_params, best_score=best_score)
 
         # print progress
         print(f"Parameter combination: {params} \t Validation loss: {val_loss:.4f} \t Best validation loss: {best_score:.4f}")
 
     # print best parameters and corresponding validation score
     print(f"\nBest parameters: {best_params} \t Best validation loss: {best_score:.4f}")
-    # define file name
-    filename = model_name + ".json"
 
-    # create dictionary with best parameters and validation score
-    result = {'best_params': best_params, 'best_score': best_score}
 
-    # save dictionary to file
-    with open(filename, 'w') as f:
-        json.dump(result, f)
-
-    print(f"\nBest parameters and validation score saved to file: {filename}")
