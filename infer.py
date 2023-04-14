@@ -93,7 +93,7 @@ def evalute_assembly_regression(dataset_val, features):
     batch_size = cf["training"]["assemble_1"]["batch_size"]
     # here we re-initialize dataloader so the data doesn't shuffled, so we can plot the values by date
     # load the saved model weights from a file
-    model = Assemble()
+    model = Assemble_1()
     checkpoint = torch.load('./models/' + model_name)
     model.load_state_dict(checkpoint['model_state_dict'])
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])

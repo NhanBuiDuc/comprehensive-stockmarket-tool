@@ -151,7 +151,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -163,7 +163,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 1,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
