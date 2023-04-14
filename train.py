@@ -247,7 +247,7 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
     )
     movement_3.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_3"]["batch_size"], drop_last=True, shuffle=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_3"]["batch_size"], drop_last=True, shuffle=False)
     val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True, drop_last=True)
 
     # define optimizer, scheduler and loss function
@@ -459,15 +459,18 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=Fa
         out = model(x)
 
         # Calculate the L2 regularization term
-        l2_reg = 0
-        for param in model.parameters():
-            l2_reg += torch.norm(param).to("cuda")
-        loss = criterion(out, y) + weight_decay * l2_reg
+        # l2_reg = 0
+        # for param in model.parameters():
+        #     l2_reg += torch.norm(param).to("cuda")
+        # loss = criterion(out, y) + weight_decay * l2_reg
+        loss = criterion(out, y)
         if is_training:
-            torch.autograd.set_detect_anomaly(True)
-            loss.backward()
-            optimizer.step()
-
+            if loss != torch.nan:
+                torch.autograd.set_detect_anomaly(True)
+                loss.backward()
+                optimizer.step()
+            else:
+                print("loss = nan")
         epoch_loss += (loss.detach().item() / batchsize)
     try:
         lr = scheduler.get_last_lr()[0]

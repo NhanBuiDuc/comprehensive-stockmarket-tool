@@ -101,8 +101,8 @@ config = {
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 1,
-            "num_epoch": 50,
+            "batch_size": 16,
+            "num_epoch": 10,
             "learning_rate": 0.001,
             "scheduler_step_size": 50,
             "patient": 200,

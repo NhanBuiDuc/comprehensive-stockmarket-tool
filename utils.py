@@ -454,35 +454,35 @@ def prepare_dataset_and_indicators(data_df, window_size):
         'adjusted close': data_df['5. adjusted close'],
         'volume': data_df['6. volume']})
     dataset_df['willr'] =willr
-    dataset_df['smi'] =smi.values[:, 0]
-    dataset_df['SMIs'] =smi.values[:, 1]
-    dataset_df['SMIo'] =smi.values[:, 2]
-    dataset_df['STOCHRSIk'] =stochrsi.to_numpy()[:, 0]
-    dataset_df['STOCHRSId'] =stochrsi.to_numpy()[:, 1]
-    dataset_df['cci'] =cci
-    dataset_df['macd'] =macd[0]
-    dataset_df['mach'] =macd[1]
-    dataset_df['macs'] =macd[2]
-    dataset_df['DMp'] =dm[0]
-    dataset_df['DMn'] =dm[1]
+    # dataset_df['smi'] =smi.values[:, 0]
+    # dataset_df['SMIs'] =smi.values[:, 1]
+    # dataset_df['SMIo'] =smi.values[:, 2]
+    # dataset_df['STOCHRSIk'] =stochrsi.to_numpy()[:, 0]
+    # dataset_df['STOCHRSId'] =stochrsi.to_numpy()[:, 1]
+    # dataset_df['cci'] =cci
+    # dataset_df['macd'] =macd[0]
+    # dataset_df['mach'] =macd[1]
+    # dataset_df['macs'] =macd[2]
+    # dataset_df['DMp'] =dm[0]
+    # dataset_df['DMn'] =dm[1]
     # dataset_df['DIp'] =dm[2]
     # dataset_df['DIn'] =dm[3]
     dataset_df['cfo'] =cfo
     dataset_df['cmo'] =cmo
     dataset_df['er'] =er
     dataset_df['mom'] =mom
-    dataset_df['roc'] =roc
-    dataset_df['stc'] =stc.values[:, 0]
-    dataset_df['STCmacd'] =stc.to_numpy()[:, 1]
-    dataset_df['STCstoch'] =stc.to_numpy()[:, 2]
-    dataset_df['slope'] =slope
-    dataset_df['ERIbull'] =eri.to_numpy()[:, 0]
-    dataset_df['ERIbear'] =eri.to_numpy()[:, 1]
-    dataset_df['BBANDSl'] =bbands.to_numpy()[:, 0]
-    dataset_df['BBANDSm'] =bbands.to_numpy()[:, 1]
-    dataset_df['BBANDSu'] =bbands.to_numpy()[:, 2]
-    dataset_df['BBANDSb'] =bbands.to_numpy()[:, 3]
-    dataset_df['BBANDSp'] =bbands.to_numpy()[:, 4]
+    # dataset_df['roc'] =roc
+    # dataset_df['stc'] =stc.values[:, 0]
+    # dataset_df['STCmacd'] =stc.to_numpy()[:, 1]
+    # dataset_df['STCstoch'] =stc.to_numpy()[:, 2]
+    # dataset_df['slope'] =slope
+    # dataset_df['ERIbull'] =eri.to_numpy()[:, 0]
+    # dataset_df['ERIbear'] =eri.to_numpy()[:, 1]
+    # dataset_df['BBANDSl'] =bbands.to_numpy()[:, 0]
+    # dataset_df['BBANDSm'] =bbands.to_numpy()[:, 1]
+    # dataset_df['BBANDSu'] =bbands.to_numpy()[:, 2]
+    # dataset_df['BBANDSb'] =bbands.to_numpy()[:, 3]
+    # dataset_df['BBANDSp'] =bbands.to_numpy()[:, 4]
     dataset_df['sma'] =sma
     dataset_df['ema'] =ema
     dataset_df['vwap'] =vwap
@@ -503,7 +503,7 @@ def split_train_valid_test_dataframe(data_df, num_data_points, data_dates):
     # test dates splitted
     test_dates = data_dates[trainval_test_split_index:]
     # New index for train and valid only
-    train_valid_split_index = int(len(train_valid_df) * cf["data"]["train_split_size"])
+    train_valid_split_index = int(len(train_valid_df) * 0.5)
     # Train and valid df splitted up
     # 0 - 80
     train_df = train_valid_df[:train_valid_split_index]
