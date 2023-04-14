@@ -304,7 +304,7 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
     val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
     # optimizer = optim.SGD(binary_model.parameters(), lr=cf["training"]["movement_3"]["learning_rate"], momentum=0.9)
 
     optimizer = optim.Adam(movement_3.parameters(), lr=cf["training"]["movement_3"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9, weight_decay=0.001)
