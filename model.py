@@ -141,7 +141,7 @@ class Movement_3(nn.Module):
         self.autoencoder_final_dim = 32
         self.kernel_size = kernel_size
         self.dilation_base = dilation_base
-
+        self.linear_3 = nn.Linear(16, 1)
         self.autoencoder = CausalDilatedConvNet(window_size= self.window_size,
                                                 input_channels = self.input_size,
                                                 out_channels = self.window_size,
@@ -170,7 +170,9 @@ class Movement_3(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         #Data extract
-        x = self.autoencoder(x)
+        # x = self.autoencoder(x)
+        x = self.linear_3(x)
+        x = self.relu(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
         x = self.linear_2(x)
