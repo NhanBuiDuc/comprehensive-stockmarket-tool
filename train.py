@@ -23,8 +23,8 @@ def train_assemble_model_1(dataset_train, dataset_val, features):
     regression_model = model.Assemble()
     regression_model.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=64, shuffle=True, drop_last=True)
-    val_dataloader = DataLoader(dataset_val, batch_size=64, shuffle=True, drop_last=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=64, shuffle=True)
+    val_dataloader = DataLoader(dataset_val, batch_size=64, shuffle=True)
 
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -168,8 +168,8 @@ def train_LSTM_regression_1 (dataset_train, dataset_val, features, is_training=T
     )
     diff_1.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["diff_1"]["batch_size"], drop_last=True)
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["diff_1"]["batch_size"], shuffle=True, drop_last=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["diff_1"]["batch_size"])
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["diff_1"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
     criterion = nn.MSELoss()
@@ -247,8 +247,8 @@ def train_Movement_3(dataset_train, dataset_val, features, is_training=True):
     )
     movement_3.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_3"]["batch_size"], drop_last=True, shuffle=False)
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True, drop_last=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=False)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_3"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
     criterion = UAL()
@@ -313,8 +313,8 @@ def train_Movement_7(dataset_train, dataset_val, features, is_training=True):
     )
     movement_7.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_7"]["batch_size"], drop_last=True, shuffle=True)
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_7"]["batch_size"], shuffle=True, drop_last=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_7"]["batch_size"],shuffle=False)
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_7"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
     criterion = UAL()
@@ -379,8 +379,8 @@ def train_Movement_14(dataset_train, dataset_val, features, is_training=True):
     )
     movement_14.to("cuda")
     # create `DataLoader`
-    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_14"]["batch_size"],shuffle=True, drop_last=True)
-    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True, drop_last=True)
+    train_dataloader = DataLoader(dataset_train, batch_size=cf["training"]["movement_14"]["batch_size"])
+    val_dataloader = DataLoader(dataset_val, batch_size=cf["training"]["movement_14"]["batch_size"], shuffle=True)
 
     # define optimizer, scheduler and loss function
     criterion = UAL()
@@ -437,7 +437,7 @@ def lr_lambda(epoch):
     else:
         return 0.1 * (0.1 ** ((epoch - 5000) // 1000))
     
-def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training=False):
+def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
     epoch_loss = 0
 
     weight_decay=0.001

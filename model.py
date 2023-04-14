@@ -72,7 +72,7 @@ class Assemble(nn.Module):
         )
         self.forecasting_model_14.load_state_dict(checkpoint['model_state_dict'])
 
-        self.linear_1 = nn.Linear(3, 2)
+        self.linear_1 = nn.Linear(5, 2)
         self.relu = nn.ReLU()
         self.dropout_1 = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
@@ -95,25 +95,31 @@ class Assemble(nn.Module):
 
         latest_data_point = x[:, -1, 0].unsqueeze(1) 
         # Run the short-term and long-term forecasting models
-        prob_3 = self.forecasting_model_3(x1)[:, :2]
-        delta_3 = self.forecasting_model_3(x1)[:, 2:]
+        prob_3 = self.forecasting_model_3(x1)[:, :1]
+        delta_3 = self.forecasting_model_3(x1)[:, 1:]
 
-        prob_7 = self.forecasting_model_7(x2)[:, :2]
-        delta_7 = self.forecasting_model_7(x2)[:, 2:]
+        prob_7 = self.forecasting_model_7(x2)[:, :1]
+        delta_7 = self.forecasting_model_7(x2)[:, 1:]
 
-        prob_14 = self.forecasting_model_14(x3)[:, :2]
-        delta_14 = self.forecasting_model_14(x3)[:, 2:]
+        prob_14 = self.forecasting_model_14(x3)[:, :1]
+        delta_14 = self.forecasting_model_14(x3)[:, 1:]
         
-        max_probs, max_indices = torch.max(prob_3, dim=1)
-        direction_3 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
+        # max_probs, max_indices = torch.max(prob_3, dim=1)
+        # direction_3 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
+        direction_3 = (prob_3[:, :1] > 0.5).float()
+        direction_3 = torch.where(direction_3 == 0, -1, 1)
         delta_3 = latest_data_point + (direction_3 * delta_3 / 100) * latest_data_point
 
-        max_probs, max_indices = torch.max(prob_7, dim=1)
-        direction_7 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
+        # max_probs, max_indices = torch.max(prob_7, dim=1)
+        # direction_7 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
+        direction_7 = (prob_3[:, :1] > 0.5).float()
+        direction_7 = torch.where(direction_7 == 0, -1, 1)
         delta_7 = latest_data_point + (direction_7 * delta_7 / 100)  * latest_data_point
         
-        max_probs, max_indices = torch.max(prob_14, dim=1)
-        direction_14 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
+        # max_probs, max_indices = torch.max(prob_14, dim=1)
+        # direction_14 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
+        direction_14 = (prob_3[:, :1] > 0.5).float()
+        direction_14 = torch.where(direction_14 == 0, -1, 1)
         delta_14 = latest_data_point + (direction_14 * delta_14 / 100) * latest_data_point
         # Run the regression model
         # delta_1 = self.regression_model(x4)
