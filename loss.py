@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 class Unified_Adversarial_Loss(nn.Module):
-    def __init__(self, bce_weight=0.7, mse_weight=0.3, hard_negative_weight=2):
+    def __init__(self, bce_weight=3, mse_weight=1, hard_negative_weight=2):
         super().__init__()
         self.bce_weight = bce_weight
         self.mse_weight = mse_weight
@@ -19,7 +19,7 @@ class Unified_Adversarial_Loss(nn.Module):
 
         # Calculate the hard negative loss for the classification part
         # target_cls_int = (target[:, :1] > self.threshold)  # Convert the one-hot encoding to integers
-        output_cls_int = (output[:, :1] > self.threshold)  # Convert the one-hot encoding to integers
+        output_cls_int = (output[:, :1] >= self.threshold)  # Convert the one-hot encoding to integers
         hard_negative_mask = (target[:, :1] != output_cls_int) # Create a mask for hard negative examples
         hard_negative_mask = hard_negative_mask.float()  # Convert the mask to a float tensor
 
@@ -29,7 +29,7 @@ class Unified_Adversarial_Loss(nn.Module):
 
         # Combine the three losses
         
-        loss = (self.bce_weight * bce_loss + self.mse_weight * mse_loss)/batch
+        loss = (self.bce_weight * bce_loss + self.mse_weight * mse_loss)
         # loss = loss.mean()
         # print("loss", loss)
         # print("bce", bce_loss)
