@@ -7,34 +7,19 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import seaborn as sns
 import math
-import model
-class Assemble(nn.Module):
+class Assemble_1(nn.Module):
     def __init__(self, dropout_rate=0.1):
         super().__init__()
 
-        # # Diff 1
-        # model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "diff_1"
-        # checkpoint = torch.load('./models/' + model_name)
-        # self.regression_data_features_1 = checkpoint['features']
-        # self.regression_data_mask_1 = checkpoint['mask']
-        # self.regression_model = Diff_1(
-        #     input_size = len(self.regression_data_features_1 ),
-        #     window_size = cf["model"]["diff_1"]["window_size"],
-        #     lstm_hidden_layer_size = cf["model"]["diff_1"]["lstm_hidden_layer_size"], 
-        #     lstm_num_layers = cf["model"]["diff_1"]["lstm_num_layers"], 
-        #     output_steps = cf["model"]["diff_1"]["output_steps"]
-        # )
-        # self.regression_model.load_state_dict(checkpoint['model_state_dict'])
-        # Diff 3
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_3"
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_1"
         checkpoint = torch.load('./models/' + model_name)
-        self.forecasting_data_features_3 = checkpoint['features']
-        self.forecasting_model_3 = m.Movement_3(
-            input_size = len(self.forecasting_data_features_3),
-            window_size = cf["model"]["movement_3"]["window_size"],
-            lstm_hidden_layer_size = cf["model"]["movement_3"]["lstm_hidden_layer_size"], 
-            lstm_num_layers = cf["model"]["movement_3"]["lstm_num_layers"], 
-            output_steps = cf["model"]["movement_3"]["output_steps"],
+        self.forecasting_data_features_1 = checkpoint['features']
+        self.forecasting_model_1 = m.Movement_1(
+            input_size = len(self.forecasting_data_features_1),
+            window_size = cf["model"]["movement_1"]["window_size"],
+            lstm_hidden_layer_size = cf["model"]["movement_1"]["lstm_hidden_layer_size"], 
+            lstm_num_layers = cf["model"]["movement_1"]["lstm_num_layers"], 
+            output_steps = cf["model"]["movement_1"]["output_steps"],
             kernel_size=4,
             dilation_base=3
         )
@@ -54,23 +39,6 @@ class Assemble(nn.Module):
             dilation_base=3
         )
         self.forecasting_model_7.load_state_dict(checkpoint['model_state_dict'])
-
-
-        # Diff 14
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_14"
-        checkpoint = torch.load('./models/' + model_name)
-        self.forecasting_data_features_14 = checkpoint['features']
-        # self.forecasting_data_mask_14 = checkpoint['mask']
-        self.forecasting_model_14 = m.Movement_14(
-            input_size = len(self.forecasting_data_features_3),
-            window_size = cf["model"]["movement_14"]["window_size"],
-            lstm_hidden_layer_size = cf["model"]["movement_14"]["lstm_hidden_layer_size"], 
-            lstm_num_layers = cf["model"]["movement_14"]["lstm_num_layers"], 
-            output_steps = cf["model"]["movement_14"]["output_steps"],
-            kernel_size=4,
-            dilation_base=3
-        )
-        self.forecasting_model_14.load_state_dict(checkpoint['model_state_dict'])
 
         self.linear_1 = nn.Linear(5, 2)
         self.relu = nn.ReLU()
@@ -158,7 +126,7 @@ class Movement_1(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -210,7 +178,7 @@ class Magnitude_1(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -262,7 +230,7 @@ class Movement_3(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -314,7 +282,7 @@ class Magnitude_3(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -365,7 +333,7 @@ class Movement_7(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -416,7 +384,7 @@ class Magnitude_7(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -467,7 +435,7 @@ class Movement_14(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -518,7 +486,7 @@ class Magnitude_14(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 2)
+        self.linear_2 = nn.Linear(320, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
