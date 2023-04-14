@@ -27,15 +27,24 @@ config = {
             "num_lstm_layers": 5,
             "lstm_size": 64,
             "dropout": 0.2, 
-            "output_steps": 3,
+            "output_steps": 1,
             "window_size": 14,
-
+        },
+        "movement_1":{
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
+            "dropout": 0.2, 
+            "output_steps": 1,
+            "window_size": 14,
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
         },
         "movement_3":{
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
             "dropout": 0.2, 
-            "output_steps": 3,
+            "output_steps": 1,
             "window_size": 14,
             "max_features": 5,
             "kernel_size": 4,
@@ -98,11 +107,47 @@ config = {
             "early_stop": True,
             "corr_thresh_hold": 0.1
         },
+        "movement_1":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 16,
+            "num_epoch": 150,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
+            "patient": 200,
+            "best_model": True,
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
+        },
+        "magnitude_1":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 16,
+            "num_epoch": 150,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
+            "patient": 200,
+            "best_model": True,
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
+        },
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 16,
-            "num_epoch": 10,
+            "num_epoch": 200,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
+            "patient": 200,
+            "best_model": True,
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
+        },
+        "magnitude_3":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 16,
+            "num_epoch": 200,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -122,6 +167,18 @@ config = {
             "early_stop": True,
             "corr_thresh_hold": 0.5
         },
+        "magnitude_7":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 16,
+            "num_epoch": 200,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
+            "patient": 200,
+            "best_model": True,
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
+        },
         "movement_14":
         {
             "device": "cuda", # "cuda" or "cpu"
@@ -133,6 +190,18 @@ config = {
             "best_model": False,
             "early_stop": True,
             "corr_thresh_hold": 0.5
-        }
+        },
+        "magnitude_14":
+        {
+            "device": "cuda", # "cuda" or "cpu"
+            "batch_size": 16,
+            "num_epoch": 200,
+            "learning_rate": 0.01,
+            "scheduler_step_size": 50,
+            "patient": 200,
+            "best_model": True,
+            "early_stop": True,
+            "corr_thresh_hold": 0.1
+        },
     }
 }

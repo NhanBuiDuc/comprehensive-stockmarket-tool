@@ -159,17 +159,17 @@ def prepare_timeseries_data_y_diff(num_rows, data, window_size):
     return output
 
 def prepare_timeseries_data_y_trend(num_rows, data, output_size):
-    output = np.empty((num_rows, 2))
+    output = np.zeros((num_rows, 2), dtype=float)
     # Iterate over original array and extract windows of size 3
-    # (0,1) means up
-    # (1,0) means down
+    # (1) means up
+    # (0) means down
     for i in range(num_rows - 1):
         # Go up
         if(data[i + output_size] > data[i]):
-            output[i] = (0, 1)
+            output[i] = (1)
         # Go down
         else:
-            output[i] = (1, 0)
+            output[i] = (0)
     return output
 def prepare_timeseries_data_y_trend_percentage(num_rows, data, output_size):
     output = np.zeros((num_rows, 2), dtype=float)
@@ -194,6 +194,15 @@ def prepare_timeseries_data_y_trend_percentage(num_rows, data, output_size):
         elif change_percentage < 0:
             output[i] = (0, abs(change_percentage))
     return output
+
+def prepare_timeseries_data_y_percentage(num_rows, data, output_size):
+    output = np.zeros((num_rows, 1), dtype=float)
+    window_size = cf["data"]["window_size"]
+    for i in range(num_rows):
+        change_percentage =  (( data[i + window_size + output_size - 1] - data[window_size + i - 1] ) * 100 ) / data[window_size + i - 1]
+        output[i] = (abs(change_percentage))
+    return output
+
 def prepare_tree_data_y_trend(num_rows, data, output_size):
     output = np.empty((num_rows, 1), dtype=int)
     # Iterate over original array and extract windows of size 3
@@ -448,43 +457,43 @@ def prepare_dataset_and_indicators(data_df, window_size):
     hma = Hma(data_df, window_size)
     cmf = Cmf(data_df, window_size)
     dataset_df = pd.DataFrame({
-        'close': data_df['4. close'] 
-        # 'open': data_df['1. open'],
-        # 'high': data_df['2. high'],
-        # 'low': data_df['3. low'],
-        # 'adjusted close': data_df['5. adjusted close'],
-        # 'volume': data_df['6. volume']
+        'close': data_df['4. close'], 
+        'open': data_df['1. open'],
+        'high': data_df['2. high'],
+        'low': data_df['3. low'],
+        'adjusted close': data_df['5. adjusted close'],
+        'volume': data_df['6. volume']
         })
-    # dataset_df['willr'] =willr
-    # dataset_df['smi'] =smi.values[:, 0]
-    # dataset_df['SMIs'] =smi.values[:, 1]
-    # dataset_df['SMIo'] =smi.values[:, 2]
-    # dataset_df['STOCHRSIk'] =stochrsi.to_numpy()[:, 0]
-    # dataset_df['STOCHRSId'] =stochrsi.to_numpy()[:, 1]
-    # dataset_df['cci'] =cci
-    # dataset_df['macd'] =macd[0]
-    # dataset_df['mach'] =macd[1]
-    # dataset_df['macs'] =macd[2]
-    # dataset_df['DMp'] =dm[0]
-    # dataset_df['DMn'] =dm[1]
+    dataset_df['willr'] =willr
+    dataset_df['smi'] =smi.values[:, 0]
+    dataset_df['SMIs'] =smi.values[:, 1]
+    dataset_df['SMIo'] =smi.values[:, 2]
+    dataset_df['STOCHRSIk'] =stochrsi.to_numpy()[:, 0]
+    dataset_df['STOCHRSId'] =stochrsi.to_numpy()[:, 1]
+    dataset_df['cci'] =cci
+    dataset_df['macd'] =macd[0]
+    dataset_df['mach'] =macd[1]
+    dataset_df['macs'] =macd[2]
+    dataset_df['DMp'] =dm[0]
+    dataset_df['DMn'] =dm[1]
     # dataset_df['DIp'] =dm[2]
     # dataset_df['DIn'] =dm[3]
-    # dataset_df['cfo'] =cfo
-    # dataset_df['cmo'] =cmo
-    # dataset_df['er'] =er
-    # dataset_df['mom'] =mom
-    # dataset_df['roc'] =roc
-    # dataset_df['stc'] =stc.values[:, 0]
-    # dataset_df['STCmacd'] =stc.to_numpy()[:, 1]
-    # dataset_df['STCstoch'] =stc.to_numpy()[:, 2]
-    # dataset_df['slope'] =slope
-    # dataset_df['ERIbull'] =eri.to_numpy()[:, 0]
-    # dataset_df['ERIbear'] =eri.to_numpy()[:, 1]
-    # dataset_df['BBANDSl'] =bbands.to_numpy()[:, 0]
-    # dataset_df['BBANDSm'] =bbands.to_numpy()[:, 1]
-    # dataset_df['BBANDSu'] =bbands.to_numpy()[:, 2]
-    # dataset_df['BBANDSb'] =bbands.to_numpy()[:, 3]
-    # dataset_df['BBANDSp'] =bbands.to_numpy()[:, 4]
+    dataset_df['cfo'] =cfo
+    dataset_df['cmo'] =cmo
+    dataset_df['er'] =er
+    dataset_df['mom'] =mom
+    dataset_df['roc'] =roc
+    dataset_df['stc'] =stc.values[:, 0]
+    dataset_df['STCmacd'] =stc.to_numpy()[:, 1]
+    dataset_df['STCstoch'] =stc.to_numpy()[:, 2]
+    dataset_df['slope'] =slope
+    dataset_df['ERIbull'] =eri.to_numpy()[:, 0]
+    dataset_df['ERIbear'] =eri.to_numpy()[:, 1]
+    dataset_df['BBANDSl'] =bbands.to_numpy()[:, 0]
+    dataset_df['BBANDSm'] =bbands.to_numpy()[:, 1]
+    dataset_df['BBANDSu'] =bbands.to_numpy()[:, 2]
+    dataset_df['BBANDSb'] =bbands.to_numpy()[:, 3]
+    dataset_df['BBANDSp'] =bbands.to_numpy()[:, 4]
     dataset_df['sma'] =sma
     dataset_df['ema'] =ema
     dataset_df['vwap'] =vwap
