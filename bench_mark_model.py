@@ -43,7 +43,7 @@ def bench_mark_svm(X_train, y_train, X_val, y_val, X_test, y_test):
     mae = mean_absolute_error(y_test, model.predict(X_test))
     return model, mse, mae
 
-def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test):
+def create_gru_model(X_train, y_train, X_val, y_val, X_test, y_test):
     model = Sequential()
 
     # Add LSTM layers
