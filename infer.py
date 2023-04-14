@@ -6,7 +6,7 @@ from config import config as cf
 import numpy as np
 import torch.nn as nn
 import torch
-from model import Diff_1, Assemble,Movement_1, Magnitude_3, Movement_7,Movement_14, Magnitude_1,Magnitude_3, Magnitude_7, Magnitude_14
+from model import Diff_1, Assemble_1 ,Movement_1, Magnitude_3, Movement_7,Movement_14, Magnitude_1,Magnitude_3, Magnitude_7, Magnitude_14
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 def test_random_forest_classfier(model, X_test, y_test):
@@ -194,7 +194,7 @@ def evalute_Movement_1(dataset_val, features):
         loss1 = criterion1(out[:, :1], y[:, :1])
         binary_cross_entropy_val_loss += loss1.detach().item()
     print(model_name + ' infer BCE loss:{:.6f}, Accuracy:{:.6f}'
-                    .format(binary_cross_entropy_val_loss, accuracy_score/num_data))
+                    .format(binary_cross_entropy_val_loss, accuracy_score/ num_data))
 
     cm = confusion_matrix(y_true, y_pred)
     print(cm)

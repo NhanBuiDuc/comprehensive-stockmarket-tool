@@ -515,46 +515,46 @@ if __name__ == "__main__":
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)
                     
     train_magnitude_1(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)
 
-    train_movement_3(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_movement_3(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
                     
-    train_magnitude_3(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_magnitude_3(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
 
-    train_movement_7(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_movement_7(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
                     
-    train_magnitude_7(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_magnitude_7(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
 
-    train_movement_14(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_movement_14(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
                     
-    train_magnitude_14(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_magnitude_14(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
