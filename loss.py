@@ -8,7 +8,7 @@ class Unified_Adversarial_Loss(nn.Module):
         self.hard_negative_weight = hard_negative_weight
         self.bce_loss = nn.BCELoss()
         self.mse_loss = nn.MSELoss()
-        self.threshold = 0.5678
+        self.threshold = 0.5
     def forward(self, output, target):
 
         # Calculate the binary cross-entropy loss for the classification part
