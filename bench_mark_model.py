@@ -47,7 +47,7 @@ def create_gru_model(X_train, y_train, X_val, y_val, X_test, y_test):
     model = Sequential()
 
     # Add LSTM layers
-    model.add(GRU(units=32, input_shape=(10, 5)))
+    model.add(GRU(units=100, input_shape=(14, 5), return_sequences=True))
     model.add(Dense(units=1))
     # Print model summary
     model.summary()
@@ -55,7 +55,7 @@ def create_gru_model(X_train, y_train, X_val, y_val, X_test, y_test):
                 loss='mean_squared_error',
                 metrics=['mean_squared_error', 'mean_absolute_error'])
 
-    history_LSTM = model.fit(X_train, y_train, epochs=100, batch_size=64, validation_data=(X_val, y_val))
+    history_LSTM = model.fit(X_train, y_train, epochs=200, batch_size=64, validation_data=(X_val, y_val))
     _, mse, mae = model.evaluate(X_test, y_test)
     return model, mse, mae
 def create_lstm_model(X_train, y_train, X_val, y_val, X_test, y_test):

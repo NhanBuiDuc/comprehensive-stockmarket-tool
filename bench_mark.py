@@ -102,7 +102,7 @@ def train_lstm(data_df,
                     data_dates, show_heat_map = False, is_train = False):
 
     window_size = cf["model"]["assemble_1"]["window_size"]
-
+    output_step = 1
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
@@ -117,9 +117,9 @@ def train_lstm(data_df,
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
-    train_n_row = len(train_close_df) - window_size
-    valid_n_row = len(valid_close_df) - window_size
-    test_n_row = len(test_close_df) - window_size
+    train_n_row = len(train_close_df) - window_size - output_step
+    valid_n_row = len(valid_close_df) - window_size - output_step
+    test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
     y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
@@ -131,9 +131,9 @@ def train_lstm(data_df,
     valid_date = valid_date[ int(len(valid_date) - len(y_valid)) :]
     test_date = test_date[ int(len(test_date) - len(y_test)) :]
     # close_df and dataset_df should be the same
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
@@ -152,19 +152,23 @@ def train_gru(data_df,
                     data_dates, show_heat_map = False, is_train = False):
 
     window_size = 14
-
+    output_step = 1
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
 
+
+    train_df = train_df.iloc[:, :5]
+    valid_df = valid_df.iloc[:, :5]
+    test_df = test_df.iloc[:, :5]
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
-    train_n_row = len(train_close_df) - window_size
-    valid_n_row = len(valid_close_df) - window_size
-    test_n_row = len(test_close_df) - window_size
+    train_n_row = len(train_close_df) - window_size - output_step
+    valid_n_row = len(valid_close_df) - window_size - output_step
+    test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
     y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
@@ -176,9 +180,10 @@ def train_gru(data_df,
     valid_date = valid_date[ int(len(valid_date) - len(y_valid)) :]
     test_date = test_date[ int(len(test_date) - len(y_test)) :]
     # close_df and dataset_df should be the same
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
+
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
@@ -284,7 +289,7 @@ def evaluate_lstm(data_df,
                     data_dates, show_heat_map = False, is_train = False):
 
     window_size = cf["model"]["assemble_1"]["window_size"]
-
+    output_step = 1
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
@@ -299,9 +304,9 @@ def evaluate_lstm(data_df,
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
-    train_n_row = len(train_close_df) - window_size
-    valid_n_row = len(valid_close_df) - window_size
-    test_n_row = len(test_close_df) - window_size
+    train_n_row = len(train_close_df) - window_size - output_step
+    valid_n_row = len(valid_close_df) - window_size  - output_step
+    test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
     y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
@@ -313,9 +318,9 @@ def evaluate_lstm(data_df,
     valid_date = valid_date[ int(len(valid_date) - len(y_valid)) :]
     test_date = test_date[ int(len(test_date) - len(y_test)) :]
     # close_df and dataset_df should be the same
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
 
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
@@ -334,7 +339,7 @@ def evaluate_gru(data_df,
                     data_dates, show_heat_map = False, is_train = False):
 
     window_size = cf["model"]["assemble_1"]["window_size"]
-
+    output_step = 1
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
@@ -377,24 +382,23 @@ def evaluate_gru(data_df,
     print(model_name + " mse", mse)
     print(model_name + " mae", mae)
 if __name__ == "__main__":
-    data_df, num_data_points, data_dates = utils.download_data_api()
-    data_df.set_index('date', inplace=True)
+    data_df, num_data_points, data_dates = utils.download_data_api('2000-5-01', '2023-04-01')
     train_df, valid_df, test_df, train_date, valid_date, test_date = utils.split_train_valid_test_dataframe(data_df, num_data_points, data_dates)
-    train_random_forest(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
-    train_lstm(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
-    train_svm(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_random_forest(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
+    # train_lstm(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
+    # train_svm(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
     train_gru(data_df, 
                     num_data_points,
                     train_df, valid_df,
