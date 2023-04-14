@@ -448,13 +448,14 @@ def prepare_dataset_and_indicators(data_df, window_size):
     hma = Hma(data_df, window_size)
     cmf = Cmf(data_df, window_size)
     dataset_df = pd.DataFrame({
-        'close': data_df['4. close'], 
-        'open': data_df['1. open'],
-        'high': data_df['2. high'],
-        'low': data_df['3. low'],
-        'adjusted close': data_df['5. adjusted close'],
-        'volume': data_df['6. volume']})
-    dataset_df['willr'] =willr
+        'close': data_df['4. close'] 
+        # 'open': data_df['1. open'],
+        # 'high': data_df['2. high'],
+        # 'low': data_df['3. low'],
+        # 'adjusted close': data_df['5. adjusted close'],
+        # 'volume': data_df['6. volume']
+        })
+    # dataset_df['willr'] =willr
     # dataset_df['smi'] =smi.values[:, 0]
     # dataset_df['SMIs'] =smi.values[:, 1]
     # dataset_df['SMIo'] =smi.values[:, 2]
@@ -468,10 +469,10 @@ def prepare_dataset_and_indicators(data_df, window_size):
     # dataset_df['DMn'] =dm[1]
     # dataset_df['DIp'] =dm[2]
     # dataset_df['DIn'] =dm[3]
-    dataset_df['cfo'] =cfo
-    dataset_df['cmo'] =cmo
-    dataset_df['er'] =er
-    dataset_df['mom'] =mom
+    # dataset_df['cfo'] =cfo
+    # dataset_df['cmo'] =cmo
+    # dataset_df['er'] =er
+    # dataset_df['mom'] =mom
     # dataset_df['roc'] =roc
     # dataset_df['stc'] =stc.values[:, 0]
     # dataset_df['STCmacd'] =stc.to_numpy()[:, 1]
