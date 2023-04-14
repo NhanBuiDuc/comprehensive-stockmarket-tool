@@ -73,7 +73,8 @@ def download_data_api(from_date, to_date):
 
     # Get the number of data points and the unique dates in the new DataFrame
     num_data_points = len(df)
-    data_dates = df.index.tolist()
+
+    data_dates = df.index.strftime("%Y-%m-%d").tolist()
 
     return df, num_data_points, data_dates
 def str_to_datetime(s):
