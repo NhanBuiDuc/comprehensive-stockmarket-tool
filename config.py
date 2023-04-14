@@ -77,7 +77,7 @@ config = {
         "assemble_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": ,
+            "batch_size": 16,
             "num_epoch": 10,
             "learning_rate": 0.001,
             "scheduler_step_size": 50,
