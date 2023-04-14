@@ -77,7 +77,7 @@ config = {
         "assemble_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 128,
+            "batch_size": 1,
             "num_epoch": 50,
             "learning_rate": 0.001,
             "scheduler_step_size": 50,
@@ -101,7 +101,7 @@ config = {
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 128,
+            "batch_size": 1,
             "num_epoch": 50,
             "learning_rate": 0.001,
             "scheduler_step_size": 50,
@@ -113,7 +113,7 @@ config = {
         "movement_7":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 128,
+            "batch_size": 1,
             "num_epoch": 50,
             "learning_rate": 0.001,
             "scheduler_step_size": 50,
@@ -125,7 +125,7 @@ config = {
         "movement_14":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 128,
+            "batch_size": 1,
             "num_epoch": 50,
             "learning_rate": 0.001,
             "scheduler_step_size": 50,

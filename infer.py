@@ -240,7 +240,7 @@ def evalute_Movement_3(dataset_val, features):
 
         out = model(x)
         # _, prob_predict = torch.max(out[:, :1], dim=1)
-        prob_predict = (out[:, :1] > 0.5678).float()
+        prob_predict = (out[:, :1] > 0.5).float()
         # _, prob_true = torch.max(y[:, :1], dim=1)
         accuracy_score += torch.sum(prob_predict == y[:, :1]).item()
         y_true = np.append(y_true, [value for value in y[:, :1].cpu().detach().numpy()])
