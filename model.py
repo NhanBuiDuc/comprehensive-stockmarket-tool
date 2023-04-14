@@ -129,7 +129,6 @@ class Assemble(nn.Module):
         real_value = latest_data_point + delta
         return real_value
 
-
 class Movement_3(nn.Module):
     def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, kernel_size, dilation_base):
         super().__init__()
@@ -148,11 +147,14 @@ class Movement_3(nn.Module):
                                                 out_channels = self.window_size,
                                                 kernel_size = self.kernel_size,
                                                 dilation_base=self.dilation_base)
-        self.lstm = nn.LSTM(20, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
+        
+        self.lstm = nn.LSTM(1, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
+        self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-
+        self.linear_2 = nn.Linear(320, 3)
         self.relu = nn.ReLU()
+        self.drop_out = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
@@ -171,12 +173,11 @@ class Movement_3(nn.Module):
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear(x)
-        x = x.clone()
-        x[:, :2] = self.softmax(x[:, :2])
+        x = self.linear_2(x)
+        x = self.drop_out(x)
+        x[:, :2] = self.sigmoid(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
-
 class Movement_7(nn.Module):
     def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, kernel_size, dilation_base):
         super().__init__()
@@ -195,11 +196,14 @@ class Movement_7(nn.Module):
                                                 out_channels = self.window_size,
                                                 kernel_size = self.kernel_size,
                                                 dilation_base=self.dilation_base)
-        self.lstm = nn.LSTM(20, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
+        
+        self.lstm = nn.LSTM(1, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
+        self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-
+        self.linear_2 = nn.Linear(320, 3)
         self.relu = nn.ReLU()
+        self.drop_out = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
@@ -218,9 +222,9 @@ class Movement_7(nn.Module):
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear(x)
-        x = x.clone()
-        x[:, :2] = self.softmax(x[:, :2])
+        x = self.linear_2(x)
+        x = self.drop_out(x)
+        x[:, :2] = self.sigmoid(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
 class Movement_14(nn.Module):
@@ -241,11 +245,14 @@ class Movement_14(nn.Module):
                                                 out_channels = self.window_size,
                                                 kernel_size = self.kernel_size,
                                                 dilation_base=self.dilation_base)
-        self.lstm = nn.LSTM(20, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        self.linear = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 3)
+        
+        self.lstm = nn.LSTM(1, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
+        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
+        self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-
+        self.linear_2 = nn.Linear(320, 3)
         self.relu = nn.ReLU()
+        self.drop_out = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
 
         self.init_weights()
@@ -264,9 +271,9 @@ class Movement_14(nn.Module):
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear(x)
-        x = x.clone()
-        x[:, :2] = self.softmax(x[:, :2])
+        x = self.linear_2(x)
+        x = self.drop_out(x)
+        x[:, :2] = self.sigmoid(x[:, :2])
         x[:, 2:] = self.relu(x[:, 2:])
         return x
 class CausalDilatedConv1d(nn.Module):
@@ -353,8 +360,7 @@ class CausalDilatedConvNet(nn.Module):
             self.causal_full_layers.append(layer)
         self.adaptive_pool = nn.AdaptiveAvgPool1d(self.output_size)
         self.maxpool = nn.MaxPool1d(kernel_size= self.max_pooling_size)
-        self.linear_1 = nn.Linear(self.receptive_field_size, 50)
-        self.linear_2 = nn.Linear(50, 20)
+        self.linear_1 = nn.Linear(self.receptive_field_size, 1)
         self.relu = nn.ReLU()
     def forward(self, x):
         batch = x.shape[0]
@@ -375,9 +381,6 @@ class CausalDilatedConvNet(nn.Module):
         concat = torch.cat([x1, x2, x3], dim=2)
         out = self.linear_1(concat)
         out = self.relu(out)
-        out = self.linear_2(out)
-        out = self.relu(out)
-        # out = out.permute(0, 1, 2)
         return out
     
 class Diff_1(nn.Module):

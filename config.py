@@ -1,7 +1,7 @@
 config = {
     "alpha_vantage": {
         "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "TSLA",
+        "symbol": "AAPL",
         "outputsize": "full",
         "key_adjusted_close": "5. adjusted close",
     },
@@ -77,9 +77,9 @@ config = {
         "assemble_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 200,
-            "learning_rate": 0.01,
+            "batch_size": 128,
+            "num_epoch": 50,
+            "learning_rate": 0.001,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
@@ -90,8 +90,8 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 200,
-            "learning_rate": 0.01,
+            "num_epoch": 50,
+            "learning_rate": 0.001,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
@@ -101,9 +101,9 @@ config = {
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 200,
-            "learning_rate": 0.01,
+            "batch_size": 128,
+            "num_epoch": 50,
+            "learning_rate": 0.001,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": True,
@@ -113,9 +113,9 @@ config = {
         "movement_7":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 200,
-            "learning_rate": 0.01,
+            "batch_size": 128,
+            "num_epoch": 50,
+            "learning_rate": 0.001,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
@@ -125,9 +125,9 @@ config = {
         "movement_14":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 200,
-            "learning_rate": 0.01,
+            "batch_size": 128,
+            "num_epoch": 50,
+            "learning_rate": 0.001,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
