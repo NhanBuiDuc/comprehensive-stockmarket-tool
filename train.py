@@ -21,7 +21,7 @@ def train_assemble_model_1(dataset_train, dataset_val, features):
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "assemble_1"
     lr=cf["training"]["assemble_1"]["learning_rate"]
     epochs=cf["training"]["assemble_1"]["num_epoch"]
-    regression_model = model.Assemble()
+    regression_model = model.Assemble_1()
     regression_model.to("cuda")
     # create `DataLoader`
     train_dataloader = DataLoader(dataset_train, batch_size=64, shuffle=True)

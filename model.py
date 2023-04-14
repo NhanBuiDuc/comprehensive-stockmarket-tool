@@ -13,9 +13,9 @@ class Assemble_1(nn.Module):
 
         model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_1"
         checkpoint = torch.load('./models/' + model_name)
-        self.forecasting_data_features_1 = checkpoint['features']
-        self.forecasting_model_1 = m.Movement_1(
-            input_size = len(self.forecasting_data_features_1),
+        self.forecasting_data_features = checkpoint['features']
+        self.forecasting_model = m.Movement_1(
+            input_size = len(self.forecasting_data_features),
             window_size = cf["model"]["movement_1"]["window_size"],
             lstm_hidden_layer_size = cf["model"]["movement_1"]["lstm_hidden_layer_size"], 
             lstm_num_layers = cf["model"]["movement_1"]["lstm_num_layers"], 
@@ -23,24 +23,20 @@ class Assemble_1(nn.Module):
             kernel_size=4,
             dilation_base=3
         )
-        self.forecasting_model_3.load_state_dict(checkpoint['model_state_dict'])
-        #Diff 7
-        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "movement_7"
+
+        model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "magnitude_1"
         checkpoint = torch.load('./models/' + model_name)
-        self.forecasting_data_features_7 = checkpoint['features']
-        # self.forecasting_data_mask_7 = checkpoint['mask']
-        self.forecasting_model_7 = m.Movement_7(
-            input_size = len(self.forecasting_data_features_3),
-            window_size = cf["model"]["movement_7"]["window_size"],
-            lstm_hidden_layer_size = cf["model"]["movement_7"]["lstm_hidden_layer_size"], 
-            lstm_num_layers = cf["model"]["movement_7"]["lstm_num_layers"], 
-            output_steps = cf["model"]["movement_7"]["output_steps"],
+        self.magnitude_model_features = checkpoint['features']
+        self.magnitude_model = m.Magnitude_1(
+            input_size = len(self.magnitude_model_features),
+            window_size = cf["model"]["magnitude_1"]["window_size"],
+            lstm_hidden_layer_size = cf["model"]["magnitude_1"]["lstm_hidden_layer_size"], 
+            lstm_num_layers = cf["model"]["magnitude_1"]["lstm_num_layers"], 
+            output_steps = cf["model"]["magnitude_1"]["output_steps"],
             kernel_size=4,
             dilation_base=3
         )
-        self.forecasting_model_7.load_state_dict(checkpoint['model_state_dict'])
-
-        self.linear_1 = nn.Linear(5, 2)
+        self.linear_1 = nn.Linear(1, 1)
         self.relu = nn.ReLU()
         self.dropout_1 = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
@@ -53,53 +49,16 @@ class Assemble_1(nn.Module):
         batch_size = x.shape[0]
 
         x1 = x.clone()
-        #x1 = x1[:, :, self.forecasting_data_mask_3]
         x2 = x.clone()
-        #x2 = x2[:, :, self.forecasting_data_mask_7]
-        x3 = x.clone()
-        #x3 = x3[:, :, self.forecasting_data_mask_14]
-        # x4 = x.clone()
-        # x4 = x4[:, :, self.regression_data_mask_1]
-
         latest_data_point = x[:, -1, 0].unsqueeze(1) 
         # Run the short-term and long-term forecasting models
-        prob_3 = self.forecasting_model_3(x1)[:, :1]
-        delta_3 = self.forecasting_model_3(x1)[:, 1:]
-
-        prob_7 = self.forecasting_model_7(x2)[:, :1]
-        delta_7 = self.forecasting_model_7(x2)[:, 1:]
-
-        prob_14 = self.forecasting_model_14(x3)[:, :1]
-        delta_14 = self.forecasting_model_14(x3)[:, 1:]
+        prob = self.forecasting_model(x1)
+        delta = self.magnitude_model(x1)
         
-        # max_probs, max_indices = torch.max(prob_3, dim=1)
-        # direction_3 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
-        direction_3 = (prob_3[:, :1] > 0.5).float()
-        direction_3 = torch.where(direction_3 == 0, -1, 1)
-        delta_3 = latest_data_point + (direction_3 * delta_3 / 100) * latest_data_point
-
-        # max_probs, max_indices = torch.max(prob_7, dim=1)
-        # direction_7 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
-        direction_7 = (prob_3[:, :1] > 0.5).float()
-        direction_7 = torch.where(direction_7 == 0, -1, 1)
-        delta_7 = latest_data_point + (direction_7 * delta_7 / 100)  * latest_data_point
-        
-        # max_probs, max_indices = torch.max(prob_14, dim=1)
-        # direction_14 = torch.where(max_indices == 0, -1, 1).unsqueeze(1) 
-        direction_14 = (prob_3[:, :1] > 0.5).float()
-        direction_14 = torch.where(direction_14 == 0, -1, 1)
-        delta_14 = latest_data_point + (direction_14 * delta_14 / 100) * latest_data_point
-        # Run the regression model
-        # delta_1 = self.regression_model(x4)
-    
-        combined_delta = torch.cat([delta_3, delta_7, delta_14], dim=1)
-        
-        # Adding dropout to the combined delta
-        
-        delta = self.linear_1(combined_delta)
-        delta = self.relu(delta)
-        delta = self.linear_2(delta)
-        delta = self.relu(delta)
+        direction = (prob[:, :1] > 0.5).float()
+        direction = torch.where(direction == 0, -1, 1)
+        delta = (direction * delta) * latest_data_point
+        delta = self.linear_1(delta)
         real_value = latest_data_point + delta
         return real_value
 
@@ -204,7 +163,7 @@ class Magnitude_1(nn.Module):
         x = self.drop_out(x)
         # x[:, :1] = self.tanh(x[:, :1])
         # x[:, 1:] = self.relu(x[:, 1:])
-        x = self.sigmoid(x)
+        x = self.relu(x)
         return x
 
 class Movement_3(nn.Module):

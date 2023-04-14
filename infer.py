@@ -6,7 +6,7 @@ from config import config as cf
 import numpy as np
 import torch.nn as nn
 import torch
-from model import Diff_1, Assemble_1 ,Movement_1, Magnitude_3, Movement_7,Movement_14, Magnitude_1,Magnitude_3, Magnitude_7, Magnitude_14
+from model import Diff_1, Assemble_1 ,Movement_1, Movement_3, Movement_7,Movement_14, Magnitude_1,Magnitude_3, Magnitude_7, Magnitude_14
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 def test_random_forest_classfier(model, X_test, y_test):
@@ -242,7 +242,6 @@ def evalute_magnitude_1(dataset_val, features):
                     .format(mean_squared_error_val_loss))
 
     return mean_squared_error_val_loss
-
 
 def evalute_Movement_3(dataset_val, features):
     batch_size = cf["training"]["movement_3"]["batch_size"]
