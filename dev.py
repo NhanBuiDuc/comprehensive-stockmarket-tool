@@ -53,7 +53,7 @@ def  train_assemble(data_df,
                     data_dates, show_heat_map = False, is_train = False):
 
     window_size = cf["model"]["assemble_1"]["window_size"]
-
+    output_step = cf["model"]["movement_1"]["output_steps"]
     train_df = utils.prepare_dataset_and_indicators(train_df, window_size)
     valid_df = utils.prepare_dataset_and_indicators(valid_df, window_size)
     test_df = utils.prepare_dataset_and_indicators(test_df, window_size)
@@ -68,9 +68,9 @@ def  train_assemble(data_df,
     valid_close_df = pd.DataFrame({'close': valid_df['close']})
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
-    train_n_row = len(train_close_df) - window_size
-    valid_n_row = len(valid_close_df) - window_size
-    test_n_row = len(test_close_df) - window_size
+    train_n_row = len(train_close_df) - window_size - output_step
+    valid_n_row = len(valid_close_df) - window_size - output_step
+    test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
     y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
@@ -82,9 +82,9 @@ def  train_assemble(data_df,
     valid_date = valid_date[ int(len(valid_date) - len(y_valid)) :]
     test_date = test_date[ int(len(test_date) - len(y_test)) :]
     # close_df and dataset_df should be the same
-    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)
-    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)
-    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)
+    X_train = utils.prepare_timeseries_data_x(train_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
+    X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
 
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
@@ -177,8 +177,8 @@ def train_magnitude_1(data_df,
     test_close_df = pd.DataFrame({'close': test_df['close']})
 
     train_n_row = len(train_close_df) - window_size - output_step
-    valid_n_row = len(valid_close_df) - window_size - output_step
-    test_n_row = len(test_close_df) - window_size - output_step 
+    valid_n_row = len(valid_close_df) - window_size -  output_step
+    test_n_row = len(test_close_df) - window_size - output_step
 
     y_train = utils.prepare_timeseries_data_y_percentage(train_n_row, train_close_df.to_numpy(), output_size = output_step)
     y_valid = utils.prepare_timeseries_data_y_percentage(valid_n_row, valid_close_df.to_numpy(), output_size = output_step)
@@ -523,6 +523,11 @@ if __name__ == "__main__":
                     test_df, train_date,valid_date, test_date,
                     data_dates, show_heat_map = False, is_train = True)
 
+    train_assemble(data_df, 
+                    num_data_points,
+                    train_df, valid_df,
+                    test_df, train_date,valid_date, test_date,
+                    data_dates, show_heat_map = False, is_train = True)
     # train_movement_3(data_df, 
     #                 num_data_points,
     #                 train_df, valid_df,
