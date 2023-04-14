@@ -216,16 +216,21 @@ class Movement_3(nn.Module):
         #self.drop_out = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
         '''
-        self.linear_1 = nn.Linear(in_features=6, out_features=4, bias=False)
-        self.linear_2 = nn.Linear(in_features=6, out_features=1, bias=False)
+        self.x1linear_1 = nn.Linear(in_features=6, out_features=4, bias=False)
+        self.x2linear_1 = nn.Linear(in_features=6, out_features=1, bias=False)
         
-        self.linear_3 = nn.Linear(in_features=6, out_features=4, bias=False)
-        self.linear_4 = nn.Linear(in_features=6, out_features=1, bias=False)
+        self.x1linear_2 = nn.Linear(in_features=6, out_features=4, bias=False)
+        self.x2linear_2 = nn.Linear(in_features=6, out_features=1, bias=False)
 
+        self.x1linear_3 = nn.Linear(in_features=4, out_features=12, bias=False)
+        self.x1linear_4 = nn.Linear(in_features=12, out_features=24, bias=False)
+        self.x1linear_5 = nn.Linear(in_features=24, out_features=48, bias=False)
+        
         self.lstm_1 = nn.LSTM(input_size=6, hidden_size=2, num_layers=3, batch_first=True)
         self.lstm_2 = nn.LSTM(input_size=6, hidden_size=2, num_layers=3, batch_first=True)
         self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()       
+        self.sigmoid = nn.Sigmoid()   
+        self.tanh = nn.Tanh()    
         self.init_weights()
 
     def init_weights(self):
@@ -261,9 +266,11 @@ class Movement_3(nn.Module):
         x1 = x.clone()
         x2 = x.clone()
 
-        x1 = self.linear_1(x1)
-        x2 = self.linear_3(x2)
-
+        x1 = self.x1linear_1(x1)
+        x1 = self.tanh(x1)
+        x2 = self.x1linear_1(x2)
+        x2 = self.tanh(x2)
+        
         lstm_out, (h_n1, c_n) = self.lstm_1(x)
         h_n1 = h_n1.permute(1, 0, 2).reshape(batchsize, -1)
         lstm_out, (h_n2, c_n) = self.lstm_1(x)
@@ -272,10 +279,16 @@ class Movement_3(nn.Module):
         x1 = h_n1
         x2 = h_n2
 
-        x1 = self.linear_2(x1)
-        x1 = self.sigmoid(x1)
-       
-        x2 = self.linear_2(x2)
+        x1 = self.x1linear_2(x1)
+        x1 = self.relu(x1)
+
+        x1 = self.x1linear_3(x1)
+        x1 = self.relu(x1)
+
+        x1 = self.x1linear_4(x1)
+        x1 = self.relu(x1)
+
+        x2 = self.x2linear_2(x2)
         x2 = self.relu(x2)
 
         concat = torch.cat([x1, x2], dim=1)
