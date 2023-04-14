@@ -59,15 +59,17 @@ def download_data_api(from_date, to_date):
     # Convert the dictionary to a pandas DataFrame
     df = pd.DataFrame.from_dict(data, orient='index', dtype=float)
 
-    # Set the index of the DataFrame to "date" and sort by date
+    # Set the index of the DataFrame to datetime
     df.index = pd.to_datetime(df.index)
-    df.sort_index(inplace=True)
 
+    # Rename the current index to 'date'
+    df.index.name = 'date'
 
+    # Sort the DataFrame by date
+    df = df.sort_index()
+
+    # Filter the DataFrame to the desired date range
     df = df.loc[from_date:to_date]
-
-    # Format the index as a string in YYYY-MM-DD format
-    df.index = df.index.strftime('%Y-%m-%d')
 
     # Get the number of data points and the unique dates in the new DataFrame
     num_data_points = len(df)
@@ -302,8 +304,23 @@ def Macd(df, window_size):
     # The resulting MACD, Signal line, and Histogram are added as new columns to the original DataFrame.
     return macd, signal, histogram
 
-def Dm(df, window_size):
-    return ta.dm(df['2. high'], df['3. low'], window_size)
+# def Dm(df, window_size):
+#     return ta.dm(df['2. high'], df['3. low'], window_size)
+
+def Dm(dataframe, window_size):
+    df = dataframe.copy()
+    # Calculate the True Range (TR)
+    df['TR'] = np.max([df['2. high'] - df['3. low'], np.abs(df['2. high'] - df['4. close'].shift()), np.abs(df['3. low'] - df['4. close'].shift())], axis=0)
+
+    # Calculate the Plus Directional Movement (+DM) and Minus Directional Movement (-DM)
+    df['+DM'] = np.where((df['2. high'] - df['2. high'].shift()) > (df['3. low'].shift() - df['3. low']), np.max([df['2. high'] - df['2. high'].shift(), np.zeros(len(df))], axis=0), np.zeros(len(df)))
+    df['-DM'] = np.where((df['3. low'].shift() - df['3. low']) > (df['2. high'] - df['2. high'].shift()), np.max([df['3. low'].shift() - df['3. low'], np.zeros(len(df))], axis=0), np.zeros(len(df)))
+
+    # Calculate the Plus Directional Indicator (+DI) and Minus Directional Indicator (-DI)
+    # df['+DI'] = ta.sma(df['+DM'], window_size) / ta.sma(df['TR'], window_size) * 100
+    # df['-DI'] = ta.sma(df['-DM'], window_size) / ta.sma(df['TR'], window_size) * 100
+
+    return df['+DM'].values, df['-DM'].values
 def Cfo(df, window_size):
     return ta.cfo(df['4. close'], window_size)
 def Cmo(df, window_size):
@@ -437,23 +454,25 @@ def prepare_dataset_and_indicators(data_df, window_size):
         'adjusted close': data_df['5. adjusted close'],
         'volume': data_df['6. volume']})
     dataset_df['willr'] =willr
-    dataset_df['smi'] =smi.to_numpy()[:, 0]
-    dataset_df['SMIs'] =smi.to_numpy()[:, 1]
-    dataset_df['SMIo'] =smi.to_numpy()[:, 2]
+    dataset_df['smi'] =smi.values[:, 0]
+    dataset_df['SMIs'] =smi.values[:, 1]
+    dataset_df['SMIo'] =smi.values[:, 2]
     dataset_df['STOCHRSIk'] =stochrsi.to_numpy()[:, 0]
     dataset_df['STOCHRSId'] =stochrsi.to_numpy()[:, 1]
     dataset_df['cci'] =cci
     dataset_df['macd'] =macd[0]
     dataset_df['mach'] =macd[1]
     dataset_df['macs'] =macd[2]
-    dataset_df['DMp'] =dm.to_numpy()[:, 0]
-    dataset_df['DMn'] =dm.to_numpy()[:, 1]
+    dataset_df['DMp'] =dm[0]
+    dataset_df['DMn'] =dm[1]
+    # dataset_df['DIp'] =dm[2]
+    # dataset_df['DIn'] =dm[3]
     dataset_df['cfo'] =cfo
     dataset_df['cmo'] =cmo
     dataset_df['er'] =er
     dataset_df['mom'] =mom
     dataset_df['roc'] =roc
-    dataset_df['stc'] =stc.to_numpy()[:, 0]
+    dataset_df['stc'] =stc.values[:, 0]
     dataset_df['STCmacd'] =stc.to_numpy()[:, 1]
     dataset_df['STCstoch'] =stc.to_numpy()[:, 2]
     dataset_df['slope'] =slope
