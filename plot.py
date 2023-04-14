@@ -10,7 +10,7 @@ from matplotlib.pyplot import figure
 # predict on the unseen data, tomorrow's price 
 def to_plot(dataset_test, dataset_val, y_test, y_val, num_data_points, dates, test_dates, val_dates):
 
-    test_model = model.Assemble()
+    test_model = model.Assemble_1()
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "assemble_1"
     checkpoint = torch.load('./models/' + model_name)
     test_model.load_state_dict(checkpoint['model_state_dict'])
