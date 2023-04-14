@@ -159,7 +159,7 @@ def prepare_timeseries_data_y_diff(num_rows, data, window_size):
     return output
 
 def prepare_timeseries_data_y_trend(num_rows, data, output_size):
-    output = np.zeros((num_rows, 2), dtype=float)
+    output = np.zeros((num_rows, 1), dtype=float)
     # Iterate over original array and extract windows of size 3
     # (1) means up
     # (0) means down

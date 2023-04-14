@@ -40,6 +40,16 @@ config = {
             "kernel_size": 4,
             "dilation_base": 3
         },
+        "magnitude_1":{
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
+            "dropout": 0.2, 
+            "output_steps": 1,
+            "window_size": 14,
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
+        },
         "movement_3":{
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
@@ -50,11 +60,41 @@ config = {
             "kernel_size": 4,
             "dilation_base": 3
         },
+        "magnitude_3":{
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
+            "dropout": 0.2, 
+            "output_steps": 1,
+            "window_size": 14,
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
+        },
         "movement_7":{
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
             "dropout": 0.2, 
             "output_steps": 7,
+            "window_size": 14,
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
+        },
+        "magnitude_7":{
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
+            "dropout": 0.2, 
+            "output_steps": 1,
+            "window_size": 14,
+            "max_features": 5,
+            "kernel_size": 4,
+            "dilation_base": 3
+        },
+        "magnitude_14":{
+            "lstm_num_layers": 5,
+            "lstm_hidden_layer_size": 64,
+            "dropout": 0.2, 
+            "output_steps": 1,
             "window_size": 14,
             "max_features": 5,
             "kernel_size": 4,
@@ -111,7 +151,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 150,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -123,7 +163,7 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 150,
+            "num_epoch": 1,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
