@@ -329,30 +329,30 @@ def train_movement_14(data_df,
     infer.evalute_Movement_14(dataset_val=dataset_test_trend, features = full_features)
 
 if __name__ == "__main__":
-    data_df, num_data_points, data_dates = utils.download_data_api('2022-5-01', '2023-04-01')
+    data_df, num_data_points, data_dates = utils.download_data_api('2000-5-01', '2023-04-01')
 
     train_df, valid_df, test_df, train_date, valid_date, test_date = utils.split_train_valid_test_dataframe(data_df, num_data_points, data_dates)
     # data_df = utils.get_new_df(data_df, '2023-04-01')
 
     # train_random_tree_classifier_14(data_df, num_data_points, data_date)
 
-    train_movement_3(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
-    train_movement_7(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
-    train_movement_14(data_df, 
-                    num_data_points,
-                    train_df, valid_df,
-                    test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+    # train_movement_3(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
+    # train_movement_7(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
+    # train_movement_14(data_df, 
+    #                 num_data_points,
+    #                 train_df, valid_df,
+    #                 test_df, train_date,valid_date, test_date,
+    #                 data_dates, show_heat_map = False, is_train = True)
     train_assemble(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = True)
+                    data_dates, show_heat_map = False, is_train = False)
