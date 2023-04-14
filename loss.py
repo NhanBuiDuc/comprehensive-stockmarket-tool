@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 class Unified_Adversarial_Loss(nn.Module):
-    def __init__(self, bce_weight=1, mse_weight=1, hard_negative_weight=5):
+    def __init__(self, bce_weight=0.7, mse_weight=0.3, hard_negative_weight=2):
         super().__init__()
         self.bce_weight = bce_weight
         self.mse_weight = mse_weight
@@ -25,10 +25,13 @@ class Unified_Adversarial_Loss(nn.Module):
 
         # hard_negative_mask[hard_negative_mask == 1] = 2
         # hard_negative_mask[hard_negative_mask == 0] = 1
-        hard_negative_loss = self.hard_negative_weight * hard_negative_mask * bce_loss
+        # bce_loss = self.hard_negative_weight * hard_negative_mask * bce_loss
 
         # Combine the three losses
         
-        loss = self.bce_weight * bce_loss + self.mse_weight * mse_loss + hard_negative_loss
-        loss = loss.mean()
+        loss = self.bce_weight * bce_loss + self.mse_weight * mse_loss
+        # loss = loss.mean()
+        # print("loss", loss)
+        # print("bce", bce_loss)
+        # print("mse_loss", mse_loss)
         return loss
