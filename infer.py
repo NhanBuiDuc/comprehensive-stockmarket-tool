@@ -298,10 +298,11 @@ def evalute_Movement_7(dataset_val, features):
 
 
         out = model(x)
-        _, prob_predict = torch.max(out[:, :2], dim=1)
-        _, prob_true = torch.max(y[:, :2], dim=1)
-        accuracy_score += torch.sum(prob_predict == prob_true).item()
-        y_true = np.append(y_true, [value for value in prob_true.cpu().detach().numpy()])
+        # _, prob_predict = torch.max(out[:, :1], dim=1)
+        prob_predict = (out[:, :1] > 0.5).float()
+        # _, prob_true = torch.max(y[:, :1], dim=1)
+        accuracy_score += torch.sum(prob_predict == y[:, :1]).item()
+        y_true = np.append(y_true, [value for value in y[:, :1].cpu().detach().numpy()])
         y_pred = np.append(y_pred, [value for value in prob_predict.cpu().detach().numpy()])
         loss1 = criterion1(out[:, :1], y[:, :1])
         loss2 = criterion2(out[:, :-1], y[:, :-1])
@@ -350,17 +351,18 @@ def evalute_Movement_14(dataset_val, features):
     model.eval()
 
     for idx, (x, y) in enumerate(val_dataloader):
-
         batchsize = x.shape[0]
 
         x = x.to("cuda")
         y = y.to("cuda")
 
+
         out = model(x)
-        _, prob_predict = torch.max(out[:, :1], dim=1)
-        _, prob_true = torch.max(y[:, :1], dim=1)
-        accuracy_score += torch.sum(prob_predict == prob_true).item()
-        y_true = np.append(y_true, [value for value in prob_true.cpu().detach().numpy()])
+        # _, prob_predict = torch.max(out[:, :1], dim=1)
+        prob_predict = (out[:, :1] > 0.5).float()
+        # _, prob_true = torch.max(y[:, :1], dim=1)
+        accuracy_score += torch.sum(prob_predict == y[:, :1]).item()
+        y_true = np.append(y_true, [value for value in y[:, :1].cpu().detach().numpy()])
         y_pred = np.append(y_pred, [value for value in prob_predict.cpu().detach().numpy()])
         loss1 = criterion1(out[:, :1], y[:, :1])
         loss2 = criterion2(out[:, :-1], y[:, :-1])

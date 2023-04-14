@@ -10,7 +10,7 @@ class Unified_Adversarial_Loss(nn.Module):
         self.mse_loss = nn.MSELoss()
         self.threshold = 0.5
     def forward(self, output, target):
-
+        batch = target.shape[0]
         # Calculate the binary cross-entropy loss for the classification part
         bce_loss = self.bce_loss(output[:, :1], target[:, :1])
 
@@ -29,7 +29,7 @@ class Unified_Adversarial_Loss(nn.Module):
 
         # Combine the three losses
         
-        loss = self.bce_weight * bce_loss + self.mse_weight * mse_loss
+        loss = (self.bce_weight * bce_loss + self.mse_weight * mse_loss)/batch
         # loss = loss.mean()
         # print("loss", loss)
         # print("bce", bce_loss)
