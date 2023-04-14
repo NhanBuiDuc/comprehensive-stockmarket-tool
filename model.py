@@ -152,7 +152,7 @@ class Movement_3(nn.Module):
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 3)
+        self.linear_2 = nn.Linear(320, 2)
         self.relu = nn.ReLU()
         self.drop_out = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
@@ -175,8 +175,8 @@ class Movement_3(nn.Module):
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
         x = self.linear_2(x)
         x = self.drop_out(x)
-        x[:, :2] = self.sigmoid(x[:, :2])
-        x[:, 2:] = self.relu(x[:, 2:])
+        x[:, :1] = self.sigmoid(x[:, :1])
+        x[:, 1:] = self.relu(x[:, 1:])
         return x
 class Movement_7(nn.Module):
     def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, kernel_size, dilation_base):

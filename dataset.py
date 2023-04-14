@@ -18,7 +18,7 @@ class Normalizer():
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = RobustScaler()
+        self.scaler = MinMaxScaler()
         self.x = x.astype(np.float64)
         # Reshape the data
         x = x.reshape((x.shape[0]*x.shape[1], x.shape[2]))
@@ -37,7 +37,7 @@ class TimeSeriesDataset(Dataset):
     
 class Classification_TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = RobustScaler()
+        self.scaler = MinMaxScaler()
         self.y = y.astype(np.float32)
         self.x = x.astype(np.float64)
         # Reshape the data

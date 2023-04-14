@@ -10,7 +10,7 @@ from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
 from plot import to_plot
 import pandas_ta as ta
-from bench_mark_model import bench_mark_random_forest, create_lstm_model, bench_mark_svm
+from bench_mark_model import bench_mark_random_forest, create_lstm_model, bench_mark_svm, create_gru_model
 import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler, RobustScaler
 import joblib
@@ -182,7 +182,7 @@ def train_gru(data_df,
     dataset_train = TimeSeriesDataset(X_train, y_train)
     dataset_val = TimeSeriesDataset(X_valid, y_valid)
     dataset_test = TimeSeriesDataset(X_test, y_test)
-    model, mse, mae = create_lstm_model(dataset_train.x, dataset_train.y, dataset_val.x, dataset_val.y,
+    model, mse, mae = create_gru_model(dataset_train.x, dataset_train.y, dataset_val.x, dataset_val.y,
                                             dataset_test.x, dataset_test.y)
     model_name = cf["alpha_vantage"]["symbol"] +  "_"  + "GRU"
     tf.keras.models.save_model(model, './bench_mark_models/' + model_name, save_format='h5')
@@ -380,26 +380,26 @@ if __name__ == "__main__":
     data_df, num_data_points, data_dates = utils.download_data_api()
     data_df.set_index('date', inplace=True)
     train_df, valid_df, test_df, train_date, valid_date, test_date = utils.split_train_valid_test_dataframe(data_df, num_data_points, data_dates)
-    # train_random_forest(data_df, 
-    #                 num_data_points,
-    #                 train_df, valid_df,
-    #                 test_df, train_date,valid_date, test_date,
-    #                 data_dates, show_heat_map = False, is_train = True)
-    # train_lstm(data_df, 
-    #                 num_data_points,
-    #                 train_df, valid_df,
-    #                 test_df, train_date,valid_date, test_date,
-    #                 data_dates, show_heat_map = False, is_train = True)
-    # train_svm(data_df, 
-    #                 num_data_points,
-    #                 train_df, valid_df,
-    #                 test_df, train_date,valid_date, test_date,
-    #                 data_dates, show_heat_map = False, is_train = True)
-    # train_gru(data_df, 
-    #                 num_data_points,
-    #                 train_df, valid_df,
-    #                 test_df, train_date,valid_date, test_date,
-    #                 data_dates, show_heat_map = False, is_train = True)
+    train_random_forest(data_df, 
+                    num_data_points,
+                    train_df, valid_df,
+                    test_df, train_date,valid_date, test_date,
+                    data_dates, show_heat_map = False, is_train = True)
+    train_lstm(data_df, 
+                    num_data_points,
+                    train_df, valid_df,
+                    test_df, train_date,valid_date, test_date,
+                    data_dates, show_heat_map = False, is_train = True)
+    train_svm(data_df, 
+                    num_data_points,
+                    train_df, valid_df,
+                    test_df, train_date,valid_date, test_date,
+                    data_dates, show_heat_map = False, is_train = True)
+    train_gru(data_df, 
+                    num_data_points,
+                    train_df, valid_df,
+                    test_df, train_date,valid_date, test_date,
+                    data_dates, show_heat_map = False, is_train = True)
     evaluate_forest(data_df, 
                     num_data_points,
                     train_df, valid_df,

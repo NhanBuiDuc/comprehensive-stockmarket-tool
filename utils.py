@@ -5,11 +5,54 @@ import pandas as pd
 import numpy as np
 import pandas_ta as ta
 import seaborn as sns
+import traceback
 import matplotlib.pyplot as plt
 """
 return df: pandas dataframe, num_data_points: int, data_date: list
 """
-def download_data_api():
+# def download_data_api(from_date, to_date):
+#     ts = TimeSeries(key=cf["alpha_vantage"]["key"])
+#     data, meta_data = ts.get_daily_adjusted(cf["alpha_vantage"]["symbol"], outputsize=cf["alpha_vantage"]["outputsize"])
+
+#     # Convert the dictionary to a pandas DataFrame
+#     df = pd.DataFrame.from_dict(data, orient='index')
+#     df = df.astype(float)
+
+#     # Set the name of the first column (date data)
+#     df.reset_index(inplace=True)
+#     df.rename(columns={"index": "date"}, inplace=True)
+
+#     # Reset the index of the DataFrame
+#     df.reset_index(drop=True, inplace=True)
+#     #df['date'] = df['date'].apply(str_to_datetime)
+#     #df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+#     df = df.iloc[::-1].reset_index(drop=True)
+#     data_dates = [date for date in df["date"]]
+#     num_data_points = len(data_dates)
+#     return df, num_data_points, data_dates
+
+# def get_new_df(df, new_date):
+#     df['date'] = pd.to_datetime(df['date'])
+#     new_dates = pd.to_datetime(new_date)
+#     df = df.loc[df['date'] >= new_date]
+#     df = df.drop(columns = ['7. dividend amount', '8. split coefficient'])
+#     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
+#     num_data_points = len(df)
+#     return df, num_data_points, df['date'].tolist()
+# def get_new_df(data_df, from_date, to_date):
+#     # Convert the date columns to datetime format
+#     data_df['date'] = pd.to_datetime(data_df['date'])
+    
+#     # Filter the DataFrame to only include rows within the date range
+#     new_df = data_df[(data_df['date'] >= from_date) & (data_df['date'] <= to_date)]
+#     new_df["date"] = new_df["date"].dt.strftime("%Y-%m-%d")
+#     # Get the number of data points and the unique dates in the new DataFrame
+#     num_data_points = len(new_df)
+#     data_dates = new_df['date'].tolist()
+    
+#     return new_df, num_data_points, data_dates
+
+def download_data_api(from_date, to_date):
     ts = TimeSeries(key=cf["alpha_vantage"]["key"])
     data, meta_data = ts.get_daily_adjusted(cf["alpha_vantage"]["symbol"], outputsize=cf["alpha_vantage"]["outputsize"])
 
@@ -22,22 +65,25 @@ def download_data_api():
     df.rename(columns={"index": "date"}, inplace=True)
 
     # Reset the index of the DataFrame
-    df.reset_index(drop=True, inplace=True)
-    #df['date'] = df['date'].apply(str_to_datetime)
-    #df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-    df = df.iloc[::-1].reset_index(drop=True)
-    data_dates = [date for date in df["date"]]
-    num_data_points = len(data_dates)
-    return df, num_data_points, data_dates
+    # df.reset_index(drop=True, inplace=True)
 
-def get_new_df(df, new_date):
+    # Reverse the order of the DataFrame so that the most recent data is at the end
+    df = df.iloc[::-1].reset_index(drop=True)
+
+    # Convert the date column to datetime format and filter the DataFrame to the desired date range
     df['date'] = pd.to_datetime(df['date'])
-    new_dates = pd.to_datetime(new_date)
-    df = df.loc[df['date'] >= new_date]
-    df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-    df = df.drop(columns = ['7. dividend amount', '8. split coefficient'])
+    # from_date = pd.to_datetime('2023-01-01')
+    # to_date = pd.to_datetime('2023-04-01')
+    df = df[(df['date'] >= from_date) & (df['date'] <= to_date)]
+
+    # Format the date column as a string in YYYY-MM-DD format
+    df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+
+    # Get the number of data points and the unique dates in the new DataFrame
     num_data_points = len(df)
-    return df, num_data_points, new_dates
+    data_dates = df['date'].tolist()
+
+    return df, num_data_points, data_dates
 
 def str_to_datetime(s):
   split = s.split('-')
@@ -134,19 +180,27 @@ def prepare_timeseries_data_y_trend(num_rows, data, output_size):
             output[i] = (1, 0)
     return output
 def prepare_timeseries_data_y_trend_percentage(num_rows, data, output_size):
-    output = np.empty((num_rows, 3))
+    output = np.empty((num_rows, 2))
     window_size = cf["data"]["window_size"]
     # Iterate over original array and extract windows of size 3
     # (0,1,p) means up
     # (1,0,p) means down
+    # for i in range(num_rows):
+    #     change_percentage =  (( data[i + window_size + output_size - 1] - data[window_size + i - 1] ) * 100 ) / data[window_size + i - 1]
+    #     # Go up
+    #     if((change_percentage > 0)):
+    #         output[i] = (0, 1, abs(change_percentage))
+    #     # Go down
+    #     elif ((change_percentage < 0)):
+    #         output[i] = (1, 0, abs(change_percentage))
     for i in range(num_rows):
         change_percentage =  (( data[i + window_size + output_size - 1] - data[window_size + i - 1] ) * 100 ) / data[window_size + i - 1]
         # Go up
         if((change_percentage > 0)):
-            output[i] = (0, 1, abs(change_percentage))
+            output[i] = (1, abs(change_percentage))
         # Go down
         elif ((change_percentage < 0)):
-            output[i] = (1, 0, abs(change_percentage))
+            output[i] = (0, abs(change_percentage))
     return output
 def prepare_tree_data_y_trend(num_rows, data, output_size):
     output = np.empty((num_rows, 1), dtype=int)
@@ -225,7 +279,20 @@ def Stochrsi(df, window_size):
 def Cci(df, window_size):
     return ta.cci(df['2. high'], df['3. low'], df['4. close'], window_size)
 def Macd(df, window_size):
-    return ta.macd(df['4. close'], fast=window_size, slow=window_size * 2)
+    try:
+        # Replace any None values in the '4. close' column with NaN
+        df['4. close'] = df['4. close'].replace({None: np.nan})
+        # Drop any rows with NaN values in the '4. close' column
+        df = df.dropna(subset=['4. close'])
+        close = df['4. close'].numpy()
+        # Calculate the MACD
+        macd = ta.macd(close, fast=window_size, slow=window_size * 2)
+        return macd
+    except Exception as e:
+        print("An error occurred while calculating the MACD:")
+        print(str(e))
+        print(traceback.format_exc())
+
 def Dm(df, window_size):
     return ta.dm(df['2. high'], df['3. low'], window_size)
 def Cfo(df, window_size):

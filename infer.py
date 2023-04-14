@@ -239,12 +239,13 @@ def evalute_Movement_3(dataset_val, features):
 
 
         out = model(x)
-        _, prob_predict = torch.max(out[:, :2], dim=1)
-        _, prob_true = torch.max(y[:, :2], dim=1)
-        accuracy_score += torch.sum(prob_predict == prob_true).item()
-        y_true = np.append(y_true, [value for value in prob_true.cpu().detach().numpy()])
+        # _, prob_predict = torch.max(out[:, :1], dim=1)
+        prob_predict = (out[:, :1] > 0.5678).float()
+        # _, prob_true = torch.max(y[:, :1], dim=1)
+        accuracy_score += torch.sum(prob_predict == y[:, :1]).item()
+        y_true = np.append(y_true, [value for value in y[:, :1].cpu().detach().numpy()])
         y_pred = np.append(y_pred, [value for value in prob_predict.cpu().detach().numpy()])
-        loss1 = criterion1(out[:, :2], y[:, :2])
+        loss1 = criterion1(out[:, :1], y[:, :1])
         loss2 = criterion2(out[:, :-1], y[:, :-1])
         binary_cross_entropy_val_loss += loss1.detach().item()  / batchsize
         mean_squared_error_val_loss += loss2.detach().item()  / batchsize
@@ -302,7 +303,7 @@ def evalute_Movement_7(dataset_val, features):
         accuracy_score += torch.sum(prob_predict == prob_true).item()
         y_true = np.append(y_true, [value for value in prob_true.cpu().detach().numpy()])
         y_pred = np.append(y_pred, [value for value in prob_predict.cpu().detach().numpy()])
-        loss1 = criterion1(out[:, :2], y[:, :2])
+        loss1 = criterion1(out[:, :1], y[:, :1])
         loss2 = criterion2(out[:, :-1], y[:, :-1])
         binary_cross_entropy_val_loss += loss1.detach().item()  / batchsize
         mean_squared_error_val_loss += loss2.detach().item()  / batchsize
@@ -356,12 +357,12 @@ def evalute_Movement_14(dataset_val, features):
         y = y.to("cuda")
 
         out = model(x)
-        _, prob_predict = torch.max(out[:, :2], dim=1)
-        _, prob_true = torch.max(y[:, :2], dim=1)
+        _, prob_predict = torch.max(out[:, :1], dim=1)
+        _, prob_true = torch.max(y[:, :1], dim=1)
         accuracy_score += torch.sum(prob_predict == prob_true).item()
         y_true = np.append(y_true, [value for value in prob_true.cpu().detach().numpy()])
         y_pred = np.append(y_pred, [value for value in prob_predict.cpu().detach().numpy()])
-        loss1 = criterion1(out[:, :2], y[:, :2])
+        loss1 = criterion1(out[:, :1], y[:, :1])
         loss2 = criterion2(out[:, :-1], y[:, :-1])
         binary_cross_entropy_val_loss += loss1.detach().item()  / batchsize
         mean_squared_error_val_loss += loss2.detach().item()  / batchsize
