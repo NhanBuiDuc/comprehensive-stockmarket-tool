@@ -86,9 +86,9 @@ def  train_assemble(data_df,
     X_valid = utils.prepare_timeseries_data_x(valid_df.to_numpy(), window_size = window_size)[:-output_step]
     X_test = utils.prepare_timeseries_data_x(test_df.to_numpy(), window_size = window_size)[:-output_step]
 
-    dataset_train = TimeSeriesDataset(X_train, y_train)
-    dataset_val = TimeSeriesDataset(X_valid, y_valid)
-    dataset_test = TimeSeriesDataset(X_test, y_test)
+    dataset_train = Classification_TimeSeriesDataset(X_train, y_train)
+    dataset_val = Classification_TimeSeriesDataset(X_valid, y_valid)
+    dataset_test = Classification_TimeSeriesDataset(X_test, y_test)
     if is_train:
         train.train_assemble_model_1(dataset_train, dataset_val, features = train_df.columns.values)
     infer.evalute_assembly_regression(dataset_val=dataset_val , features = train_df.columns.values)
@@ -521,10 +521,10 @@ if __name__ == "__main__":
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False)
+                    data_dates, show_heat_map = False, is_train = True)
 
     train_assemble(data_df, 
                     num_data_points,
                     train_df, valid_df,
                     test_df, train_date,valid_date, test_date,
-                    data_dates, show_heat_map = False, is_train = False)
+                    data_dates, show_heat_map = False, is_train = True  )

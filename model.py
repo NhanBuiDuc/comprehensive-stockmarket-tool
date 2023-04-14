@@ -36,7 +36,7 @@ class Assemble_1(nn.Module):
             kernel_size=4,
             dilation_base=3
         )
-        self.linear_1 = nn.Linear(1, 1)
+        self.linear_1 = nn.Linear(2, 1)
         self.relu = nn.ReLU()
         self.dropout_1 = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
@@ -47,17 +47,15 @@ class Assemble_1(nn.Module):
 
     def forward(self, x):
         batch_size = x.shape[0]
-
-        x1 = x.clone()
-        x2 = x.clone()
         latest_data_point = x[:, -1, 0].unsqueeze(1) 
         # Run the short-term and long-term forecasting models
-        prob = self.forecasting_model(x1)
-        delta = self.magnitude_model(x1)
+        prob = self.forecasting_model(x)
+        delta = self.magnitude_model(x)
         
         direction = (prob[:, :1] > 0.5).float()
         direction = torch.where(direction == 0, -1, 1)
         delta = (direction * delta) * latest_data_point
+        delta = torch.concat([delta, latest_data_point], dim = 1)
         delta = self.linear_1(delta)
         real_value = latest_data_point + delta
         return real_value
@@ -134,10 +132,10 @@ class Magnitude_1(nn.Module):
                                                 dilation_base=self.dilation_base)
         
         self.lstm = nn.LSTM(2, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
-        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layers, 10)
+        self.linear_1 = nn.Linear(320, 100)
         self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(320, 1)
+        self.linear_2 = nn.Linear(100, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
@@ -159,10 +157,9 @@ class Magnitude_1(nn.Module):
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+        x = self.linear_1(x)
+        x = self.relu(x)
         x = self.linear_2(x)
-        x = self.drop_out(x)
-        # x[:, :1] = self.tanh(x[:, :1])
-        # x[:, 1:] = self.relu(x[:, 1:])
         x = self.relu(x)
         return x
 
