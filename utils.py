@@ -57,34 +57,23 @@ def download_data_api(from_date, to_date):
     data, meta_data = ts.get_daily_adjusted(cf["alpha_vantage"]["symbol"], outputsize=cf["alpha_vantage"]["outputsize"])
 
     # Convert the dictionary to a pandas DataFrame
-    df = pd.DataFrame.from_dict(data, orient='index')
-    df = df.astype(float)
+    df = pd.DataFrame.from_dict(data, orient='index', dtype=float)
 
-    # Set the name of the first column (date data)
-    df.reset_index(inplace=True)
-    df.rename(columns={"index": "date"}, inplace=True)
+    # Set the index of the DataFrame to "date" and sort by date
+    df.index = pd.to_datetime(df.index)
+    df.sort_index(inplace=True)
 
-    # Reset the index of the DataFrame
-    # df.reset_index(drop=True, inplace=True)
 
-    # Reverse the order of the DataFrame so that the most recent data is at the end
-    df = df.iloc[::-1].reset_index(drop=True)
+    df = df.loc[from_date:to_date]
 
-    # Convert the date column to datetime format and filter the DataFrame to the desired date range
-    df['date'] = pd.to_datetime(df['date'])
-    # from_date = pd.to_datetime('2023-01-01')
-    # to_date = pd.to_datetime('2023-04-01')
-    df = df[(df['date'] >= from_date) & (df['date'] <= to_date)]
-
-    # Format the date column as a string in YYYY-MM-DD format
-    df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+    # Format the index as a string in YYYY-MM-DD format
+    df.index = df.index.strftime('%Y-%m-%d')
 
     # Get the number of data points and the unique dates in the new DataFrame
     num_data_points = len(df)
-    data_dates = df['date'].tolist()
+    data_dates = df.index.tolist()
 
     return df, num_data_points, data_dates
-
 def str_to_datetime(s):
   split = s.split('-')
   year, month, day = int(split[0]), int(split[1]), int(split[2])
@@ -278,20 +267,40 @@ def Stochrsi(df, window_size):
         return ta.stochrsi(df['4. close'], window_size, rsi_length= window_size )
 def Cci(df, window_size):
     return ta.cci(df['2. high'], df['3. low'], df['4. close'], window_size)
+# def Macd(df, window_size):
+#     try:
+#         close = df['4. close']
+#         # Calculate the MACD
+#         macd = ta.macd(close, fast=window_size, slow=window_size * 2)
+#         return macd
+#     except Exception as e:
+#         print("An error occurred while calculating the MACD:")
+#         print(str(e))
+#         print(traceback.format_exc())
 def Macd(df, window_size):
-    try:
-        # Replace any None values in the '4. close' column with NaN
-        df['4. close'] = df['4. close'].replace({None: np.nan})
-        # Drop any rows with NaN values in the '4. close' column
-        df = df.dropna(subset=['4. close'])
-        close = df['4. close'].numpy()
-        # Calculate the MACD
-        macd = ta.macd(close, fast=window_size, slow=window_size * 2)
-        return macd
-    except Exception as e:
-        print("An error occurred while calculating the MACD:")
-        print(str(e))
-        print(traceback.format_exc())
+    window_size_fast = 12
+    window_size_slow = 26
+    signal_period = 9
+
+    # Calculate the Exponential Moving Averages (EMA)
+    ema_fast = df['4. close'].ewm(span=window_size_fast, adjust=False).mean()
+    ema_slow = df['4. close'].ewm(span=window_size_slow, adjust=False).mean()
+
+    # Calculate the MACD and Signal line
+    macd = ema_fast - ema_slow
+    signal = macd.ewm(span=signal_period, adjust=False).mean()
+
+    # Calculate the Histogram
+    histogram = macd - signal
+
+    # Add the MACD, Signal line and Histogram as columns to the DataFrame
+    # df['MACD'] = macd
+    # df['Signal line'] = signal
+    # df['Histogram'] = histogram
+    # This code uses the Pandas' built-in ewm method to calculate the Exponential Moving Averages (EMA) for the fast and slow windows. It then subtracts the slow EMA from the fast EMA to get the MACD line, and calculates a signal line by taking the EMA of the MACD line. Finally, it calculates the Histogram as the difference between the MACD and Signal line.
+
+    # The resulting MACD, Signal line, and Histogram are added as new columns to the original DataFrame.
+    return macd, signal, histogram
 
 def Dm(df, window_size):
     return ta.dm(df['2. high'], df['3. low'], window_size)
@@ -434,9 +443,9 @@ def prepare_dataset_and_indicators(data_df, window_size):
     dataset_df['STOCHRSIk'] =stochrsi.to_numpy()[:, 0]
     dataset_df['STOCHRSId'] =stochrsi.to_numpy()[:, 1]
     dataset_df['cci'] =cci
-    dataset_df['macd'] =macd.to_numpy()[:, 0]
-    dataset_df['mach'] =macd.to_numpy()[:, 1]
-    dataset_df['macs'] =macd.to_numpy()[:, 2]
+    dataset_df['macd'] =macd[0]
+    dataset_df['mach'] =macd[1]
+    dataset_df['macs'] =macd[2]
     dataset_df['DMp'] =dm.to_numpy()[:, 0]
     dataset_df['DMn'] =dm.to_numpy()[:, 1]
     dataset_df['cfo'] =cfo
