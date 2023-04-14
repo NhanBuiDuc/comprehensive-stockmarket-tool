@@ -23,7 +23,7 @@ config = {
     },
     "model": {
         "assemble_1":{
-            "input_size": 14,
+            "input_size": 39,
             "num_lstm_layers": 5,
             "lstm_size": 64,
             "dropout": 0.2, 
@@ -44,7 +44,7 @@ config = {
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
             "dropout": 0.2, 
-            "output_steps": 1,
+            "output_steps": 3,
             "window_size": 14,
             "max_features": 5,
             "kernel_size": 4,
@@ -86,9 +86,9 @@ config = {
         "assemble_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
-            "num_epoch": 10,
-            "learning_rate": 0.001,
+            "batch_size": 64,
+            "num_epoch": 150,
+            "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
@@ -99,8 +99,8 @@ config = {
         {
             "device": "cuda", # "cuda" or "cpu"
             "batch_size": 64,
-            "num_epoch": 50,
-            "learning_rate": 0.001,
+            "num_epoch": 150,
+            "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
             "best_model": False,
@@ -110,7 +110,7 @@ config = {
         "movement_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
+            "batch_size": 64,
             "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
@@ -122,7 +122,7 @@ config = {
         "magnitude_1":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
+            "batch_size": 64,
             "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
@@ -134,8 +134,8 @@ config = {
         "movement_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
-            "num_epoch": 200,
+            "batch_size": 64,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -146,8 +146,8 @@ config = {
         "magnitude_3":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
-            "num_epoch": 200,
+            "batch_size": 64,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -158,8 +158,8 @@ config = {
         "movement_7":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
-            "num_epoch": 50,
+            "batch_size": 64,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -170,8 +170,8 @@ config = {
         "magnitude_7":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
-            "num_epoch": 200,
+            "batch_size": 64,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -182,8 +182,8 @@ config = {
         "movement_14":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
-            "num_epoch": 50,
+            "batch_size": 64,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
@@ -194,8 +194,8 @@ config = {
         "magnitude_14":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 16,
-            "num_epoch": 200,
+            "batch_size": 64,
+            "num_epoch": 150,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
             "patient": 200,
