@@ -131,15 +131,15 @@ def evalute_assembly_regression(dataset_val, features):
         loss2 = criterion2(out, y)
         loss3 = torch.sqrt(loss)
         
-        MSE_val_loss += loss.detach().item()  / batchsize
-        MAE_val_loss += loss2.detach().item()  / batchsize
-        RMSE_val_loss += loss3.detach().item()  / batchsize
+        MSE_val_loss += loss.detach().item() / batch_size
+        MAE_val_loss += loss2.detach().item()
+        RMSE_val_loss += loss3.detach().item()
 
 
-    print('Assemble MSE Valid loss:{:.6f}%, MAE Valid loss:{:.6f}%, RMSE Valid loss:{:.6f}%'
-                    .format(MSE_val_loss * 100 / num_data, 
-                            MAE_val_loss * 100 / num_data,
-                            RMSE_val_loss * 100 / num_data))
+    print('Assemble MSE Average Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
+                    .format(MSE_val_loss / num_data, 
+                            MAE_val_loss / num_data,
+                            RMSE_val_loss / num_data))
     print('Assemble MSE Valid loss:{:.6f}, MAE Valid loss:{:.6f}, RMSE Valid loss:{:.6f}'
                     .format(MSE_val_loss, 
                             MAE_val_loss,

@@ -160,7 +160,6 @@ class Magnitude_1(nn.Module):
         x = self.linear_1(x)
         x = self.relu(x)
         x = self.linear_2(x)
-        x = self.relu(x)
         return x
 
 class Movement_3(nn.Module):
