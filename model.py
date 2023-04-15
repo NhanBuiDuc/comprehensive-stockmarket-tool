@@ -36,7 +36,11 @@ class Assemble_1(nn.Module):
             kernel_size=4,
             dilation_base=3
         )
-        self.linear_1 = nn.Linear(2, 1)
+        self.linear_1 = nn.Linear(2, 10)
+        self.linear_2 = nn.Linear(10, 20)
+        self.linear_3 = nn.Linear(20, 10)
+        self.linear_4 = nn.Linear(20, 10)
+        self.linear_5 = nn.Linear(20, 1)
         self.relu = nn.ReLU()
         self.dropout_1 = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
@@ -55,10 +59,24 @@ class Assemble_1(nn.Module):
         direction = (prob[:, :1] > 0.5).float()
         direction = torch.where(direction == 0, -1, 1)
         delta = (direction * delta) * latest_data_point
-        delta = torch.concat([delta, latest_data_point], dim = 1)
+        # # real_value = latest_data_point + delta
+        delta = torch.concat([latest_data_point, delta], dim = 1)
         delta = self.linear_1(delta)
-        real_value = latest_data_point + delta
-        return real_value
+        delta = self.dropout(delta)
+        delta = self.relu(delta)
+        delta = self.linear_2(delta)
+        delta = self.dropout(delta)
+        delta = self.relu(delta)
+        delta = self.linear_3(delta)
+        delta = self.dropout(delta)
+        delta = self.relu(delta)
+        delta = self.linear_4(delta)
+        delta = self.dropout(delta)
+        delta = self.relu(delta)
+        delta = self.linear_5(delta)
+        delta = self.dropout(delta)
+        delta = self.relu(delta)
+        return delta
 
 class Movement_1(nn.Module):
     def __init__(self, input_size, window_size, lstm_hidden_layer_size, lstm_num_layers, output_steps, kernel_size, dilation_base):
@@ -133,10 +151,10 @@ class Magnitude_1(nn.Module):
         
         self.lstm = nn.LSTM(2, hidden_size=self.lstm_hidden_layer_size, num_layers=self.lstm_num_layers, batch_first=True)
         self.linear_1 = nn.Linear(320, 100)
-        self.sigmoid = nn.Sigmoid()
-        self.tanh = nn.Tanh()
-        self.linear_2 = nn.Linear(100, 1)
+        self.linear_2 = nn.Linear(100, 50)
+        self.linear_3 = nn.Linear(50, 1)
         self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(0.2)
         self.softmax = nn.Softmax(dim=1)  # Apply softmax activation
@@ -158,8 +176,12 @@ class Magnitude_1(nn.Module):
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
         x = self.linear_1(x)
-        x = self.relu(x)
+        x = self.tanh(x)
+        x = self.drop_out(x)
         x = self.linear_2(x)
+        x = self.drop_out(x)
+        x = self.tanh(x)
+        x = self.linear_3(x)
         return x
 
 class Movement_3(nn.Module):
