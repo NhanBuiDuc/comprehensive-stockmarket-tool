@@ -188,10 +188,11 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
                 optimizer.step()
             else:
                 print("loss = nan")
-        epoch_loss += (loss.detach().item())
+        batch_loss = (loss.detach().item())
+        epoch_loss += batch_loss
+        # update the progress bar
+        dataloader.set_description(f"Batch Epoch Loss: {batch_loss:.4f}")
 
-    # update the progress bar
-    dataloader.set_description(f"Full Epoch Loss: {epoch_loss:.4f}")
     try:
         lr = scheduler.get_last_lr()[0]
 

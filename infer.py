@@ -312,8 +312,8 @@ def evalute_magnitude_3(dataset_val, features):
         dilation_base=3
 
     )
-    checkpoint = torch.load('./models/' + model_name)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    model.load_state_dict(checkpoint['model_state_dict'])    checkpoint = torch.load('./models/' + model_name)
+
     print("Epoch: ", checkpoint["epoch"], "Valid loss: ", checkpoint["valid_loss"], "Training loss: ", checkpoint["training_loss"])
     model.eval()
     model.to("cuda")
