@@ -86,7 +86,6 @@ def read_csv_file(path, file_name):
 
     # read the CSV file into a Pandas dataframe
     df = pd.read_csv(file_path, index_col=0, parse_dates=True)
-
     return df
 
 
@@ -102,12 +101,10 @@ def prepare_stock_dataframe(window_size, start, end, new_data):
     file_name = symbol + ".csv"
     path = "./csv/"
     if not file_exist(path, file_name):
-        download_stock_csv_file(path, file_name, symbol, window_size)
-        df = read_csv_file(path, file_name)
+        df = download_stock_csv_file(path, file_name, symbol, window_size)
 
     elif new_data:
-        download_stock_csv_file(path, file_name, symbol, window_size)
-        df = read_csv_file(path, file_name)
+        df = download_stock_csv_file(path, file_name, symbol, window_size)
     else:
         df = read_csv_file(path, file_name)
 
