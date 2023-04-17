@@ -162,13 +162,13 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 1,
+                "num_epoch": 500,
                 "learning_rate": 0.01,
                 "loss": "bce",
-                "evaluate": ["bce"],
+                "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
-                "scheduler_step_size": 50,
-                "patient": 200,
+                "scheduler_step_size": 200,
+                "patient": 1000,
                 "start": "2020-5-01",
                 "end": None,
                 "best_model": True,
