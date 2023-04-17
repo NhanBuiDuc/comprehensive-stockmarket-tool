@@ -12,7 +12,8 @@ from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 from tqdm import tqdm
 
 
-def prepare_data(model_type, window_size, start, end, new_data, output_step):
+def prepare_data(model_type, window_size, start, end, new_data,
+                 output_step, batch_size, train_shuffle, val_shuffle, test_shuffle):
     df = u.prepare_stock_dataframe(window_size, start, end, new_data)
     num_data_points = df.shape[0]
     num_feature = df.shape[1]
@@ -125,9 +126,9 @@ def prepare_data(model_type, window_size, start, end, new_data, output_step):
         valid_dataset = TimeSeriesDataset(X_valid, y_valid)
         test_dataset = TimeSeriesDataset(X_test, y_test)
 
-    train_dataloader = DataLoader(train_dataset)
-    valid_dataloader = DataLoader(valid_dataset)
-    test_dataloader = DataLoader(test_dataset)
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=train_shuffle)
+    valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=val_shuffle)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=test_shuffle)
 
     return train_dataloader, valid_dataloader, test_dataloader, \
         num_feature, num_data_points, \
@@ -191,7 +192,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
         batch_loss = (loss.detach().item())
         epoch_loss += batch_loss
         # update the progress bar
-        dataloader.set_description(f"Batch Epoch Loss: {batch_loss:.4f}")
+        dataloader.set_description(f"At index {idx:.4f}")
 
     try:
         lr = scheduler.get_last_lr()[0]
@@ -254,7 +255,7 @@ class Trainer:
             train_dataloader, valid_dataloader, test_dataloader, \
                 num_feature, num_data_points, \
                 train_date, valid_date, test_date = prepare_data(model_type, window_size, start, end, new_data,
-                                                                 output_step)
+                                                                 output_step, batch_size, train_shuffle, val_shuffle, test_shuffle)
             model = Model(name=model_name, num_feature=num_feature, model_type=model_type)
             model.name = model_full_name
             self.train_dataloader_dict[model] = train_dataloader
@@ -280,6 +281,9 @@ class Trainer:
         model.structure.to(device)
         if best_model:
             best_loss = sys.float_info.max
+        else:
+            best_loss = sys.float_info.min
+
         if early_stop:
             stop = False
 
@@ -295,13 +299,23 @@ class Trainer:
                     patient_count = 0
                     model.train_stop_lr = lr_train
                     model.train_stop_epoch = epoch
-                    torch.save(model, "./models/" + model.name + ".pth")
+
+                    model.state_dict = model.structure.state_dict()
+                    torch.save({"model": model,
+                                "state_dict": model.structure.state_dict()
+                                },
+                               "./models/" + model.name + ".pth")
                 else:
                     if early_stop:
-                        stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val,
-                                                                       patient_count=patient_count, max_patient=patient)
+                        stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss, current_loss=loss_val,
+                                                                          patient_count=patient_count,
+                                                                          max_patient=patient)
             else:
-                torch.save(model, "./models/" + model.name + ".pth")
+                model.state_dict = model.structure.state_dict()
+                torch.save({"model": model,
+                            "state_dict": model.structure.state_dict()
+                            },
+                           "./models/" + model.name + ".pth")
 
             print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                   .format(epoch + 1, num_epoch, loss_train, loss_val, lr_train))
