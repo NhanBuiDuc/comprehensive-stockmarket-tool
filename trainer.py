@@ -194,6 +194,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
     return epoch_loss, lr
 
 
+# Main
 class Trainer:
     def __init__(self):
         self.test_dataloader_dict = {}
@@ -247,7 +248,7 @@ class Trainer:
                 num_feature, num_data_points, \
                 train_date, valid_date, test_date = prepare_data(model_type, window_size, start, end, new_data,
                                                                  output_step)
-            model = Model(name=model_name, num_feature=num_feature, model_type=model_type)
+            model = Model(name=model_full_name, num_feature=num_feature, model_type=model_type)
             self.train_dataloader_dict[model] = train_dataloader
             self.valid_dataloader_dict[model] = valid_dataloader
             self.test_dataloader_dict[model] = test_dataloader
@@ -286,17 +287,13 @@ class Trainer:
                     patient_count = 0
                     model.train_stop_lr = lr_train
                     model.train_stop_epoch = epoch
-                    torch.save({
-                        "model": model
-                    }, "./models/" + model.name)
+                    torch.save(model, "./models/" + model.name)
                 else:
                     if early_stop:
                         stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val,
                                                                        patient_count=patient_count, max_patient=patient)
             else:
-                torch.save({
-                    "model": model
-                }, "./models/" + model.name)
+                torch.save(model, "./models/" + model.name)
 
             print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                   .format(epoch + 1, num_epoch, loss_train, loss_val, lr_train))

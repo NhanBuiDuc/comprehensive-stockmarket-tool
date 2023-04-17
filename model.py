@@ -5,7 +5,7 @@ import math
 
 
 class Model:
-    def __init__(self, name, num_feature, model_type):
+    def __init__(self, name, save_name, num_feature, model_type):
         self.num_feature = num_feature
         self.model_type = model_type
         self.structure = None
@@ -25,9 +25,10 @@ class Model:
         pass
 
     def construct_structure(self):
-        self.parameters = cf["model"][self.name]
+        self.parameters = cf["model"][self.model_type]
 
         if self.model_type == self.model_type_dict[1]:
+            self.parameters = cf["model"][self.name]
             self.structure = Movement(self.num_feature, **self.parameters)
         elif self.model_type == self.model_type_dict[2]:
             pass
@@ -165,7 +166,7 @@ class Movement(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.drop_out = nn.Dropout(self.drop_out)
         self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 10)
-        self.linear_2 = nn.Linear(10, 5)
+        self.linear_2 = nn.Linear(10, 1)
         self.linear_3 = nn.Linear(5, 1)
 
         self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,

@@ -188,7 +188,7 @@ config = {
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
                 "patient": 200,
-                "from": "2000-5-01",
+                "from": "2010-5-01",
                 "to": None,
                 "best_model": True,
                 "early_stop": True,
