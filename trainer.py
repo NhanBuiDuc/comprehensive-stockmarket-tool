@@ -154,6 +154,7 @@ class Trainer:
             prepare_eval_data(model_type, model_full_name, train_file_name, valid_file_name, test_file_name, batch_size,
                               evaluate, start, end, train_shuffle, val_shuffle, test_shuffle, window_size, output_step)
 
+        model.structure.to(device)
         for evaluative_criterion in evaluate:
             if "mse" in evaluative_criterion:
                 criterion = nn.MSELoss()
@@ -166,21 +167,21 @@ class Trainer:
                 true_labels = []
                 predicted_labels = []
                 # Iterate over the dataloader
-                for inputs, labels in test_shuffle:
+                for inputs, labels in test_dataloader:
                     # Move inputs and labels to device
                     inputs = inputs.to(device)
                     labels = labels.to(device)
 
                     # Forward pass
-                    outputs = model(inputs)
-                    _, predicted = torch.max(outputs.data, 1)
-
+                    outputs = model.structure(inputs)
+                    # _, predicted = torch.max(outputs.data, 1)
+                    predicted = (outputs > 0.5).float()
                     # Append true and predicted labels to the respective lists
                     true_labels.extend(labels.cpu().numpy())
                     predicted_labels.extend(predicted.cpu().numpy())
 
                 # Compute classification report
-                target_names = ["DOWN", "UP", ...]  # Add target class names here
+                target_names = ["DOWN", "UP"]  # Add target class names here
                 report = classification_report(true_labels, predicted_labels, target_names=target_names)
 
                 # Print the classification report
@@ -194,9 +195,9 @@ class Trainer:
 
 def prepare_eval_data(model_type, model_full_name, train_file_name, valid_file_name, test_file_name, batch_size,
                       evaluate, start, end, train_shuffle, val_shuffle, test_shuffle, window_size, output_step):
-    train_df = pd.read_csv(f"./csv/train_{model_full_name}.csv")
-    valid_df = pd.read_csv(f"./csv/valid_{model_full_name}.csv")
-    test_df = pd.read_csv(f"./csv/test_{model_full_name}.csv")
+    train_df = pd.read_csv(f"./csv/train_{model_full_name}.csv", index_col=0, parse_dates=True)
+    valid_df = pd.read_csv(f"./csv/valid_{model_full_name}.csv", index_col=0, parse_dates=True)
+    test_df = pd.read_csv(f"./csv/test_{model_full_name}.csv", index_col=0, parse_dates=True)
 
     train_date = train_df.index.strftime("%Y-%m-%d").tolist()
     valid_date = valid_df.index.strftime("%Y-%m-%d").tolist()
@@ -328,6 +329,10 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
     train_date = train_valid_date[:train_valid_split_index]
     valid_date = train_valid_date[train_valid_split_index:]
 
+    train_df.to_csv(f"./csv/train_{model_full_name}.csv")
+    valid_df.to_csv(f"./csv/valid_{model_full_name}.csv")
+    test_df.to_csv(f"./csv/test_{model_full_name}.csv")
+
     if model_type == "movement":
 
         train_date = train_date[int(len(train_date) - len(train_df)):]
@@ -418,10 +423,6 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=train_shuffle)
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=val_shuffle)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=test_shuffle)
-
-    train_df.to_csv(f"./csv/train_{model_full_name}.csv")
-    valid_df.to_csv(f"./csv/valid_{model_full_name}.csv")
-    test_df.to_csv(f"./csv/test_{model_full_name}.csv")
 
     return train_dataloader, valid_dataloader, test_dataloader, \
         num_feature, num_data_points, \
