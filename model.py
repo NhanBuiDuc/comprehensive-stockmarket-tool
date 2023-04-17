@@ -182,7 +182,7 @@ class Movement(nn.Module):
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
         self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 10)
+        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
         self.linear_2 = nn.Linear(10, 5)
         self.linear_3 = nn.Linear(5, 1)
 
@@ -207,13 +207,6 @@ class Movement(nn.Module):
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
         x = self.linear_1(x)
-        x = self.drop_out(x)
-        x = self.relu(x)
-        x = self.linear_2(x)
-        x = self.drop_out(x)
-        x = self.relu(x)
-        x = self.linear_3(x)
-        x = self.drop_out(x)
         x = self.sigmoid(x)
         return x
 

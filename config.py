@@ -71,7 +71,7 @@ config = {
                 "sub_big_num_layer": 1,
                 "sub_small_kernel_size": 3,
                 "sub_big_kernel_size": 30,
-                "output_size": 20
+                "output_size": 2
             }
         },
         "magnitude_1": {
@@ -167,7 +167,7 @@ config = {
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
-                "scheduler_step_size": 200,
+                "scheduler_step_size": 50,
                 "patient": 1000,
                 "start": "2000-01-01",
                 "end": None,
