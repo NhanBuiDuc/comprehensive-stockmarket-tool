@@ -1,6 +1,6 @@
 config = {
     "alpha_vantage": {
-        "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
+        "key": "FHRPM2N3M9H6SIEN", # XOLA7URKCZHU7C9X
         "symbol": "JNJ",
         "outputsize": "full",
         "key_adjusted_close": "5. adjusted close",
@@ -24,18 +24,11 @@ config = {
     "model": {
         "assembly_regression_1":{
             "input_size": 14,
-            "num_lstm_layers": 2,
+            "lstm_num_layers": 2,
             "lstm_size": 7,
             "dropout": 0.2, 
             "output_steps": 3,
             "window_size": 14  
-        },
-        "lstm_regression_1":{
-            "input_size": 14,
-            "num_lstm_layers": 2,
-            "lstm_size": 32,
-            "dropout": 0.5,
-            "output_dates": 1    
         },
         "movement_3":{
             "lstm_num_layers": 2,

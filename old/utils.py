@@ -118,19 +118,19 @@ def diff(np_array):
 
 
 def prepare_timeseries_data_x(x, window_size):
-    '''
+    """
     x: 1D arr, window_size: int
     Note: len(x) > window_size
     window_size: the size of the sliding window
     n_row: the number of rows in the windowed data. Can take it by func below.
-    output return view of x with the shape is (n_row,window_size) and the strides equal to (x.strides[0],x.strides[0])  
+    output return view of x with the shape is (n_row,window_size) and the strides equal to (x.strides[0],x.strides[0])
     which ensures that the rows of the output are contiguous in memory.
-    
+
     return:
     tuple of 2 array
     output[:-1]: has shape (n_row, window_size)
     output[-1]: has shape (window_size,) and contains the last window of x.
-    '''
+    """
     x = np.array(x)
     num_features = x.shape[-1]
     n_row = x.shape[0] - window_size
@@ -178,28 +178,21 @@ def prepare_timeseries_data_y_trend(num_rows, data, output_size):
     # (0) means down
     for i in range(num_rows - 1):
         # Go up
-        if (data[i + output_size] > data[i]):
-            output[i] = (1)
+        if data[i + output_size] > data[i]:
+            output[i] = 1
         # Go down
         else:
-            output[i] = (0)
+            output[i] = 0
     return output
 
 
 def prepare_timeseries_data_y_trend_percentage(num_rows, data, output_size):
     output = np.zeros((num_rows, 2), dtype=float)
     window_size = cf["data"]["window_size"]
-    # Iterate over original array and extract windows of size 3
-    # (0,1,p) means up
-    # (1,0,p) means down
-    # for i in range(num_rows):
-    #     change_percentage =  (( data[i + window_size + output_size - 1] - data[window_size + i - 1] ) * 100 ) / data[window_size + i - 1]
-    #     # Go up
-    #     if((change_percentage > 0)):
-    #         output[i] = (0, 1, abs(change_percentage))
-    #     # Go down
-    #     elif ((change_percentage < 0)):
-    #         output[i] = (1, 0, abs(change_percentage))
+    # Iterate over original array and extract windows of size 3 (0,1,p) means up (1,0,p) means down for i in range(
+    # num_rows): change_percentage =  (( data[i + window_size + output_size - 1] - data[window_size + i - 1] ) * 100
+    # ) / data[window_size + i - 1] # Go up if((change_percentage > 0)): output[i] = (0, 1, abs(change_percentage)) #
+    # Go down elif ((change_percentage < 0)): output[i] = (1, 0, abs(change_percentage))
     for i in range(num_rows):
         change_percentage = ((data[i + window_size + output_size - 1] - data[window_size + i - 1]) * 100) / data[
             window_size + i - 1]
@@ -606,3 +599,5 @@ def split_train_valid_test_dataframe(data_df, num_data_points, data_dates):
     valid_dates = train_valid_dates[train_valid_split_index:]
 
     return train_df, valid_df, test_df, train_dates, valid_dates, test_dates
+
+

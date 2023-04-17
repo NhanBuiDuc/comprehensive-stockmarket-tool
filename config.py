@@ -1,15 +1,16 @@
 config = {
     "alpha_vantage": {
-        "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "JNJ",
-        "outputsize": "full",
-        "key_adjusted_close": "5. adjusted close",
+        "api_key": "XOLA7URKCZHU7C9X",  # Claim your free API key here: https://www.alphavantage.co/support/#api-key
+        "symbol": "AAPL",
+        "output_size": "full",
+        "url": "https://www.alphavantage.co"
     },
     "data": {
         "window_size": 14,
-        "train_split_size": 0.7,
-        "smoothing": 2
-    }, 
+        "train_test_split_size": 0.7,
+        "train_val_split_size": 0.5,
+        "smoothing": 2,
+    },
     "plots": {
         "show_plots": True,
         "xticks_interval": 90,
@@ -22,226 +23,262 @@ config = {
         "color_pred_test": "#FF4136",
     },
     "model": {
-        "assemble_1":{
+        "assemble_1": {
             "input_size": 39,
-            "num_lstm_layers": 5,
+            "lstm_num_layer": 5,
             "lstm_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 1,
+            "dropout": 0.2,
+            "output_step": 1,
             "window_size": 14,
         },
-        "movement_1":{
+        "assemble_3": {
+            "input_size": 39,
+            "lstm_num_layer": 5,
+            "lstm_size": 64,
+            "dropout": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+        },
+        "assemble_7": {
+            "input_size": 39,
+            "lstm_num_layer": 5,
+            "lstm_size": 64,
+            "dropout": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+        },
+        "assemble_14": {
+            "input_size": 39,
+            "lstm_num_layer": 5,
+            "lstm_size": 64,
+            "dropout": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+        },
+        "movement_1": {
+            "lstm_num_layer": 5,
+            "lstm_hidden_layer_size": 64,
+            "drop_out": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+            "conv1D_param": {
+                "type": 1,
+                "kernel_size": 4,
+                "dilation_base": 3,
+                "final_features": 5,
+                "max_pooling_kernel_size": 2,
+                "sub_small_num_layer": 1,
+                "sub_big_num_layer": 1,
+                "sub_small_kernel_size": 3,
+                "sub_big_kernel_size": 30,
+                "output_size": 20
+            }
+        },
+        "magnitude_1": {
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 1,
+            "drop_out": 0.2,
+            "output_step": 1,
             "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
+            "conv1d_kernel_size": 4,
             "dilation_base": 3
         },
-        "magnitude_1":{
+        "movement_3": {
+            "lstm_num_layer": 5,
+            "lstm_hidden_layer_size": 64,
+            "drop_out": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+            "conv1d_kernel_size": 4,
+            "dilation_base": 3
+        },
+        "magnitude_3": {
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 1,
+            "drop_out": 0.2,
+            "output_step": 1,
             "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
+            "conv1d_kernel_size": 4,
             "dilation_base": 3
         },
-        "movement_3":{
+        "movement_7": {
+            "lstm_num_layer": 5,
+            "lstm_hidden_layer_size": 64,
+            "drop_out": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+            "conv1d_kernel_size": 4,
+            "dilation_base": 3
+        },
+        "magnitude_7": {
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 3,
+            "drop_out": 0.2,
+            "output_step": 1,
             "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
+            "conv1d_kernel_size": 4,
             "dilation_base": 3
         },
-        "magnitude_3":{
+        "movement_14": {
+            "lstm_num_layer": 5,
+            "lstm_hidden_layer_size": 64,
+            "drop_out": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+            "conv1d_kernel_size": 4,
+            "dilation_base": 3
+        },
+        "magnitude_14": {
             "lstm_num_layers": 5,
             "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 1,
+            "drop_out": 0.2,
+            "output_step": 1,
             "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
+            "conv1d_kernel_size": 4,
             "dilation_base": 3
-        },
-        "movement_7":{
-            "lstm_num_layers": 5,
-            "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 7,
-            "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
-            "dilation_base": 3
-        },
-        "magnitude_7":{
-            "lstm_num_layers": 5,
-            "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 1,
-            "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
-            "dilation_base": 3
-        },
-        "magnitude_14":{
-            "lstm_num_layers": 5,
-            "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 1,
-            "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
-            "dilation_base": 3
-        },
-        "movement_14":{
-            "lstm_num_layers": 5,
-            "lstm_hidden_layer_size": 64,
-            "dropout": 0.2, 
-            "output_steps": 14,
-            "window_size": 14,
-            "max_features": 5,
-            "kernel_size": 4,
-            "dilation_base": 3
-        },
-        "diff_1":{
-            "lstm_num_layers": 2,
-            "lstm_hidden_layer_size": 7,
-            "dropout": 0.2, 
-            "output_steps": 1,
-            "window_size": 14,
-            "use_attn": True,
-            "attn_num_heads": 3,
-            "attn_multi_head_scaler": 1,
-            "max_features": 5
         },
     },
     "training": {
         "assemble_1":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 500,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": False,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
-        "diff_1":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 500,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": False,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 1,
+                "learning_rate": 0.01,
+                "loss": "mse",
+                "evaluate": ["mse", "mae"],
+                "optimizer": "adam",
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "start": "2000-5-01",
+                "end": None,
+                "best_model": False,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "movement_1":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 500,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": True,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 1,
+                "learning_rate": 0.01,
+                "loss": "bce",
+                "evaluate": ["bce"],
+                "optimizer": "adam",
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "start": "2000-5-01",
+                "end": None,
+                "best_model": True,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "magnitude_1":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 500,
-            "learning_rate": 0.0001,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": True,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 1,
+                "learning_rate": 0.01,
+                "loss": "mse",
+                "evaluate": ["mse", "mae"],
+                "optimizer": "adam",
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "from": "2000-5-01",
+                "to": None,
+                "best_model": True,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "movement_3":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 150,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": True,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 150,
+                "learning_rate": 0.01,
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "best_model": True,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "magnitude_3":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 150,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": True,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 150,
+                "learning_rate": 0.01,
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "best_model": True,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "movement_7":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 150,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": False,
-            "early_stop": True,
-            "corr_thresh_hold": 0.5
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 150,
+                "learning_rate": 0.01,
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "best_model": False,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "magnitude_7":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 150,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": True,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 150,
+                "learning_rate": 0.01,
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "best_model": True,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "movement_14":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 150,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": False,
-            "early_stop": True,
-            "corr_thresh_hold": 0.5
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 150,
+                "learning_rate": 0.01,
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "best_model": False,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
         "magnitude_14":
-        {
-            "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 64,
-            "num_epoch": 150,
-            "learning_rate": 0.01,
-            "scheduler_step_size": 50,
-            "patient": 200,
-            "best_model": True,
-            "early_stop": True,
-            "corr_thresh_hold": 0.1
-        },
+            {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 150,
+                "learning_rate": 0.01,
+                "scheduler_step_size": 50,
+                "patient": 200,
+                "best_model": True,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True
+            },
     }
 }

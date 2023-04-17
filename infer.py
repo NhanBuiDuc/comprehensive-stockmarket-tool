@@ -1,4 +1,3 @@
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 from torch.utils.data import DataLoader
@@ -6,9 +5,10 @@ from config import config as cf
 import numpy as np
 import torch.nn as nn
 import torch
-from model import Diff_1, Assemble_1 ,Movement_1, Movement_3, Movement_7,Movement_14, Magnitude_1,Magnitude_3, Magnitude_7, Magnitude_14
+from old.model import Diff_1, Assemble_1 ,Movement_1, Movement_3, Movement_7,Movement_14, Magnitude_1,Magnitude_3, Magnitude_7, Magnitude_14
 from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
+
+
 def test_random_forest_classfier(model, X_test, y_test):
 
     y_pred = model.predict(X_test)

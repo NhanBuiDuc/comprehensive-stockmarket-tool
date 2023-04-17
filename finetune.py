@@ -1,15 +1,9 @@
-import utils
+from old import utils
 from config import config as cf
-import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-import train
-from sklearn.metrics import f1_score
-from sklearn.metrics import mean_squared_error
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
 from plot import to_plot
-import pandas_ta as ta
 import gridsearch as gs
 
 def  train_assemble(data_df, 
@@ -39,8 +33,8 @@ def  train_assemble(data_df,
     test_n_row = len(test_close_df) - window_size
 
     # calculate y
-    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
-    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size,output_size=1)
+    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size, output_size=1)
+    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size, output_size=1)
     y_test = utils.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(), window_size= window_size, output_size=1)
 
     # date modified 
@@ -96,11 +90,11 @@ def train_diff_1(data_df,
 
     temp_df["target"] = y_train[:]
 
-    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                       main_columns=["target"],
+                                                       max_columns = max_features,
+                                                       threshold=thresh_hold,
+                                                       show_heat_map = show_heat_map)
     train_df = train_df[features]
     valid_df = valid_df[features]
     test_df = test_df[features]
@@ -154,11 +148,11 @@ def train_movement_3(data_df,
     temp_df["target_increasing"] = y_train[:, 1:2]
     temp_df["target_percentage"] = y_train[:, 2:]
 
-    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map,)
+    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                       main_columns=["target_increasing","target_percentage"],
+                                                       max_columns = max_features,
+                                                       threshold=thresh_hold,
+                                                       show_heat_map = show_heat_map, )
     # train_df = train_df[features]
     # valid_df = valid_df[features]
     # test_df = test_df[features]
@@ -215,11 +209,11 @@ def train_movement_7(data_df,
     temp_df["target_increasing"] = y_train[:, 1:2]
     temp_df["target_percentage"] = y_train[:, 2:]
 
-    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                       main_columns=["target_increasing","target_percentage"],
+                                                       max_columns = max_features,
+                                                       threshold=thresh_hold,
+                                                       show_heat_map = show_heat_map)
     train_df = train_df[features]
     valid_df = valid_df[features]
     test_df = test_df[features]
@@ -274,11 +268,11 @@ def train_movement_14(data_df,
     temp_df["target_increasing"] = y_train[:, 1:2]
     temp_df["target_percentage"] = y_train[:, 2:]
 
-    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    temp_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                       main_columns=["target_increasing","target_percentage"],
+                                                       max_columns = max_features,
+                                                       threshold=thresh_hold,
+                                                       show_heat_map = show_heat_map)
     train_df = train_df[features]
     valid_df = valid_df[features]
     test_df = test_df[features]

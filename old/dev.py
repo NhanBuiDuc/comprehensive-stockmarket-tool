@@ -1,15 +1,12 @@
-import utils
+from old import utils
 from config import config as cf
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-import train
-from sklearn.metrics import f1_score
-from sklearn.metrics import mean_squared_error
+import old_train
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
 from plot import to_plot
-import pandas_ta as ta
+
 
 def train_random_tree_classifier_14(data_df, num_data_points, data_date):
     # data_df = utils.get_new_df(data_df, '2018-01-01')
@@ -129,11 +126,11 @@ def train_diff_1(data_df,
     # coppy dataframe
     temp_df = dataset_df.copy()[window_size:]
     temp_df["target"] = y_diff_1
-    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target"], 
-                                                    max_columns = max_features, 
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                          main_columns=["target"],
+                                                          max_columns = max_features,
+                                                          threshold=thresh_hold,
+                                                          show_heat_map = show_heat_map)
     X = dataset_df.to_numpy()
 
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
@@ -178,11 +175,11 @@ def train_movement_3(data_df,
     # temp_df["target_trend_down"] = y_trend_percentage_3[:, :1]
     temp_df["target_increasing"] = y_trend_percentage_3[:, 1:2]
     temp_df["target_percentage"] = y_trend_percentage_3[:, 2:]
-    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df, 
-                                                    main_columns=["target_increasing","target_percentage"], 
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold, 
-                                                    show_heat_map = show_heat_map)
+    dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df,
+                                                          main_columns=["target_increasing","target_percentage"],
+                                                          max_columns = max_features,
+                                                          threshold=thresh_hold,
+                                                          show_heat_map = show_heat_map)
     X = dataset_df.to_numpy()
 
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
@@ -230,10 +227,10 @@ def train_movement_7(data_df,
     temp_df["target_increasing"] = y_trend_percentage_7[:, 1:2]
     temp_df["target_percentage"] = y_trend_percentage_7[:, 2:]
     dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df,
-                                                    main_columns=["target_increasing", "target_percentage"],
-                                                    max_columns = max_features,
-                                                    threshold = thresh_hold,
-                                                    show_heat_map = show_heat_map)
+                                                          main_columns=["target_increasing", "target_percentage"],
+                                                          max_columns = max_features,
+                                                          threshold = thresh_hold,
+                                                          show_heat_map = show_heat_map)
     X = dataset_df.to_numpy()
 
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
@@ -288,10 +285,10 @@ def train_movement_14(data_df,
     temp_df["target_increasing"] = y_trend_percentage_14[:, 1:2]
     temp_df["target_percentage"] = y_trend_percentage_14[:, 2:]
     dataset_df, features, mask = utils.correlation_filter(dataframe=temp_df,
-                                                    main_columns=["target_increasing", "target_percentage"],
-                                                    max_columns = max_features,
-                                                    threshold=thresh_hold,
-                                                    show_heat_map = show_heat_map)
+                                                          main_columns=["target_increasing", "target_percentage"],
+                                                          max_columns = max_features,
+                                                          threshold=thresh_hold,
+                                                          show_heat_map = show_heat_map)
     X = dataset_df.to_numpy()
 
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)

@@ -1,18 +1,11 @@
-import utils
+from old import utils
 from config import config as cf
-import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-import train
-from sklearn.metrics import f1_score
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
-import infer
-from plot import to_plot
-import pandas_ta as ta
+from dataset import TimeSeriesDataset
 from bench_mark_model import bench_mark_random_forest, create_lstm_model, bench_mark_svm, create_gru_model
 import tensorflow as tf
-from sklearn.preprocessing import MinMaxScaler, RobustScaler
+from sklearn.preprocessing import RobustScaler
 import joblib
 
 
@@ -122,8 +115,8 @@ def train_lstm(data_df,
     test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
-    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
-    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size,output_size=1)
+    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size, output_size=1)
+    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size, output_size=1)
     y_test = utils.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(), window_size= window_size, output_size=1)
 
     # date modified 
@@ -171,8 +164,8 @@ def train_gru(data_df,
     test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
-    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
-    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size,output_size=1)
+    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size, output_size=1)
+    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size, output_size=1)
     y_test = utils.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(), window_size= window_size, output_size=1)
 
     # date modified 
@@ -309,8 +302,8 @@ def evaluate_lstm(data_df,
     test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
-    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
-    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size,output_size=1)
+    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size, output_size=1)
+    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size, output_size=1)
     y_test = utils.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(), window_size= window_size, output_size=1)
 
     # date modified 
@@ -359,8 +352,8 @@ def evaluate_gru(data_df,
     test_n_row = len(test_close_df) - window_size
 
     # calculate y
-    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
-    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size,output_size=1)
+    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size, output_size=1)
+    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size, output_size=1)
     y_test = utils.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(), window_size= window_size, output_size=1)
 
     # date modified 
