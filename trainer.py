@@ -9,6 +9,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 import util as u
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
+from tqdm import tqdm
 
 
 def prepare_data(model_type, window_size, start, end, new_data, output_step):
@@ -161,6 +162,8 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
     else:
         model.eval()
 
+    # create a tqdm progress bar
+    dataloader = tqdm(dataloader)
     for idx, (x, y) in enumerate(dataloader):
         if is_training:
             optimizer.zero_grad()
@@ -185,7 +188,10 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
                 optimizer.step()
             else:
                 print("loss = nan")
-        epoch_loss += (loss.detach().item() / batchsize)
+        epoch_loss += (loss.detach().item())
+
+    # update the progress bar
+    dataloader.set_description(f"Full Epoch Loss: {epoch_loss:.4f}")
     try:
         lr = scheduler.get_last_lr()[0]
 
@@ -248,7 +254,8 @@ class Trainer:
                 num_feature, num_data_points, \
                 train_date, valid_date, test_date = prepare_data(model_type, window_size, start, end, new_data,
                                                                  output_step)
-            model = Model(name=model_full_name, num_feature=num_feature, model_type=model_type)
+            model = Model(name=model_name, num_feature=num_feature, model_type=model_type)
+            model.name = model_full_name
             self.train_dataloader_dict[model] = train_dataloader
             self.valid_dataloader_dict[model] = valid_dataloader
             self.test_dataloader_dict[model] = test_dataloader
@@ -287,13 +294,13 @@ class Trainer:
                     patient_count = 0
                     model.train_stop_lr = lr_train
                     model.train_stop_epoch = epoch
-                    torch.save(model, "./models/" + model.name)
+                    torch.save(model, "./models/" + model.name + ".pth")
                 else:
                     if early_stop:
                         stop, patient_count, best_loss, _ = early_stop(best_loss=best_loss, current_loss=loss_val,
                                                                        patient_count=patient_count, max_patient=patient)
             else:
-                torch.save(model, "./models/" + model.name)
+                torch.save(model, "./models/" + model.name + ".pth")
 
             print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                   .format(epoch + 1, num_epoch, loss_train, loss_val, lr_train))
