@@ -1,10 +1,8 @@
 from config import config as cf
-import model
+from old import model
 from torch.utils.data import DataLoader
 from loss import Unified_Adversarial_Loss as UAL
 import torch.optim as optim
-import torch.nn as nn
-from sklearn.model_selection import GridSearchCV
 from itertools import product
 import numpy as np
 import torch
@@ -13,7 +11,7 @@ import json
 def save_best_param(model_name, best_params, best_score):
     filename = model_name + ".json"
 
-    # create dictionary with best parameters and validation score
+    # create dictionary with the best parameters and validation score
     result = {'best_params': best_params, 'best_score': best_score}
 
     # save dictionary to file

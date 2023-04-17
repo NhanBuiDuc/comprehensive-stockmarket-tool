@@ -1,9 +1,7 @@
 import torch
 from config import config as cf
-from dataset import TimeSeriesDataset, Normalizer
 import numpy as np
-import utils
-import model
+from old import model
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
 from matplotlib.pyplot import figure

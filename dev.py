@@ -1,15 +1,9 @@
-import utils
+from old import utils
 from config import config as cf
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-import train
-from sklearn.metrics import f1_score
-from sklearn.metrics import mean_squared_error
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
-import infer
 from plot import to_plot
-import pandas_ta as ta
 import infer
 def train_random_tree_classifier_14(data_df, num_data_points, data_date):
     # data_df = utils.get_new_df(data_df, '2018-01-01')
@@ -61,7 +55,6 @@ def  train_assemble(data_df,
     # date modified 
     train_date = train_date[ int(len(train_date) - len(train_df)) :]
     valid_date = valid_date[ int(len(valid_date) - len(valid_df)) :]
-
     test_date = test_date[ int(len(test_date) - len(test_df)) :]
     # prepare y df
     train_close_df = pd.DataFrame({'close': train_df['close']})
@@ -73,8 +66,8 @@ def  train_assemble(data_df,
     test_n_row = len(test_close_df) - window_size - output_step
 
     # calculate y
-    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size,output_size=1)
-    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size,output_size=1)
+    y_train = utils.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(), window_size= window_size, output_size=1)
+    y_valid = utils.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(), window_size= window_size, output_size=1)
     y_test = utils.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(), window_size= window_size, output_size=1)
 
     # date modified 

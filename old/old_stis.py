@@ -227,3 +227,154 @@ def upward(close, window_size):
         else:
             comparison_array.append(0)
     return [float('nan')]*(window_size) + comparison_array
+
+def daily_dataframe(api_key, symbol):
+    ts = TimeSeries(key=api_key)
+    data, meta_data = ts.get_daily_adjusted(symbol, outputsize="full")
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def sma_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_sma(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def ema_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_ema(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def vwap_dataframe(ti, symbol, window_size):
+    try:
+        data, meta_data = ti.get_vwap(symbol=symbol, interval="daily")
+        df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+        return df
+    finally:
+        api_key = cf["alpha_vantage"]["api_key"]
+        function = "VWAP"
+
+        api = api_builder()
+
+
+def willr_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_willr(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def macd_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_macd(symbol=symbol, interval="daily")
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def stochrsi_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_stochrsi(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def mom_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_mom(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def cmo_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_cmo(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def roc_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_roc(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def minus_di_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_minus_di(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def plus_di_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_plus_di(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def minus_dm_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_minus_dm(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def plus_dm_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_plus_dm(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def bbands_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_bbands(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def ad_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_ad(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def obv_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_obv(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+def aroon_dataframe(ti, symbol, window_size):
+    data, meta_data = ti.get_aroon(symbol=symbol, interval="daily", time_period=window_size)
+    df = pd.DataFrame.from_dict(data, orient='index').astype(float)
+    return df
+
+
+   sma_df = sma_dataframe(ti, symbol, window_size)
+    ema_df = ema_dataframe(ti, symbol, window_size)
+    # vwap_df = vwap_dataframe(ti, symbol, window_size)
+    willr_df = willr_dataframe(ti, symbol, window_size)
+    macd_df = macd_dataframe(ti, symbol, window_size)
+    stochrsi_df = stochrsi_dataframe(ti, symbol, window_size)
+    mom_df = mom_dataframe(ti, symbol, window_size)
+    cmo_df = cmo_dataframe(ti, symbol, window_size)
+    roc_df = roc_dataframe(ti, symbol, window_size)
+    minus_di_df = minus_di_dataframe(ti, symbol, window_size)
+    plus_di_df = plus_di_dataframe(ti, symbol, window_size)
+    minus_dm_df = minus_dm_dataframe(ti, symbol, window_size)
+    plus_dm_df = plus_dm_dataframe(ti, symbol, window_size)
+    bbands_df = bbands_dataframe(ti, symbol, window_size)
+    ad_df = ad_dataframe(ti, symbol, window_size)
+    obv_df = obv_dataframe(ti, symbol, window_size)
+    aroon_df = aroon_dataframe(ti, symbol, window_size)
+
+    final_df = daily_adjusted_df.append(sma_df)
+    final_df = daily_adjusted_df.append(ema_df)
+    # final_df = daily_adjusted_df.append(vwap_df)
+    final_df = daily_adjusted_df.append(willr_df)
+    final_df = daily_adjusted_df.append(macd_df)
+    final_df = daily_adjusted_df.append(stochrsi_df)
+    final_df = daily_adjusted_df.append(mom_df)
+    final_df = daily_adjusted_df.append(cmo_df)
+    final_df = daily_adjusted_df.append(roc_df)
+    final_df = daily_adjusted_df.append(minus_di_df)
+    final_df = daily_adjusted_df.append(plus_di_df)
+    final_df = daily_adjusted_df.append(minus_dm_df)
+    final_df = daily_adjusted_df.append(plus_dm_df)
+    final_df = daily_adjusted_df.append(bbands_df)
+    final_df = daily_adjusted_df.append(ad_df)
+    final_df = daily_adjusted_df.append(obv_df)
+    final_df = daily_adjusted_df.append(aroon_df)
