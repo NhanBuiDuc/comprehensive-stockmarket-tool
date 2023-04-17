@@ -57,7 +57,7 @@ config = {
         "assemble_regressor":
         {
             "device": "cuda", # "cuda" or "cpu"
-            "batch_size": 128,
+            "batch_size": 64,
             "num_epoch": 500,
             "learning_rate": 0.01,
             "scheduler_step_size": 50,
