@@ -7,7 +7,7 @@ config = {
     },
     "data": {
         "window_size": 14,
-        "train_test_split_size": 0.1,
+        "train_test_split_size": 0.7,
         "train_val_split_size": 0.5,
         "smoothing": 2,
     },
@@ -162,7 +162,7 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 500,
+                "num_epoch": 1,
                 "learning_rate": 0.01,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],

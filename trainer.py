@@ -10,20 +10,14 @@ import sys
 import util as u
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 from tqdm import tqdm
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 
 
 # Main
 class Trainer:
     def __init__(self):
-        self.test_dataloader_dict = {}
-        self.valid_dataloader_dict = {}
-        self.train_dataloader_dict = {}
 
-        self.test_date_dict = {}
-        self.valid_date_dict = {}
-        self.train_date_dict = {}
-
-        self.model_dict = {}
         self.model_type_dict = {
             1: "movement",
             2: "magnitude",
@@ -64,17 +58,13 @@ class Trainer:
             model_full_name = cf["alpha_vantage"]["symbol"] + "_" + model_name
             train_dataloader, valid_dataloader, test_dataloader, \
                 num_feature, num_data_points, \
-                train_date, valid_date, test_date = prepare_data(model_type, window_size, start, end, new_data,
+                train_date, valid_date, test_date = prepare_data(model_type, model_full_name, window_size, start, end,
+                                                                 new_data,
                                                                  output_step, batch_size, train_shuffle, val_shuffle,
                                                                  test_shuffle)
             model = Model(name=model_name, num_feature=num_feature, model_type=model_type)
-            model.name = model_full_name
-            self.train_dataloader_dict[model] = train_dataloader
-            self.valid_dataloader_dict[model] = valid_dataloader
-            self.test_dataloader_dict[model] = test_dataloader
-            self.train_date_dict[model] = train_date
-            self.valid_date_dict[model] = valid_date
-            self.test_date_dict[model] = test_date
+            model.full_name = model_full_name
+
         if "mse" in loss:
             criterion = nn.MSELoss()
         elif "mae" in loss:
@@ -83,9 +73,9 @@ class Trainer:
             criterion = nn.BCELoss()
 
         if "adam" in optimizer:
-            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate)
+            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate, weight_decay=0.001)
         elif "sgd" in optimizer:
-            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate)
+            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate, weight_decay=0.001)
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1,
                                       patience=scheduler_step_size, verbose=True)
 
@@ -115,7 +105,7 @@ class Trainer:
                     torch.save({"model": model,
                                 "state_dict": model.structure.state_dict()
                                 },
-                               "./models/" + model.name + ".pth")
+                               "./models/" + model.full_name + ".pth")
                 else:
                     if early_stop:
                         stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss, current_loss=loss_val,
@@ -126,7 +116,7 @@ class Trainer:
                 torch.save({"model": model,
                             "state_dict": model.structure.state_dict()
                             },
-                           "./models/" + model.name + ".pth")
+                           "./models/" + model.full_name + ".pth")
 
             print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
                   .format(epoch + 1, num_epoch, loss_train, loss_val, lr_train))
@@ -135,17 +125,183 @@ class Trainer:
             if stop:
                 print("Early Stopped At Epoch: {}", epoch + 1)
                 break
-        self.model_dict[model_name] = model
-        return self.model_dict[model_name]
 
-    def eval(self):
-        pass
+        return model
 
-    def save_model(self):
-        pass
+    def eval(self, model):
+        model.structure.eval()
+        model_full_name = model.full_name
+        model_name = model.name
+        train_file_name = f"./csv/train_{model_full_name}.csv"
+        valid_file_name = f"./csv/valid_{model_full_name}.csv"
+        test_file_name = f"./csv/test_{model_full_name}.csv"
+
+        training_param = cf["training"][model_name]
+        device = training_param["device"]
+        batch_size = training_param["batch_size"]
+        evaluate = training_param["evaluate"]
+        start = training_param["start"]
+        end = training_param["end"]
+        train_shuffle = training_param["train_shuffle"]
+        val_shuffle = training_param["val_shuffle"]
+        test_shuffle = training_param["test_shuffle"]
+        model_type = model.model_type
+
+        model_param = cf["model"][model_name]
+        window_size = model_param["window_size"]
+        output_step = model_param["output_step"]
+        train_dataloader, valid_dataloader, test_dataloader, train_date, valid_date, test_date = \
+            prepare_eval_data(model_type, model_full_name, train_file_name, valid_file_name, test_file_name, batch_size,
+                              evaluate, start, end, train_shuffle, val_shuffle, test_shuffle, window_size, output_step)
+
+        for evaluative_criterion in evaluate:
+            if "mse" in evaluative_criterion:
+                criterion = nn.MSELoss()
+            elif "mae" in evaluative_criterion:
+                criterion = nn.L1Loss()
+            elif "bce" in evaluative_criterion:
+                criterion = nn.BCELoss()
+            elif "accuracy" or "precision" or "f1" in evaluative_criterion:
+                # Create empty lists to store the true and predicted labels
+                true_labels = []
+                predicted_labels = []
+                # Iterate over the dataloader
+                for inputs, labels in test_shuffle:
+                    # Move inputs and labels to device
+                    inputs = inputs.to(device)
+                    labels = labels.to(device)
+
+                    # Forward pass
+                    outputs = model(inputs)
+                    _, predicted = torch.max(outputs.data, 1)
+
+                    # Append true and predicted labels to the respective lists
+                    true_labels.extend(labels.cpu().numpy())
+                    predicted_labels.extend(predicted.cpu().numpy())
+
+                # Compute classification report
+                target_names = ["DOWN", "UP", ...]  # Add target class names here
+                report = classification_report(true_labels, predicted_labels, target_names=target_names)
+
+                # Print the classification report
+                print(report)
+                # Compute confusion matrix
+                cm = confusion_matrix(true_labels, predicted_labels)
+                # Print the confusion matrix
+                print("Confusion matrix:")
+                print(cm)
 
 
-def prepare_data(model_type, window_size, start, end, new_data,
+def prepare_eval_data(model_type, model_full_name, train_file_name, valid_file_name, test_file_name, batch_size,
+                      evaluate, start, end, train_shuffle, val_shuffle, test_shuffle, window_size, output_step):
+    train_df = pd.read_csv(f"./csv/train_{model_full_name}.csv")
+    valid_df = pd.read_csv(f"./csv/valid_{model_full_name}.csv")
+    test_df = pd.read_csv(f"./csv/test_{model_full_name}.csv")
+
+    train_date = train_df.index.strftime("%Y-%m-%d").tolist()
+    valid_date = valid_df.index.strftime("%Y-%m-%d").tolist()
+    test_date = test_df.index.strftime("%Y-%m-%d").tolist()
+
+    if model_type == "movement":
+
+        train_date = train_date[int(len(train_date) - len(train_df)):]
+        valid_date = valid_date[int(len(valid_date) - len(valid_df)):]
+        test_date = test_date[int(len(test_date) - len(test_df)):]
+
+        # prepare y df
+        train_close_df = pd.DataFrame({'close': train_df['close']})
+        valid_close_df = pd.DataFrame({'close': valid_df['close']})
+        test_close_df = pd.DataFrame({'close': test_df['close']})
+
+        train_n_row = len(train_close_df) - window_size - output_step
+        valid_n_row = len(valid_close_df) - window_size - output_step
+        test_n_row = len(test_close_df) - window_size - output_step
+
+        y_train = u.prepare_timeseries_data_y_trend(train_n_row, train_close_df.to_numpy(),
+                                                    output_size=output_step)
+        y_valid = u.prepare_timeseries_data_y_trend(valid_n_row, valid_close_df.to_numpy(),
+                                                    output_size=output_step)
+        y_test = u.prepare_timeseries_data_y_trend(test_n_row, test_close_df.to_numpy(),
+                                                   output_size=output_step)
+
+        X_train = u.prepare_timeseries_data_x(train_df.to_numpy(), window_size=window_size)[:-output_step]
+        X_valid = u.prepare_timeseries_data_x(valid_df.to_numpy(), window_size=window_size)[:-output_step]
+        X_test = u.prepare_timeseries_data_x(test_df.to_numpy(), window_size=window_size)[:-output_step]
+
+        train_dataset = Classification_TimeSeriesDataset(X_train, y_train)
+        valid_dataset = Classification_TimeSeriesDataset(X_valid, y_valid)
+        test_dataset = Classification_TimeSeriesDataset(X_test, y_test)
+
+    elif model_type == "magnitude":
+        train_date = train_date[int(len(train_date) - len(train_df)):]
+        valid_date = valid_date[int(len(valid_date) - len(valid_df)):]
+        test_date = test_date[int(len(test_date) - len(test_df)):]
+
+        # prepare y df
+        train_close_df = pd.DataFrame({'close': train_df['close']})
+        valid_close_df = pd.DataFrame({'close': valid_df['close']})
+        test_close_df = pd.DataFrame({'close': test_df['close']})
+
+        train_n_row = len(train_close_df) - window_size - output_step
+        valid_n_row = len(valid_close_df) - window_size - output_step
+        test_n_row = len(test_close_df) - window_size - output_step
+
+        y_train = u.prepare_timeseries_data_y_percentage(train_n_row, train_close_df.to_numpy(),
+                                                         output_size=output_step)
+        y_valid = u.prepare_timeseries_data_y_percentage(valid_n_row, valid_close_df.to_numpy(),
+                                                         output_size=output_step)
+        y_test = u.prepare_timeseries_data_y_percentage(test_n_row, test_close_df.to_numpy(),
+                                                        output_size=output_step)
+
+        X_train = u.prepare_timeseries_data_x(train_df.to_numpy(), window_size=window_size)[:-output_step]
+        X_valid = u.prepare_timeseries_data_x(valid_df.to_numpy(), window_size=window_size)[:-output_step]
+        X_test = u.prepare_timeseries_data_x(test_df.to_numpy(), window_size=window_size)[:-output_step]
+
+        train_dataset = Classification_TimeSeriesDataset(X_train, y_train)
+        valid_dataset = Classification_TimeSeriesDataset(X_valid, y_valid)
+        test_dataset = Classification_TimeSeriesDataset(X_test, y_test)
+
+    elif model_type == "assembler":
+        train_date = train_date[int(len(train_date) - len(train_df)):]
+        valid_date = valid_date[int(len(valid_date) - len(valid_df)):]
+        test_date = test_date[int(len(test_date) - len(test_df)):]
+
+        # prepare y df
+        train_close_df = pd.DataFrame({'close': train_df['close']})
+        valid_close_df = pd.DataFrame({'close': valid_df['close']})
+        test_close_df = pd.DataFrame({'close': test_df['close']})
+
+        train_n_row = len(train_close_df) - window_size - output_step
+        valid_n_row = len(valid_close_df) - window_size - output_step
+        test_n_row = len(test_close_df) - window_size - output_step
+
+        y_train = u.prepare_timeseries_data_y(train_n_row, train_close_df.to_numpy(),
+                                              output_size=output_step)
+        y_valid = u.prepare_timeseries_data_y(valid_n_row, valid_close_df.to_numpy(),
+                                              output_size=output_step)
+        y_test = u.prepare_timeseries_data_y(test_n_row, test_close_df.to_numpy(),
+                                             output_size=output_step)
+
+        X_train = u.prepare_timeseries_data_x(train_df.to_numpy(), window_size=window_size)[:-output_step]
+        X_valid = u.prepare_timeseries_data_x(valid_df.to_numpy(), window_size=window_size)[:-output_step]
+        X_test = u.prepare_timeseries_data_x(test_df.to_numpy(), window_size=window_size)[:-output_step]
+
+        train_dataset = TimeSeriesDataset(X_train, y_train)
+        valid_dataset = TimeSeriesDataset(X_valid, y_valid)
+        test_dataset = TimeSeriesDataset(X_test, y_test)
+
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=train_shuffle)
+    valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=val_shuffle)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=test_shuffle)
+
+    train_df.to_csv(f"./csv/train_{model_full_name}.csv")
+    valid_df.to_csv(f"./csv/valid_{model_full_name}.csv")
+    test_df.to_csv(f"./csv/test_{model_full_name}.csv")
+
+    return train_dataloader, valid_dataloader, test_dataloader, train_date, valid_date, test_date
+
+
+def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
                  output_step, batch_size, train_shuffle, val_shuffle, test_shuffle):
     df = u.prepare_stock_dataframe(window_size, start, end, new_data)
     num_data_points = df.shape[0]
@@ -262,6 +418,10 @@ def prepare_data(model_type, window_size, start, end, new_data,
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=train_shuffle)
     valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=val_shuffle)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=test_shuffle)
+
+    train_df.to_csv(f"./csv/train_{model_full_name}.csv")
+    valid_df.to_csv(f"./csv/valid_{model_full_name}.csv")
+    test_df.to_csv(f"./csv/test_{model_full_name}.csv")
 
     return train_dataloader, valid_dataloader, test_dataloader, \
         num_feature, num_data_points, \
