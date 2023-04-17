@@ -19,8 +19,10 @@ class Model:
             2: "magnitude",
             3: "assembler"
         }
-
         self.construct_structure()
+
+    def __init__(self):
+        pass
 
     def predict(self):
         pass
@@ -37,10 +39,11 @@ class Model:
         elif self.model_type == self.model_type_dict[2]:
             pass
 
-    # def load_check_point(self):
-    #     check_point = torch.load('./models/' + "AAPL_movement_1.pth")
-    #     model = check_point["model"]
-    #     model.structure.load_state_dict(check_point['state_dict'])
+    def load_check_point(self, file_name):
+        check_point = torch.load('./models/' + file_name)
+        self = check_point["model"]
+        self.structure.load_state_dict(check_point['state_dict'])
+
 
 
 class Autoencoder(nn.Module):
