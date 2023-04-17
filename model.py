@@ -13,6 +13,7 @@ class Model:
         self.parameters = None
         self.train_stop_lr = None
         self.train_stop_epoch = None
+        self.state_dict = None
         self.model_type_dict = {
             1: "movement",
             2: "magnitude",
@@ -30,13 +31,16 @@ class Model:
         if self.model_type == self.model_type_dict[1]:
             self.parameters = cf["model"][self.name]
             self.structure = Movement(self.num_feature, **self.parameters)
+
         elif self.model_type == self.model_type_dict[2]:
             pass
         elif self.model_type == self.model_type_dict[2]:
             pass
 
-    def load_check_point(self):
-        pass
+    # def load_check_point(self):
+    #     check_point = torch.load('./models/' + "AAPL_movement_1.pth")
+    #     model = check_point["model"]
+    #     model.structure.load_state_dict(check_point['state_dict'])
 
 
 class Autoencoder(nn.Module):
@@ -48,7 +52,6 @@ class Autoencoder(nn.Module):
         self.main_layer = nn.ModuleList()
         self.sub_small_layer = nn.ModuleList()
         self.sub_big_layer = nn.ModuleList()
-
         self.conv1D_type_dict = {
             1: "spatial",
             2: "temporal"
