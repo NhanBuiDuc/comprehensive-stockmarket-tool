@@ -272,9 +272,9 @@ class Trainer:
             criterion = nn.BCELoss()
 
         if "adam" in optimizer:
-            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate)
+            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate,  weight_decay=0.001)
         elif "sgd" in optimizer:
-            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate)
+            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate,  weight_decay=0.001)
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1,
                                       patience=scheduler_step_size, verbose=True)
 

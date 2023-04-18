@@ -7,7 +7,7 @@ config = {
     },
     "data": {
         "window_size": 14,
-        "train_test_split_size": 0.1,
+        "train_test_split_size": 0.7,
         "train_val_split_size": 0.5,
         "smoothing": 2,
     },
@@ -162,14 +162,14 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 1,
-                "learning_rate": 0.01,
+                "num_epoch": 1000,
+                "learning_rate": 0.001,
                 "loss": "bce",
                 "evaluate": ["bce"],
                 "optimizer": "adam",
-                "scheduler_step_size": 50,
-                "patient": 200,
-                "start": "2020-5-01",
+                "scheduler_step_size": 500,
+                "patient": 1000,
+                "start": "2000-5-01",
                 "end": None,
                 "best_model": True,
                 "early_stop": True,
