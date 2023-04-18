@@ -142,7 +142,7 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 300,
+                "num_epoch": 1,
                 "learning_rate": 0.01,
                 "loss": "mse",
                 "evaluate": ["mse", "mae"],
@@ -161,16 +161,11 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 1000,
-                "learning_rate": 0.001,
                 "num_epoch": 300,
                 "learning_rate": 0.01,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
-                "scheduler_step_size": 500,
-                "patient": 1000,
-                "start": "2000-5-01",
                 "scheduler_step_size": 50,
                 "patient": 1000,
                 "start": "2000-01-01",
