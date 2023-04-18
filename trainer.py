@@ -45,7 +45,7 @@ class Trainer:
         train_shuffle = training_param["train_shuffle"]
         val_shuffle = training_param["val_shuffle"]
         test_shuffle = training_param["test_shuffle"]
-
+        weight_decay = training_param["test_shuffle"]
         model_param = cf["model"][model_name]
 
         if "movement" in model_name:
@@ -76,9 +76,9 @@ class Trainer:
             criterion = nn.BCELoss()
 
         if "adam" in optimizer:
-            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate, weight_decay=0.1)
+            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate, weight_decay=weight_decay)
         elif "sgd" in optimizer:
-            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate, weight_decay=0.1)
+            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate, weight_decay=weight_decay)
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1,
                                       patience=scheduler_step_size, verbose=True)
 
@@ -259,7 +259,7 @@ class Trainer:
                     # Write the loss to the file
                     f.write(print_string + " " + loss_str + "\n")
                     f.write("-" * 100)
-                    f.write("\n-")
+                    f.write("-")
                 # Print a message to confirm that the file was written successfully
                 print(f"Loss written to {save_path}.")
 
