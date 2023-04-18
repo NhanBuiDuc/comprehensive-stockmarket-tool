@@ -45,7 +45,7 @@ class Trainer:
         train_shuffle = training_param["train_shuffle"]
         val_shuffle = training_param["val_shuffle"]
         test_shuffle = training_param["test_shuffle"]
-        weight_decay = training_param["test_shuffle"]
+        weight_decay = training_param["weight_decay"]
         model_param = cf["model"][model_name]
 
         if "movement" in model_name:
