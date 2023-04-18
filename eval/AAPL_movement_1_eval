@@ -1,0 +1,541 @@
+Train evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.97      0.96      0.96      1010
+          UP       0.96      0.97      0.97      1025
+
+    accuracy                           0.97      2035
+   macro avg       0.97      0.97      0.97      2035
+weighted avg       0.97      0.97      0.97      2035
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 16,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[974  36]
+ [ 35 990]]
+----------------------------------------------------------------------------------------------------
+Train evaluate AAPL_movement_1 BCE loss: 17.02420425415039
+----------------------------------------------------------------------------------------------------
+-Valid evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.96      0.88      0.92       970
+          UP       0.90      0.97      0.93      1066
+
+    accuracy                           0.92      2036
+   macro avg       0.93      0.92      0.92      2036
+weighted avg       0.93      0.92      0.92      2036
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 16,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[ 850  120]
+ [  33 1033]]
+----------------------------------------------------------------------------------------------------
+Valid evaluate AAPL_movement_1 BCE loss: 18.555452346801758
+----------------------------------------------------------------------------------------------------
+-Test evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.96      0.90      0.93       816
+          UP       0.92      0.96      0.94       927
+
+    accuracy                           0.93      1743
+   macro avg       0.94      0.93      0.93      1743
+weighted avg       0.94      0.93      0.93      1743
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 16,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[735  81]
+ [ 34 893]]
+----------------------------------------------------------------------------------------------------
+Test evaluate AAPL_movement_1 BCE loss: 18.212759017944336
+----------------------------------------------------------------------------------------------------
+-Train evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.95      0.96      0.95      1010
+          UP       0.96      0.95      0.95      1025
+
+    accuracy                           0.95      2035
+   macro avg       0.95      0.95      0.95      2035
+weighted avg       0.95      0.95      0.95      2035
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 32,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[966  44]
+ [ 51 974]]
+----------------------------------------------------------------------------------------------------
+Train evaluate AAPL_movement_1 BCE loss: 18.87123680114746
+----------------------------------------------------------------------------------------------------
+-Valid evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.96      0.90      0.93       970
+          UP       0.92      0.97      0.94      1066
+
+    accuracy                           0.94      2036
+   macro avg       0.94      0.94      0.94      2036
+weighted avg       0.94      0.94      0.94      2036
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 32,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[ 877   93]
+ [  33 1033]]
+----------------------------------------------------------------------------------------------------
+Valid evaluate AAPL_movement_1 BCE loss: 19.381216049194336
+----------------------------------------------------------------------------------------------------
+-Test evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.97      0.89      0.93       816
+          UP       0.91      0.98      0.94       927
+
+    accuracy                           0.94      1743
+   macro avg       0.94      0.93      0.94      1743
+weighted avg       0.94      0.94      0.94      1743
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 32,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[727  89]
+ [ 20 907]]
+----------------------------------------------------------------------------------------------------
+Test evaluate AAPL_movement_1 BCE loss: 19.177173614501953
+----------------------------------------------------------------------------------------------------
+-Train evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.98      0.96      0.97      1010
+          UP       0.96      0.98      0.97      1025
+
+    accuracy                           0.97      2035
+   macro avg       0.97      0.97      0.97      2035
+weighted avg       0.97      0.97      0.97      2035
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 64,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[ 972   38]
+ [  20 1005]]
+----------------------------------------------------------------------------------------------------
+Train evaluate AAPL_movement_1 BCE loss: 16.606956481933594
+----------------------------------------------------------------------------------------------------
+-Valid evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.90      0.95      0.92       970
+          UP       0.95      0.91      0.93      1066
+
+    accuracy                           0.93      2036
+   macro avg       0.93      0.93      0.93      2036
+weighted avg       0.93      0.93      0.93      2036
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 64,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[918  52]
+ [ 97 969]]
+----------------------------------------------------------------------------------------------------
+Valid evaluate AAPL_movement_1 BCE loss: 19.273292541503906
+----------------------------------------------------------------------------------------------------
+-Test evaluate AAPL_movement_1
+Classification report:
+              precision    recall  f1-score   support
+
+        DOWN       0.91      0.95      0.93       816
+          UP       0.96      0.92      0.94       927
+
+    accuracy                           0.93      1743
+   macro avg       0.93      0.93      0.93      1743
+weighted avg       0.93      0.93      0.93      1743
+
+Training Config:
+{
+    "device": "cuda",
+    "batch_size": 64,
+    "num_epoch": 300,
+    "learning_rate": 0.01,
+    "loss": "bce",
+    "evaluate": [
+        "bce",
+        "accuracy",
+        "precision",
+        "f1"
+    ],
+    "optimizer": "adam",
+    "scheduler_step_size": 50,
+    "patient": 1000,
+    "start": "2000-01-01",
+    "end": null,
+    "best_model": true,
+    "early_stop": true,
+    "train_shuffle": true,
+    "val_shuffle": true,
+    "test_shuffle": true
+}
+Model Config:
+{
+    "lstm_num_layer": 1,
+    "lstm_hidden_layer_size": 64,
+    "drop_out": 0.2,
+    "output_step": 1,
+    "window_size": 14,
+    "conv1D_param": {
+        "type": 1,
+        "kernel_size": 4,
+        "dilation_base": 3,
+        "max_pooling_kernel_size": 2,
+        "sub_small_num_layer": 1,
+        "sub_big_num_layer": 1,
+        "sub_small_kernel_size": 3,
+        "sub_big_kernel_size": 30,
+        "output_size": 1
+    }
+}
+Confusion matrix:
+[[776  40]
+ [ 76 851]]
+----------------------------------------------------------------------------------------------------
+Test evaluate AAPL_movement_1 BCE loss: 18.74335479736328
+----------------------------------------------------------------------------------------------------
+-

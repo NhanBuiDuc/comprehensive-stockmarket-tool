@@ -45,6 +45,10 @@ class Model:
         self.structure.load_state_dict(check_point['state_dict'])
         return self
 
+    def predict(self, x):
+        y = self.structure(x)
+        return y
+
 
 class Autoencoder(nn.Module):
     def __init__(self, num_feature, window_size, **param):
