@@ -56,7 +56,7 @@ config = {
             "window_size": 14,
         },
         "movement_1": {
-            "lstm_num_layer": 5,
+            "lstm_num_layer": 1,
             "lstm_hidden_layer_size": 64,
             "drop_out": 0.2,
             "output_step": 1,
@@ -65,13 +65,12 @@ config = {
                 "type": 1,
                 "kernel_size": 4,
                 "dilation_base": 3,
-                "final_features": 5,
                 "max_pooling_kernel_size": 2,
                 "sub_small_num_layer": 1,
                 "sub_big_num_layer": 1,
                 "sub_small_kernel_size": 3,
                 "sub_big_kernel_size": 30,
-                "output_size": 2
+                "output_size": 1
             }
         },
         "magnitude_1": {

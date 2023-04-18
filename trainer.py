@@ -12,8 +12,10 @@ from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 from tqdm import tqdm
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-
+import json
 import numpy as np
+import os
+
 
 # Main
 class Trainer:
@@ -90,9 +92,9 @@ class Trainer:
             stop = False
 
         for epoch in range(num_epoch):
-            loss_train, lr_train = run_epoch(model.structure, train_dataloader, optimizer, criterion, scheduler,
+            loss_train, lr_train = run_epoch(model, train_dataloader, optimizer, criterion, scheduler,
                                              is_training=True)
-            loss_val, lr_val = run_epoch(model.structure, valid_dataloader, optimizer, criterion, scheduler,
+            loss_val, lr_val = run_epoch(model, valid_dataloader, optimizer, criterion, scheduler,
                                          is_training=False)
             scheduler.step(loss_val)
             if best_model:
@@ -159,13 +161,13 @@ class Trainer:
         for i in range(0, 3, 1):
             if i == 0:
                 dataloader = train_dataloader
-                print_string = "Train evaluate" + model_full_name + ": "
+                print_string = "Train evaluate " + model_full_name
             if i == 1:
                 dataloader = valid_dataloader
-                print_string = "Valid evaluate: " + model_full_name + ": "
+                print_string = "Valid evaluate " + model_full_name
             elif i == 2:
                 dataloader = test_dataloader
-                print_string = "Test evaluate: " + model_full_name + ": "
+                print_string = "Test evaluate " + model_full_name
             if "accuracy" or "precision" or "f1" in evaluate:
                 # Create empty lists to store the true and predicted labels
                 true_labels = []
@@ -181,7 +183,7 @@ class Trainer:
                 labels = labels.to(device)
 
                 # Forward pass
-                outputs = model.structure(inputs)
+                outputs = model.predict(inputs)
 
                 target_list = torch.cat([target_list, labels], dim=0)
                 output_list = torch.cat([output_list, outputs], dim=0)
@@ -193,17 +195,37 @@ class Trainer:
 
             if "accuracy" or "precision" or "f1" in evaluate:
                 # Compute classification report
-                print(print_string)
                 target_names = ["DOWN", "UP"]  # Add target class names here
                 report = classification_report(true_labels, predicted_labels, target_names=target_names)
+                # Create the saving folder if it does not exist
+                save_folder = "./eval/"
+                if not os.path.exists(save_folder):
+                    os.makedirs(save_folder)
 
-                # Print the classification report
-                print(report)
-                # Compute confusion matrix
-                cm = confusion_matrix(true_labels, predicted_labels)
-                # Print the confusion matrix
-                print("Confusion matrix:")
-                print(cm)
+                # Open the file in write mode
+                save_path = os.path.join(save_folder,  model_full_name+"_eval")
+                # Open the file in write mode
+                with open(save_path, "a") as f:
+                    # Write the classification report to the file
+                    f.write(print_string + "\n" + "Classification report:\n")
+                    f.write(report)
+
+                    # Write the config dictionary to the file
+                    f.write("\nTraining Config:\n")
+                    f.write(json.dumps(training_param, indent=4))
+                    f.write("\nModel Config:\n")
+                    f.write(json.dumps(model_param, indent=4))
+                    # Compute confusion matrix
+                    cm = confusion_matrix(true_labels, predicted_labels)
+
+                    # Write the confusion matrix to the file
+                    f.write("\nConfusion matrix:\n")
+                    f.write(np.array2string(cm))
+                    f.write("\n")
+                    f.write("-" * 100)
+                    f.write("\n")
+                # Print a message to confirm that the file was written successfully
+                print("Results written to " + model_full_name + "_eval.txt")
 
             temp_evaluate = np.array(evaluate)
 
@@ -211,20 +233,35 @@ class Trainer:
             temp_evaluate = temp_evaluate[temp_evaluate != "precision"]
             temp_evaluate = temp_evaluate[temp_evaluate != "f1"]
             for c in temp_evaluate:
-                if "mse" in c:
+                if "mse" in evaluate:
                     criterion = nn.MSELoss()
                     c_name = "MSE"
-                elif "mae" in c:
+                elif "mae" in evaluate:
                     criterion = nn.L1Loss()
                     c_name = "MAE"
-                elif "bce" in c:
+                elif "bce" in evaluate:
                     criterion = nn.BCELoss()
                     c_name = "BCE"
 
                 target_list = target_list.reshape(-1)
                 output_list = output_list.reshape(-1)
                 loss = criterion(target_list, output_list)
-                print(print_string + " " + c_name + " loss: " + str(loss.item()))
+                loss_str = f"{c_name} loss: {loss.item()}"
+
+                # Create the saving folder if it does not exist
+                save_folder = "./eval/"
+                if not os.path.exists(save_folder):
+                    os.makedirs(save_folder)
+
+                # Open the file in append mode
+                save_path = os.path.join(save_folder, model_full_name + "_eval")
+                with open(save_path, "a") as f:
+                    # Write the loss to the file
+                    f.write(print_string + " " + loss_str + "\n")
+                    f.write("-" * 100)
+                    f.write("\n-")
+                # Print a message to confirm that the file was written successfully
+                print(f"Loss written to {save_path}.")
 
 
 def prepare_eval_data(model_type, model_full_name, train_file_name, valid_file_name, test_file_name, batch_size,
@@ -487,9 +524,9 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
 
     weight_decay = 0.001
     if is_training:
-        model.train()
+        model.structure.train()
     else:
-        model.eval()
+        model.structure.eval()
 
     # create a tqdm progress bar
     dataloader = tqdm(dataloader)
@@ -502,13 +539,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training):
         x = x.to("cuda")
         y = y.to("cuda")
 
-        out = model(x)
-
-        # Calculate the L2 regularization term
-        # l2_reg = 0
-        # for param in model.parameters():
-        #     l2_reg += torch.norm(param).to("cuda")
-        # loss = criterion(out, y) + weight_decay * l2_reg
+        out = model.predict(x)
         loss = criterion(out, y)
         if is_training:
             if loss != torch.nan:
