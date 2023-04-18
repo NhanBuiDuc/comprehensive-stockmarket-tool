@@ -13,6 +13,7 @@ from tqdm import tqdm
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
+import numpy as np
 
 # Main
 class Trainer:
@@ -155,32 +156,44 @@ class Trainer:
                               evaluate, start, end, train_shuffle, val_shuffle, test_shuffle, window_size, output_step)
 
         model.structure.to(device)
-        for evaluative_criterion in evaluate:
-            if "mse" in evaluative_criterion:
-                criterion = nn.MSELoss()
-            elif "mae" in evaluative_criterion:
-                criterion = nn.L1Loss()
-            elif "bce" in evaluative_criterion:
-                criterion = nn.BCELoss()
-            elif "accuracy" or "precision" or "f1" in evaluative_criterion:
+        for i in range(0, 3, 1):
+            if i == 0:
+                dataloader = train_dataloader
+                print_string = "Train evaluate" + model_full_name + ": "
+            if i == 1:
+                dataloader = valid_dataloader
+                print_string = "Valid evaluate: " + model_full_name + ": "
+            elif i == 2:
+                dataloader = test_dataloader
+                print_string = "Test evaluate: " + model_full_name + ": "
+            if "accuracy" or "precision" or "f1" in evaluate:
                 # Create empty lists to store the true and predicted labels
                 true_labels = []
                 predicted_labels = []
-                # Iterate over the dataloader
-                for inputs, labels in test_dataloader:
-                    # Move inputs and labels to device
-                    inputs = inputs.to(device)
-                    labels = labels.to(device)
+            total_loss = 0
 
-                    # Forward pass
-                    outputs = model.structure(inputs)
-                    # _, predicted = torch.max(outputs.data, 1)
+            target_list = torch.empty(0).to(device)
+            output_list = torch.empty(0).to(device)
+            # Iterate over the dataloader
+            for inputs, labels in dataloader:
+                # Move inputs and labels to device
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                # Forward pass
+                outputs = model.structure(inputs)
+
+                target_list = torch.cat([target_list, labels], dim=0)
+                output_list = torch.cat([output_list, outputs], dim=0)
+                if "accuracy" or "precision" or "f1" in evaluate:
                     predicted = (outputs > 0.5).float()
                     # Append true and predicted labels to the respective lists
-                    true_labels.extend(labels.cpu().numpy())
-                    predicted_labels.extend(predicted.cpu().numpy())
+                    true_labels.extend(labels.cpu().detach().numpy())
+                    predicted_labels.extend(predicted.cpu().detach().numpy())
 
+            if "accuracy" or "precision" or "f1" in evaluate:
                 # Compute classification report
+                print(print_string)
                 target_names = ["DOWN", "UP"]  # Add target class names here
                 report = classification_report(true_labels, predicted_labels, target_names=target_names)
 
@@ -191,6 +204,27 @@ class Trainer:
                 # Print the confusion matrix
                 print("Confusion matrix:")
                 print(cm)
+
+            temp_evaluate = np.array(evaluate)
+
+            temp_evaluate = temp_evaluate[temp_evaluate != "accuracy"]
+            temp_evaluate = temp_evaluate[temp_evaluate != "precision"]
+            temp_evaluate = temp_evaluate[temp_evaluate != "f1"]
+            for c in temp_evaluate:
+                if "mse" in c:
+                    criterion = nn.MSELoss()
+                    c_name = "MSE"
+                elif "mae" in c:
+                    criterion = nn.L1Loss()
+                    c_name = "MAE"
+                elif "bce" in c:
+                    criterion = nn.BCELoss()
+                    c_name = "BCE"
+
+                target_list = target_list.reshape(-1)
+                output_list = output_list.reshape(-1)
+                loss = criterion(target_list, output_list)
+                print(print_string + " " + c_name + " loss: " + str(loss.item()))
 
 
 def prepare_eval_data(model_type, model_full_name, train_file_name, valid_file_name, test_file_name, batch_size,
