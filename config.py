@@ -179,7 +179,8 @@ config = {
                 "early_stop": True,
                 "train_shuffle": True,
                 "val_shuffle": True,
-                "test_shuffle": True
+                "test_shuffle": True,
+                "weight_decay": 0.1
             },
         "magnitude_1":
             {
