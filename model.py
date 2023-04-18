@@ -5,11 +5,12 @@ import math
 
 
 class Model:
-    def __init__(self, name, num_feature, model_type):
+    def __init__(self, name=None, num_feature=None, model_type=None):
         self.num_feature = num_feature
         self.model_type = model_type
         self.structure = None
         self.name = name
+        self.full_name = None
         self.parameters = None
         self.train_stop_lr = None
         self.train_stop_epoch = None
@@ -19,8 +20,8 @@ class Model:
             2: "magnitude",
             3: "assembler"
         }
-
-        self.construct_structure()
+        if self.num_feature is not None:
+            self.construct_structure()
 
     def predict(self):
         pass
@@ -37,10 +38,12 @@ class Model:
         elif self.model_type == self.model_type_dict[2]:
             pass
 
-    # def load_check_point(self):
-    #     check_point = torch.load('./models/' + "AAPL_movement_1.pth")
-    #     model = check_point["model"]
-    #     model.structure.load_state_dict(check_point['state_dict'])
+    def load_check_point(self, file_name):
+        check_point = torch.load('./models/' + file_name)
+        self = check_point["model"]
+        self.construct_structure()
+        self.structure.load_state_dict(check_point['state_dict'])
+        return self
 
 
 class Autoencoder(nn.Module):
@@ -63,7 +66,8 @@ class Autoencoder(nn.Module):
             # The receptive field is calculated on num_feature(window_size, n)
 
             self.num_layer = \
-                int((math.log((((self.num_feature - 1) * (self.dilation_base - 1)) / (self.kernel_size - 1)) + 1)) / (math.log(self.dilation_base))) + 1
+                int((math.log((((self.num_feature - 1) * (self.dilation_base - 1)) / (self.kernel_size - 1)) + 1)) / (
+                    math.log(self.dilation_base))) + 1
 
             # Applying 1dconv among input lenght dim
             for i in range(self.num_layer):
@@ -89,18 +93,24 @@ class Autoencoder(nn.Module):
 
             # output_dim = (input_dim - kernel_size + 2 * padding) / stride + 1
 
-            self.receptive_field_size = int((self.num_feature + (self.kernel_size - 1) * sum(self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
+            self.receptive_field_size = int((self.num_feature + (self.kernel_size - 1) * sum(
+                self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
 
-            self.small_sub_receptive_field_size = int((self.num_feature - self.sub_small_kernel_size + 2 * (self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
-            self.big_sub_receptive_field_size = int((self.num_feature - self.sub_big_kernel_size + 2 * (self.sub_big_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
-            self.receptive_field_size = int(self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
+            self.small_sub_receptive_field_size = int((self.num_feature - self.sub_small_kernel_size + 2 * (
+                        self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
+            self.big_sub_receptive_field_size = int((self.num_feature - self.sub_big_kernel_size + 2 * (
+                        self.sub_big_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
+            self.receptive_field_size = int(
+                self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
         elif self.conv1D_type_dict[self.type] == "temporal":
             # Temporal: 1d convolution will apply on window_size dim, input and output chanels = input_feature size
             # 1D feature map will slide, containing info of the same feature consecutively among the time step
             # Multiple 1D feature maps means changes day after daye of 1 feature, for each feature
             # The receptive field is calculated on num_feature(window_size, n)
 
-            self.num_layer = int((math.log((((self.window_size - 1) * (self.dilation_base - 1)) / (self.kernel_size - 1)) + 1)) / (math.log(self.dilation_base))) + 1
+            self.num_layer = int(
+                (math.log((((self.window_size - 1) * (self.dilation_base - 1)) / (self.kernel_size - 1)) + 1)) / (
+                    math.log(self.dilation_base))) + 1
 
             # Applying 1dconv among input lenght dim
             for i in range(self.num_layer):
@@ -126,11 +136,15 @@ class Autoencoder(nn.Module):
 
             # output_dim = (input_dim - kernel_size + 2 * padding) / stride + 1
 
-            self.receptive_field_size = int((self.window_size + (self.kernel_size - 1) * sum(self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
+            self.receptive_field_size = int((self.window_size + (self.kernel_size - 1) * sum(
+                self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
 
-            self.small_sub_receptive_field_size = int((self.window_size - self.sub_small_kernel_size + 2 * (self.sub_small_kernel_size - 1)) / self.max_pooling_kernel_size)
-            self.big_sub_receptive_field_size = int((self.window_size - self.sub_big_kernel_size + 2 * (self.sub_big_kernel_size - 1)) / self.max_pooling_kernel_size)
-            self.receptive_field_size = int(self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
+            self.small_sub_receptive_field_size = int((self.window_size - self.sub_small_kernel_size + 2 * (
+                        self.sub_small_kernel_size - 1)) / self.max_pooling_kernel_size)
+            self.big_sub_receptive_field_size = int((self.window_size - self.sub_big_kernel_size + 2 * (
+                        self.sub_big_kernel_size - 1)) / self.max_pooling_kernel_size)
+            self.receptive_field_size = int(
+                self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
 
         self.maxpool = nn.MaxPool1d(kernel_size=self.max_pooling_kernel_size)
         self.linear_1 = nn.Linear(self.receptive_field_size, self.output_size)
@@ -168,7 +182,7 @@ class Movement(nn.Module):
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
         self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 10)
+        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
         self.linear_2 = nn.Linear(10, 5)
         self.linear_3 = nn.Linear(5, 1)
 
@@ -193,13 +207,6 @@ class Movement(nn.Module):
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
         x = self.linear_1(x)
-        x = self.drop_out(x)
-        x = self.relu(x)
-        x = self.linear_2(x)
-        x = self.drop_out(x)
-        x = self.relu(x)
-        x = self.linear_3(x)
-        x = self.drop_out(x)
         x = self.sigmoid(x)
         return x
 

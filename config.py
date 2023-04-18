@@ -71,7 +71,7 @@ config = {
                 "sub_big_num_layer": 1,
                 "sub_small_kernel_size": 3,
                 "sub_big_kernel_size": 30,
-                "output_size": 20
+                "output_size": 2
             }
         },
         "magnitude_1": {
@@ -162,14 +162,25 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
+<<<<<<< HEAD
                 "num_epoch": 1000,
                 "learning_rate": 0.001,
+=======
+                "num_epoch": 300,
+                "learning_rate": 0.01,
+>>>>>>> 42925b35822497325fe6e0ad05daeee8cf56e39a
                 "loss": "bce",
-                "evaluate": ["bce"],
+                "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
+<<<<<<< HEAD
                 "scheduler_step_size": 500,
                 "patient": 1000,
                 "start": "2000-5-01",
+=======
+                "scheduler_step_size": 50,
+                "patient": 1000,
+                "start": "2000-01-01",
+>>>>>>> 42925b35822497325fe6e0ad05daeee8cf56e39a
                 "end": None,
                 "best_model": True,
                 "early_stop": True,
@@ -188,7 +199,7 @@ config = {
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
                 "patient": 200,
-                "from": "2022-5-01",
+                "from": "2000-01-01",
                 "to": None,
                 "best_model": True,
                 "early_stop": True,
