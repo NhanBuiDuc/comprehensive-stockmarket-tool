@@ -64,7 +64,6 @@ Classification report:
 
         DOWN       0.96      0.88      0.92       970
           UP       0.90      0.97      0.93      1066
-
     accuracy                           0.92      2036
    macro avg       0.93      0.92      0.92      2036
 weighted avg       0.93      0.92      0.92      2036
