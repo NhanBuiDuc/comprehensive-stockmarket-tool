@@ -136,6 +136,13 @@ config = {
             "conv1d_kernel_size": 4,
             "dilation_base": 3
         },
+        "LSTM_bench_mark_1": {
+            "lstm_num_layer": 1,
+            "lstm_hidden_layer_size": 64,
+            "drop_out": 0.2,
+            "output_step": 1,
+            "window_size": 14,
+        },
     },
     "training": {
         "assemble_1":
@@ -161,16 +168,11 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 1000,
-                "learning_rate": 0.001,
                 "num_epoch": 300,
                 "learning_rate": 0.01,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
-                "scheduler_step_size": 500,
-                "patient": 1000,
-                "start": "2000-5-01",
                 "scheduler_step_size": 50,
                 "patient": 1000,
                 "start": "2000-01-01",
@@ -285,5 +287,36 @@ config = {
                 "val_shuffle": True,
                 "test_shuffle": True
             },
-    }
+        "LSTM_bench_mark_1": {
+                "device": "cuda",  # "cuda" or "cpu"
+                "batch_size": 64,
+                "num_epoch": 1000,
+                "learning_rate": 0.001,
+                "num_epoch": 300,
+                "learning_rate": 0.01,
+                "loss": "bce",
+                "evaluate": ["bce", "accuracy", "precision", "f1"],
+                "optimizer": "adam",
+                "scheduler_step_size": 500,
+                "patient": 1000,
+                "start": "2000-5-01",
+                "scheduler_step_size": 50,
+                "patient": 1000,
+                "start": "2000-01-01",
+                "end": None,
+                "best_model": True,
+                "early_stop": True,
+                "train_shuffle": True,
+                "val_shuffle": True,
+                "test_shuffle": True,
+                "weight_decay": 0.1
+        },
+
+    },
+    "model_type_dict": {
+            1: "movement",
+            2: "magnitude",
+            3: "assembler",
+            4: "lstm"
+        }
 }
