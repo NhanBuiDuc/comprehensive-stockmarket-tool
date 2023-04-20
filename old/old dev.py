@@ -18,7 +18,7 @@ def train_lstm_classifier_14(data_df, num_data_points, data_date, is_train):
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
     y_trend_14 = utils.prepare_data_y_trend(n_row, close, 14)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    X_set = utils.prepare_timeseries_data(X, window_size=window_size)
     split_index = int(y_trend_14.shape[0]*cf["data"]["train_split_size"])
 
     X_train_first = X_set[:split_index]
@@ -59,7 +59,7 @@ def train_lstm_classifier_1(data_df, num_data_points, data_date, is_train):
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
     y_trend_1 = utils.prepare_data_y_trend(n_row, close, 1)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    X_set = utils.prepare_timeseries_data(X, window_size=window_size)
     split_index = int(y_trend_1.shape[0]*cf["data"]["train_split_size"])
 
     X_train_first = X_set[:split_index]
@@ -100,7 +100,7 @@ def train_lstm_classifier_7(data_df, num_data_points, data_date, is_train):
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
     y_trend_7 = utils.prepare_data_y_trend(n_row, close, 7)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    X_set = utils.prepare_timeseries_data(X, window_size=window_size)
     split_index = int(y_trend_7.shape[0]*cf["data"]["train_split_size"])
 
     X_train_first = X_set[:split_index]
@@ -142,7 +142,7 @@ def train_lstm_classifier_percentage_14(data_df, num_data_points, data_date, is_
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
     y_trend_percentage_14 = utils.prepare_timeseries_data_y_trend_percentage(n_row, close, 14)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    X_set = utils.prepare_timeseries_data(X, window_size=window_size)
     split_index = int(y_trend_percentage_14.shape[0]*cf["data"]["train_split_size"])
 
     X_train_first = X_set[:split_index]
@@ -186,7 +186,7 @@ def train_assemble(data_df, num_data_points, data_date, is_train):
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
     y_real_1 = utils.prepare_timeseries_data_y(n_row, close, window_size, 1)
-    X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
+    X_set = utils.prepare_timeseries_data(X, window_size=window_size)
     split_index = int(y_real_1.shape[0]*cf["data"]["train_split_size"])
     dates = data_date[15:-window_size]
     train_dates_first = dates[:split_index]
