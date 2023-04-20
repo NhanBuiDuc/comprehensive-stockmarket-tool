@@ -630,8 +630,7 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
     close_df = pd.DataFrame({'close': df['close']})
     
     # prepare X data
-    X, y = u.prepare_timeseries_data(df.to_numpy(), window_size=window_size, output_step = output_step, stride=3)
-    dataset_check(X, y, window_size, output_step, stride = 3)
+    X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=window_size, output_step = output_step, dilation=2)
     # Split train, validation, and test sets
     trainval_test_split_index = int(len(X) * cf["data"]["train_test_split_size"])
     X_trainval, X_test, y_trainval, y_test = X[:trainval_test_split_index], X[trainval_test_split_index:], y[
@@ -765,9 +764,9 @@ def dataset_check(X, y, window_size, output_size, stride):
     result = []
     batch = X.shape[0]
     for i in range(0, batch-1, 1):
-        if (X[i + 1][(output_size - 1)  + stride][0] > X[i][(window_size - 1)][0]) and y[i] == 1:
+        if (X[i + 1][(output_size - 1)][0] > X[i][(window_size - 1)][0]) and y[i] == 1:
             result.append(True)
-        elif (X[i + 1][(output_size - 1) + stride][0] < X[i][(window_size - 1) ][0]) and y[i] == 0:
+        elif (X[i + 1][(output_size - 1)][0] < X[i][(window_size - 1) ][0]) and y[i] == 0:
             result.append(True)
         else:
             result.append(False)

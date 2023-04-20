@@ -118,39 +118,49 @@ def prepare_stock_dataframe(window_size, start, end, new_data):
     return df
 
 
-def prepare_timeseries_data(x, window_size, output_step, stride = 1):
-    """
-    x: 1D arr, window_size: int
-    Note: len(x) > window_size
-    window_size: the size of the sliding window
-    n_row: the number of rows in the windowed data. Can take it by func below.
-    output return view of x with the shape is (n_row,window_size) and the strides equal to (x.strides[0],x.strides[0])
-    which ensures that the rows of the output are contiguous in memory.
-
-    return:
-    tuple of 2 array
-    output[:-1]: has shape (n_row, window_size)
-    output[-1]: has shape (window_size,) and contains the last window of x.
-    """
-    x = np.array(x)
-    num_features = x.shape[-1]
-    n_row = (len(x) - window_size + output_step) // stride + 1
-    X = np.zeros((n_row, window_size, num_features))
+def prepare_timeseries_dataset(data, window_size, output_step, dilation,  stride = 1):
+    features = data.shape[-1]
+    n_samples = (len(data) - dilation * (window_size - 1) - output_step)
+    X = np.zeros((n_samples, window_size, features))
     y = []
-    for i in range(0, n_row):
-        for j in range(0, window_size):
-            X[i][j] = x[i * stride + j]
-            if j == (window_size - 1):
-                if X[i][j][0] < x[i * stride + j + output_step][0]:
-                    y.append(1)
-                else:
-                    y.append(0)
-    y = np.array(y)
-    y = y.reshape(-1, 1)
-    # return (all the element but the last one, return the last element)
+    features = len(data)
+
+    for i in range(n_samples):
+        end_index = i + (window_size - stride) * dilation
+        output_index = end_index + output_step
+        for j in range(window_size):
+            X[i][j] = (data[i + (j * dilation)])
+        # X[i] = data[i:i+window_size]
+        if data[end_index][0] < data[output_index][0]:
+            y.append(1)
+        else:
+            y.append(0)
+
+    # check X, y
+    false_list = []
+    for i in range(len(X)):
+        end_index = i + (window_size - stride) * dilation
+        output_index = end_index + output_step
+        if X[i][-1][0] < data[output_index][0] and y[i] == 1:
+            false_list.append(True)
+        elif X[i][-1][0] > data[output_index][0] and y[i] == 0:
+            false_list.append(True)
+        else:
+            false_list.append(False)
+    if False in false_list:
+        print("Wrong data")
+    else:
+        print("Correct data")
+    false_count = 0
+
+    for item in false_list:
+        if item == False:
+            false_count += 1
+
+    print("Number of false items:", false_count)
+    y = np.array(y).reshape(len(y), 1)
+    
     return X, y
-
-
 def prepare_timeseries_data_y(num_rows, data, window_size, output_size):
     # X has 10 datapoints, y is the label start from the windowsize 3 with output dates of 3
     # Then x will have 6 rows, 4 usable row
