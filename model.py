@@ -242,3 +242,47 @@ class CausalConv1d(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         return x
+class LSTMModel(nn.Module):
+    def __init__(self, num_feature, **param):
+        super(LSTMModel, self).__init__()
+        self.__dict__.update(param)
+        self.num_feature = num_feature
+        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
+
+        self.relu = nn.ReLU()
+        self.selu = nn.SELU()
+        self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+        self.drop_out = nn.Dropout(self.drop_out)
+        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
+        self.linear_2 = nn.Linear(65, 10)
+        self.linear_3 = nn.Linear(10, 1)
+
+        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
+                            num_layers=self.lstm_num_layer,
+                            batch_first=True)
+        self.init_weights()
+
+    def init_weights(self):
+        for name, param in self.lstm.named_parameters():
+            if 'bias' in name:
+                nn.init.constant_(param, 0.0)
+            elif 'weight' in name:
+                nn.init.xavier_uniform_(param)
+            elif 'weight_hh' in name:
+                nn.init.orthogonal_(param)
+
+    def forward(self, x):
+        batchsize = x.shape[0]
+        # Data extract
+        x = self.autoencoder(x)
+        lstm_out, (h_n, c_n) = self.lstm(x)
+        x1 = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+        x2 = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+        x1 = self.linear_1(x)
+        x1 = self.sigmoid(x)
+        x2 = torch.cat(x1, x2, dim=1)
+        x2 = self.linear_2(x2)
+        x2 = self.linear_3(x2)
+        return x2
+
