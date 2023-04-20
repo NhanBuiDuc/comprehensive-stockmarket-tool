@@ -210,7 +210,7 @@ class Trainer:
                 f.write(json.dumps(model.train_stop_epoch, indent=4))
                 f.write("\n")
                 f.write(json.dumps(data_param, indent=4))
-                f.write("\n")                
+                f.write("\n")
             if "accuracy" or "precision" or "f1" in evaluate:
                 # Compute classification report
                 target_names = ["DOWN", "UP"]  # Add target class names here
@@ -628,13 +628,10 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
 
     # prepare y df
     close_df = pd.DataFrame({'close': df['close']})
-
-    y = u.prepare_data_y_trend(close_df.to_numpy(), window_size,
-                               output_size=output_step, stride=window_size)
-
+    
     # prepare X data
-    X = u.prepare_timeseries_data_x(df.to_numpy(), window_size=window_size)[:-output_step]
-
+    X, y = u.prepare_timeseries_data(df.to_numpy(), window_size=window_size, output_step = output_step, stride=3)
+    dataset_check(X, y, window_size, output_step, stride = 3)
     # Split train, validation, and test sets
     trainval_test_split_index = int(len(X) * cf["data"]["train_test_split_size"])
     X_trainval, X_test, y_trainval, y_test = X[:trainval_test_split_index], X[trainval_test_split_index:], y[
@@ -653,10 +650,11 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
     # Use StratifiedShuffleSplit to split train and validation sets
     for train_index, valid_index in sss.split(X_trainval, y_trainval):
         X_train, X_valid = X_trainval[train_index], X_trainval[valid_index]
+        y_trainval = y_trainval.astype(int)
         y_train, y_valid = y_trainval[train_index], y_trainval[valid_index]
 
-    print("Number of 0s and 1s in y_train:", np.bincount(y_train))
-    print("Number of 0s and 1s in y_valid:", np.bincount(y_valid))
+    # print("Number of 0s and 1s in y_train:", np.bincount(y_train))
+    # print("Number of 0s and 1s in y_valid:", np.bincount(y_valid))
     # save train data
     np.save('./dataset/X_train.npy', X_train)
     np.save('./dataset/y_train.npy', y_train)
@@ -763,15 +761,23 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training, d
     return epoch_loss, lr
 
 
-def dataset_check(X, y, window_size, output_size):
+def dataset_check(X, y, window_size, output_size, stride):
     result = []
     batch = X.shape[0]
-    for i in range(0, batch - output_size - window_size):
-        if (X[i + output_size][window_size - 1][0] > X[i][window_size - 1][0]) == y[i]:
+    for i in range(0, batch-1, 1):
+        if (X[i + 1][(output_size - 1)  + stride][0] > X[i][(window_size - 1)][0]) and y[i] == 1:
+            result.append(True)
+        elif (X[i + 1][(output_size - 1) + stride][0] < X[i][(window_size - 1) ][0]) and y[i] == 0:
             result.append(True)
         else:
             result.append(False)
+
+    count_false = 0
+    for element in result:
+        if not element:
+            count_false += 1
     if False in result:
+        print("Number of wrong: ", count_false)
         print("Wrong dataset")
     else:
         print("Correct dataset")
