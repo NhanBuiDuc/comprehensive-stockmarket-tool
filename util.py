@@ -118,7 +118,7 @@ def prepare_stock_dataframe(window_size, start, end, new_data):
     return df
 
 
-def prepare_timeseries_data_x(x, window_size, stride = 1):
+def prepare_timeseries_data(x, window_size, output_step, stride = 1):
     """
     x: 1D arr, window_size: int
     Note: len(x) > window_size
@@ -134,14 +134,21 @@ def prepare_timeseries_data_x(x, window_size, stride = 1):
     """
     x = np.array(x)
     num_features = x.shape[-1]
-    n_row = x.shape[0] - window_size
-    output = np.zeros((n_row, window_size, num_features))
-    for i in range(n_row):
-        for j in range(window_size, window_size):
-            output[i][j] = x[i + j]
-
+    n_row = (len(x) - window_size + output_step) // stride + 1
+    X = np.zeros((n_row, window_size, num_features))
+    y = []
+    for i in range(0, n_row):
+        for j in range(0, window_size):
+            X[i][j] = x[i * stride + j]
+            if j == (window_size - 1):
+                if X[i][j][0] < x[i * stride + j + output_step][0]:
+                    y.append(1)
+                else:
+                    y.append(0)
+    y = np.array(y)
+    y = y.reshape(-1, 1)
     # return (all the element but the last one, return the last element)
-    return output
+    return X, y
 
 
 def prepare_timeseries_data_y(num_rows, data, window_size, output_size):
@@ -183,18 +190,18 @@ def prepare_data_y(num_rows, data, output_size):
 
 
 def prepare_data_y_trend(data, window_size, output_size, stride = 1):
-    n_row =(len(data) - window_size + output_size) // stride + 1   
-    output = np.zeros((n_row, 1), dtype=float)
+    n_row = (len(data) - window_size + output_size) // stride + 1   
+    output = []
     # Iterate over original array and extract windows of size 3
     # (1) means up
     # (0) means down
-    for i in range(0, n_row, stride):
+    for i in range(0, len(data) - n_row, stride):
         # Go up
         if data[i + output_size + (window_size - 1)] > data[i + (window_size - 1)]:
-            output[i] = 1
+            output.append(1)
         # Go down
         else:
-            output[i] = 0
+            output.append(0)
     return output
 
 
@@ -202,7 +209,8 @@ def prepare_timeseries_data_y_percentage(num_rows, data, window_size, output_siz
     output = np.zeros((num_rows, 1), dtype=float)
     for i in range(num_rows):
         change_percentage = ((data[i + window_size + output_size - 1] - data[window_size + i - 1]) * 100) / data[window_size + i - 1]
-        output[i] = (abs(change_percentage))
+        if change_percentage > 2.5:
+            output[i] = (1)
     return output
 
 

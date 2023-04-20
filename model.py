@@ -68,7 +68,7 @@ class Movement(nn.Module):
         super(Movement, self).__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
-        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
+        self.autoencoder = Autoencoder(1, self.window_size, **self.conv1D_param)
 
         self.relu = nn.ReLU()
         self.selu = nn.SELU()
@@ -76,17 +76,18 @@ class Movement(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.soft_max = nn.Softmax(dim=1)
         self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(195, 365)
-        self.linear_2 = nn.Linear(365, 2)
+        self.linear_1 = nn.Linear(39, 5)
+        self.linear_2 = nn.Linear(14, 1)
         self.linear_3 = nn.Linear(2, 1)
         
-        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
-                            num_layers=self.lstm_num_layer,
-                            batch_first=True)
-
-        # self.lstm = nn.LSTM(self.num_feature, hidden_size=self.lstm_hidden_layer_size,
+        self.linear_4 = nn.Linear(39, 1)
+        # self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
         #                     num_layers=self.lstm_num_layer,
         #                     batch_first=True)
+
+        self.lstm = nn.LSTM(1, hidden_size=self.lstm_hidden_layer_size,
+                            num_layers=self.lstm_num_layer,
+                            batch_first=True)
         self.init_weights()
 
     def init_weights(self):
@@ -101,13 +102,13 @@ class Movement(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         # Data extract
-        x = self.autoencoder(x)
+        x = self.linear_4(x)
+        # x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
         x = x.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear_1(x)
-        x = self.tanh(x)
+        # x = self.linear_1(x)
+        # x = self.tanh(x)
         x = self.linear_2(x)
-        x = self.linear_3(x)
         x = self.sigmoid(x)
         return x
 
@@ -210,7 +211,7 @@ class Autoencoder(nn.Module):
             self.big_sub_receptive_field_size = int((self.window_size - self.sub_big_kernel_size + 2 * (
                     self.sub_big_kernel_size - 1 + 1)) / self.max_pooling_kernel_size)
             self.receptive_field_size = int(
-                self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
+                self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size) - 1
 
         self.maxpool = nn.MaxPool1d(kernel_size=self.max_pooling_kernel_size)
         self.linear_1 = nn.Linear(self.receptive_field_size, self.output_size)
