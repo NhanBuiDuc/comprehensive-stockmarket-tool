@@ -17,7 +17,7 @@ def train_lstm_classifier_14(data_df, num_data_points, data_date, is_train):
 
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
-    y_trend_14 = utils.prepare_timeseries_data_y_trend(n_row, close, 14)
+    y_trend_14 = utils.prepare_data_y_trend(n_row, close, 14)
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_trend_14.shape[0]*cf["data"]["train_split_size"])
 
@@ -58,7 +58,7 @@ def train_lstm_classifier_1(data_df, num_data_points, data_date, is_train):
 
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
-    y_trend_1 = utils.prepare_timeseries_data_y_trend(n_row, close, 1)
+    y_trend_1 = utils.prepare_data_y_trend(n_row, close, 1)
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_trend_1.shape[0]*cf["data"]["train_split_size"])
 
@@ -99,7 +99,7 @@ def train_lstm_classifier_7(data_df, num_data_points, data_date, is_train):
 
     close_df = pd.DataFrame({'close': dataset_df['close']})
     close = close_df.to_numpy()
-    y_trend_7 = utils.prepare_timeseries_data_y_trend(n_row, close, 7)
+    y_trend_7 = utils.prepare_data_y_trend(n_row, close, 7)
     X_set = utils.prepare_timeseries_data_x(X, window_size=window_size)
     split_index = int(y_trend_7.shape[0]*cf["data"]["train_split_size"])
 
