@@ -3,6 +3,8 @@ from config import config as cf
 import torch
 import math
 import benchmark as bm
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
 
 class Model:
@@ -16,28 +18,34 @@ class Model:
         self.train_stop_lr = None
         self.train_stop_epoch = None
         self.state_dict = None
-        self.model_type_dict = cf["model_type_dict"]
-
+        self.pytorch_timeseries_model_type_dict = cf["pytorch_timeseries_model_type_dict"]
+        self.tensorflow_timeseries_model_type_dict = cf["tensorflow_timeseries_model_type_dict"]
         if self.num_feature is not None:
             self.construct_structure()
-
-    def predict(self):
-        pass
 
     def construct_structure(self):
         self.parameters = cf["model"][self.name]
 
-        if self.model_type == self.model_type_dict[1]:
+        if self.model_type == self.pytorch_timeseries_model_type_dict[1]:
             self.parameters = cf["model"][self.name]
             self.structure = Movement(self.num_feature, **self.parameters)
 
-        elif self.model_type == self.model_type_dict[2]:
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[2]:
             pass
-        elif self.model_type == self.model_type_dict[3]:
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[3]:
             pass
-        elif self.model_type == self.model_type_dict[4]:
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[4]:
             self.parameters = cf["model"][self.name]
             self.structure = bm.LSTM_bench_mark(self.num_feature, **self.parameters)
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[5]:
+            self.parameters = cf["model"][self.name]
+            self.structure = bm.GRU_bench_mark(self.num_feature, **self.parameters)
+
+        elif self.model_type == self.tensorflow_timeseries_model_type_dict[1]:
+            self.structure = SVC()
+
+        elif self.model_type == self.tensorflow_timeseries_model_type_dict[2]:
+            self.structure = RandomForestClassifier()
 
     def load_check_point(self, file_name):
         check_point = torch.load('./models/' + file_name)
@@ -47,8 +55,12 @@ class Model:
         return self
 
     def predict(self, x):
-        y = self.structure(x)
-        return y
+        if self.model_type in self.pytorch_timeseries_model_type_dict.values():
+            y = self.structure(x)
+            return y
+        elif self.model_type in self.tensorflow_timeseries_model_type_dict.values():
+            y = self.structure.predict(x)
+            return y
 
 
 class Movement(nn.Module):
@@ -62,14 +74,19 @@ class Movement(nn.Module):
         self.selu = nn.SELU()
         self.tanh = nn.Tanh()
         self.sigmoid = nn.Sigmoid()
+        self.soft_max = nn.Softmax(dim=1)
         self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
-        self.linear_2 = nn.Linear(10, 5)
-        self.linear_3 = nn.Linear(5, 1)
-
+        self.linear_1 = nn.Linear(195, 365)
+        self.linear_2 = nn.Linear(365, 2)
+        self.linear_3 = nn.Linear(2, 1)
+        
         self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
                             num_layers=self.lstm_num_layer,
                             batch_first=True)
+
+        # self.lstm = nn.LSTM(self.num_feature, hidden_size=self.lstm_hidden_layer_size,
+        #                     num_layers=self.lstm_num_layer,
+        #                     batch_first=True)
         self.init_weights()
 
     def init_weights(self):
@@ -86,10 +103,14 @@ class Movement(nn.Module):
         # Data extract
         x = self.autoencoder(x)
         lstm_out, (h_n, c_n) = self.lstm(x)
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+        x = x.permute(1, 0, 2).reshape(batchsize, -1)
         x = self.linear_1(x)
+        x = self.tanh(x)
+        x = self.linear_2(x)
+        x = self.linear_3(x)
         x = self.sigmoid(x)
         return x
+
 
 class Autoencoder(nn.Module):
     def __init__(self, num_feature, window_size, **param):
@@ -142,9 +163,9 @@ class Autoencoder(nn.Module):
                 self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
 
             self.small_sub_receptive_field_size = int((self.num_feature - self.sub_small_kernel_size + 2 * (
-                        self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
+                    self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
             self.big_sub_receptive_field_size = int((self.num_feature - self.sub_big_kernel_size + 2 * (
-                        self.sub_big_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
+                    self.sub_big_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
             self.receptive_field_size = int(
                 self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
         elif self.conv1D_type_dict[self.type] == "temporal":
@@ -185,9 +206,9 @@ class Autoencoder(nn.Module):
                 self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
 
             self.small_sub_receptive_field_size = int((self.window_size - self.sub_small_kernel_size + 2 * (
-                        self.sub_small_kernel_size - 1)) / self.max_pooling_kernel_size)
+                    self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
             self.big_sub_receptive_field_size = int((self.window_size - self.sub_big_kernel_size + 2 * (
-                        self.sub_big_kernel_size - 1)) / self.max_pooling_kernel_size)
+                    self.sub_big_kernel_size - 1 + 1)) / self.max_pooling_kernel_size)
             self.receptive_field_size = int(
                 self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
 
@@ -197,6 +218,8 @@ class Autoencoder(nn.Module):
 
     def forward(self, x):
         batch = x.shape[0]
+        if self.conv1D_type_dict[self.type] == "temporal":
+            x = x.permute(0, 2, 1)
         x1 = x.clone()
         x2 = x.clone()
         x3 = x.clone()
@@ -213,7 +236,6 @@ class Autoencoder(nn.Module):
         out = self.linear_1(concat)
         out = self.relu(out)
         return out
-
 
 
 class CausalDilatedConv1d(nn.Module):

@@ -8,7 +8,7 @@ config = {
     "data": {
         "window_size": 14,
         "train_test_split_size": 0.7,
-        "train_val_split_size": 0.5,
+        "train_val_split_size": 0.7,
         "smoothing": 2,
     },
     "plots": {
@@ -56,13 +56,13 @@ config = {
             "window_size": 14,
         },
         "movement_1": {
-            "lstm_num_layer": 1,
-            "lstm_hidden_layer_size": 64,
+            "lstm_num_layer": 2,
+            "lstm_hidden_layer_size": 14,
             "drop_out": 0.2,
             "output_step": 1,
             "window_size": 14,
             "conv1D_param": {
-                "type": 1,
+                "type": 2,
                 "kernel_size": 4,
                 "dilation_base": 3,
                 "max_pooling_kernel_size": 2,
@@ -70,7 +70,7 @@ config = {
                 "sub_big_num_layer": 1,
                 "sub_small_kernel_size": 3,
                 "sub_big_kernel_size": 30,
-                "output_size": 1
+                "output_size": 5
             }
         },
         "magnitude_1": {
@@ -143,20 +143,29 @@ config = {
             "output_step": 1,
             "window_size": 14,
         },
+        "GRU_bench_mark_1": {
+            "hidden_size": 64,
+            "output_step": 1,
+            "window_size": 14,
+        },
+        "svm_1": {
+            "window_size": 14,
+            "output_step": 1,
+        }
     },
     "training": {
         "assemble_1":
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 300,
+                "num_epoch": 200,
                 "learning_rate": 0.01,
                 "loss": "mse",
                 "evaluate": ["mse", "mae"],
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
                 "patient": 200,
-                "start": "2000-5-01",
+                "start": "2000-01-01",
                 "end": None,
                 "best_model": False,
                 "early_stop": True,
@@ -168,21 +177,21 @@ config = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 300,
-                "learning_rate": 0.01,
+                "num_epoch": 1000,
+                "learning_rate": 0.001,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
-                "scheduler_step_size": 50,
+                "scheduler_step_size": 100,
                 "patient": 1000,
-                "start": "2000-01-01",
+                "start": "2015-01-01",
                 "end": None,
                 "best_model": True,
                 "early_stop": True,
                 "train_shuffle": True,
                 "val_shuffle": True,
                 "test_shuffle": True,
-                "weight_decay": 0.1
+                "weight_decay": 0.0001
             },
         "magnitude_1":
             {
@@ -217,8 +226,7 @@ config = {
                 "val_shuffle": True,
                 "test_shuffle": True
             },
-        "magnitude_3":
-            {
+        "magnitude_3": {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
                 "num_epoch": 150,
@@ -231,8 +239,7 @@ config = {
                 "val_shuffle": True,
                 "test_shuffle": True
             },
-        "movement_7":
-            {
+        "movement_7": {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
                 "num_epoch": 150,
@@ -245,8 +252,7 @@ config = {
                 "val_shuffle": True,
                 "test_shuffle": True
             },
-        "magnitude_7":
-            {
+        "magnitude_7": {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
                 "num_epoch": 150,
@@ -259,8 +265,7 @@ config = {
                 "val_shuffle": True,
                 "test_shuffle": True
             },
-        "movement_14":
-            {
+        "movement_14": {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
                 "num_epoch": 150,
@@ -273,8 +278,7 @@ config = {
                 "val_shuffle": True,
                 "test_shuffle": True
             },
-        "magnitude_14":
-            {
+        "magnitude_14": {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
                 "num_epoch": 150,
@@ -292,17 +296,12 @@ config = {
                 "batch_size": 64,
                 "num_epoch": 1000,
                 "learning_rate": 0.001,
-                "num_epoch": 300,
-                "learning_rate": 0.01,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
                 "scheduler_step_size": 500,
                 "patient": 1000,
                 "start": "2000-5-01",
-                "scheduler_step_size": 50,
-                "patient": 1000,
-                "start": "2000-01-01",
                 "end": None,
                 "best_model": True,
                 "early_stop": True,
@@ -311,12 +310,35 @@ config = {
                 "test_shuffle": True,
                 "weight_decay": 0.1
         },
+        "svm_1": {
+            "batch_size": 64,
+            "num_epoch": 300,
+            "learning_rate": 0.01,
+            "loss": "bce",
+            "evaluate": ["bce", "accuracy", "precision", "f1"],
+            "optimizer": "adam",
+            "scheduler_step_size": 50,
+            "patient": 1000,
+            "start": "2000-01-01",
+            "end": None,
+            "best_model": True,
+            "early_stop": True,
+            "train_shuffle": True,
+            "val_shuffle": True,
+            "test_shuffle": True,
+            "weight_decay": 0.1
+        }
 
     },
-    "model_type_dict": {
+    "pytorch_timeseries_model_type_dict": {
             1: "movement",
             2: "magnitude",
             3: "assembler",
-            4: "lstm"
-        }
+            4: "lstm",
+            5: "gru"
+    },
+    "tensorflow_timeseries_model_type_dict": {
+        1: "svm",
+        2: "random_forest"
+    }
 }

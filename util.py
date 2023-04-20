@@ -118,7 +118,7 @@ def prepare_stock_dataframe(window_size, start, end, new_data):
     return df
 
 
-def prepare_timeseries_data_x(x, window_size):
+def prepare_timeseries_data_x(x, window_size, stride = 1):
     """
     x: 1D arr, window_size: int
     Note: len(x) > window_size
@@ -137,7 +137,7 @@ def prepare_timeseries_data_x(x, window_size):
     n_row = x.shape[0] - window_size
     output = np.zeros((n_row, window_size, num_features))
     for i in range(n_row):
-        for j in range(window_size):
+        for j in range(window_size, window_size):
             output[i][j] = x[i + j]
 
     # return (all the element but the last one, return the last element)
@@ -163,14 +163,34 @@ def prepare_timeseries_data_y(num_rows, data, window_size, output_size):
     return output
 
 
-def prepare_timeseries_data_y_trend(num_rows, data, output_size):
-    output = np.zeros((num_rows, 1), dtype=float)
+def prepare_data_y(num_rows, data, output_size):
+    # X has 10 datapoints, y is the label start from the windowsize 3 with output dates of 3
+    # Then x will have 6 rows, 4 usable row
+    # x: 0, 1, 2 || 1, 2, 3 || 2, 3, 4 || 3, 4, 5 || 4, 5, 6 || 6, 7, 8 || 7, 8, 9
+    # y: 3, 4, 5 || 4, 5, 6 || 5, 6, 7 || 6, 7, 8 || 7, 8, 9
+
+    # X has 10 datapoints, y is the label start from the windowsize 4 with output dates of 3
+    # Then x will have 6 rows, 4 usable row
+    # x: 0, 1, 2, 3 || 1, 2, 3, 4 || 2, 3, 4, 5 || 3, 4, 5, 6 || 4, 5, 6, 7 || 5, 6, 7, 8 || 6, 7, 8, 9
+    # y: 4, 5, 6    || 5, 6, 7    || 6, 7, 8    || 7, 8, 9    || 8, 9
+
+    # Create empty array to hold reshaped array
+    output = np.empty((num_rows, output_size))
+    # Iterate over original array and extract windows of size 3
+    for i in range(num_rows):
+        output[i] = data[i:i + output_size]
+    return output
+
+
+def prepare_data_y_trend(data, window_size, output_size, stride = 1):
+    n_row =(len(data) - window_size + output_size) // stride + 1   
+    output = np.zeros((n_row, 1), dtype=float)
     # Iterate over original array and extract windows of size 3
     # (1) means up
     # (0) means down
-    for i in range(num_rows - 1):
+    for i in range(0, n_row, stride):
         # Go up
-        if data[i + output_size] > data[i]:
+        if data[i + output_size + (window_size - 1)] > data[i + (window_size - 1)]:
             output[i] = 1
         # Go down
         else:
@@ -178,12 +198,10 @@ def prepare_timeseries_data_y_trend(num_rows, data, output_size):
     return output
 
 
-def prepare_timeseries_data_y_percentage(num_rows, data, output_size):
+def prepare_timeseries_data_y_percentage(num_rows, data, window_size, output_size, stride = 1):
     output = np.zeros((num_rows, 1), dtype=float)
-    window_size = cf["data"]["window_size"]
     for i in range(num_rows):
-        change_percentage = ((data[i + window_size + output_size - 1] - data[window_size + i - 1]) * 100) / data[
-            window_size + i - 1]
+        change_percentage = ((data[i + window_size + output_size - 1] - data[window_size + i - 1]) * 100) / data[window_size + i - 1]
         output[i] = (abs(change_percentage))
     return output
 
