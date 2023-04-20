@@ -108,7 +108,7 @@ def prepare_stock_dataframe(window_size, start, end, new_data):
     else:
         df = read_csv_file(path, file_name)
 
-    if start is not None and end is not None:
+    if (start is not None) and (end is not None):
         df = df.loc[start:end]
     elif start is not None:
         df = df.loc[start:]
