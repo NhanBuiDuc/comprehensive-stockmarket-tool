@@ -21,11 +21,7 @@ import os
 class Trainer:
     def __init__(self):
 
-        self.model_type_dict = {
-            1: "movement",
-            2: "magnitude",
-            3: "assembler"
-        }
+        self.model_type_dict = cf["model_type_dict"]
 
     def train(self, model_name, new_data=False):
         training_param = cf["training"][model_name]
@@ -45,7 +41,7 @@ class Trainer:
         train_shuffle = training_param["train_shuffle"]
         val_shuffle = training_param["val_shuffle"]
         test_shuffle = training_param["test_shuffle"]
-
+        weight_decay = training_param["weight_decay"]
         model_param = cf["model"][model_name]
 
         if "movement" in model_name:
@@ -54,8 +50,9 @@ class Trainer:
             model_type = self.model_type_dict[2]
         elif "assembler" in model_name:
             model_type = self.model_type_dict[3]
-
-        if model_type == "movement" or "magnitude" or "assembler":
+        elif "lstm" or "lstm".upper() in model_name:
+            model_type = self.model_type_dict[4]
+        if model_type == "movement" or "magnitude" or "assembler" or "lstm":
             window_size = model_param["window_size"]
             output_step = model_param["output_step"]
             model_full_name = cf["alpha_vantage"]["symbol"] + "_" + model_name
@@ -76,9 +73,9 @@ class Trainer:
             criterion = nn.BCELoss()
 
         if "adam" in optimizer:
-            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate, weight_decay=0.1)
+            optimizer = optim.Adam(model.structure.parameters(), lr=learning_rate, weight_decay=weight_decay)
         elif "sgd" in optimizer:
-            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate, weight_decay=0.1)
+            optimizer = optim.SGD(model.structure.parameters(), lr=learning_rate, weight_decay=weight_decay)
         scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1,
                                       patience=scheduler_step_size, verbose=True)
 
@@ -259,7 +256,8 @@ class Trainer:
                     # Write the loss to the file
                     f.write(print_string + " " + loss_str + "\n")
                     f.write("-" * 100)
-                    f.write("\n-")
+                    f.write("-")
+                    f.write("\n")
                 # Print a message to confirm that the file was written successfully
                 print(f"Loss written to {save_path}.")
 
@@ -274,7 +272,7 @@ def prepare_eval_data(model_type, model_full_name, train_file_name, valid_file_n
     valid_date = valid_df.index.strftime("%Y-%m-%d").tolist()
     test_date = test_df.index.strftime("%Y-%m-%d").tolist()
 
-    if model_type == "movement":
+    if model_type == "movement" or "lstm":
 
         train_date = train_date[int(len(train_date) - len(train_df)):]
         valid_date = valid_date[int(len(valid_date) - len(valid_df)):]
@@ -404,7 +402,7 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
     valid_df.to_csv(f"./csv/valid_{model_full_name}.csv")
     test_df.to_csv(f"./csv/test_{model_full_name}.csv")
 
-    if model_type == "movement":
+    if model_type == "movement" or "lstm":
 
         train_date = train_date[int(len(train_date) - len(train_df)):]
         valid_date = valid_date[int(len(valid_date) - len(valid_df)):]
