@@ -2,6 +2,7 @@ import torch.nn as nn
 from config import config as cf
 import torch
 import math
+import benchmark as bm
 
 
 class Model:
@@ -15,11 +16,8 @@ class Model:
         self.train_stop_lr = None
         self.train_stop_epoch = None
         self.state_dict = None
-        self.model_type_dict = {
-            1: "movement",
-            2: "magnitude",
-            3: "assembler"
-        }
+        self.model_type_dict = cf["model_type_dict"]
+
         if self.num_feature is not None:
             self.construct_structure()
 
@@ -35,8 +33,11 @@ class Model:
 
         elif self.model_type == self.model_type_dict[2]:
             pass
-        elif self.model_type == self.model_type_dict[2]:
+        elif self.model_type == self.model_type_dict[3]:
             pass
+        elif self.model_type == self.model_type_dict[4]:
+            self.parameters = cf["model"][self.name]
+            self.structure = bm.LSTM_bench_mark(self.num_feature, **self.parameters)
 
     def load_check_point(self, file_name):
         check_point = torch.load('./models/' + file_name)
@@ -49,6 +50,46 @@ class Model:
         y = self.structure(x)
         return y
 
+
+class Movement(nn.Module):
+    def __init__(self, num_feature, **param):
+        super(Movement, self).__init__()
+        self.__dict__.update(param)
+        self.num_feature = num_feature
+        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
+
+        self.relu = nn.ReLU()
+        self.selu = nn.SELU()
+        self.tanh = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
+        self.drop_out = nn.Dropout(self.drop_out)
+        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
+        self.linear_2 = nn.Linear(10, 5)
+        self.linear_3 = nn.Linear(5, 1)
+
+        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
+                            num_layers=self.lstm_num_layer,
+                            batch_first=True)
+        self.init_weights()
+
+    def init_weights(self):
+        for name, param in self.lstm.named_parameters():
+            if 'bias' in name:
+                nn.init.constant_(param, 0.0)
+            elif 'weight' in name:
+                nn.init.xavier_uniform_(param)
+            elif 'weight_hh' in name:
+                nn.init.orthogonal_(param)
+
+    def forward(self, x):
+        batchsize = x.shape[0]
+        # Data extract
+        x = self.autoencoder(x)
+        lstm_out, (h_n, c_n) = self.lstm(x)
+        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+        x = self.linear_1(x)
+        x = self.sigmoid(x)
+        return x
 
 class Autoencoder(nn.Module):
     def __init__(self, num_feature, window_size, **param):
@@ -173,46 +214,6 @@ class Autoencoder(nn.Module):
         out = self.relu(out)
         return out
 
-
-class Movement(nn.Module):
-    def __init__(self, num_feature, **param):
-        super(Movement, self).__init__()
-        self.__dict__.update(param)
-        self.num_feature = num_feature
-        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
-
-        self.relu = nn.ReLU()
-        self.selu = nn.SELU()
-        self.tanh = nn.Tanh()
-        self.sigmoid = nn.Sigmoid()
-        self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
-        self.linear_2 = nn.Linear(10, 5)
-        self.linear_3 = nn.Linear(5, 1)
-
-        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
-                            num_layers=self.lstm_num_layer,
-                            batch_first=True)
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm.named_parameters():
-            if 'bias' in name:
-                nn.init.constant_(param, 0.0)
-            elif 'weight' in name:
-                nn.init.xavier_uniform_(param)
-            elif 'weight_hh' in name:
-                nn.init.orthogonal_(param)
-
-    def forward(self, x):
-        batchsize = x.shape[0]
-        # Data extract
-        x = self.autoencoder(x)
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear_1(x)
-        x = self.sigmoid(x)
-        return x
 
 
 class CausalDilatedConv1d(nn.Module):
