@@ -58,3 +58,17 @@ class Classification_TimeSeriesDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.x[idx], self.y[idx]
+
+
+class Classification_Dataset(Dataset):
+    def __init__(self, x, y):
+        self.scaler = MinMaxScaler()
+        self.y = y.astype(np.float32)
+        x = self.scaler.fit_transform(x)
+        self.x = x.astype(np.float32)
+
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
