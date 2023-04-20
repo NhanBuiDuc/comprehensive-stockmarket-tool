@@ -42,7 +42,7 @@ class TimeSeriesDataset(Dataset):
 
 class Classification_TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = MinMaxScaler(feature_range=(-100, 100))
+        self.scaler = MinMaxScaler(feature_range=(-10, 10))
         self.y = y.astype(np.float32)
         self.x = x.astype(np.float32)
         # Reshape the data
@@ -66,6 +66,7 @@ class Classification_Dataset(Dataset):
         self.y = y.astype(np.float32)
         x = self.scaler.fit_transform(x)
         self.x = x.astype(np.float32)
+        self.num_classes = len(set(y))
 
     def __len__(self):
         return len(self.x)

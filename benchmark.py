@@ -38,15 +38,16 @@ class LSTM_bench_mark(nn.Module):
 
 
 # Define GRU model
-class GRU(nn.Module):
+class GRU_bench_mark(nn.Module):
     def __init__(self, num_feature, **param):
-        super(GRU, self).__init__()
+        super(GRU_bench_mark, self).__init__()
         self.__dict__.update(param)
         self.gru = nn.GRU(num_feature, self.hidden_size, batch_first=True)
-        self.fc = nn.Linear(self.hidden_size, 1)
+        self.fc = nn.Linear(self.hidden_size, self.output_step)
 
     def forward(self, x):
         h0 = torch.zeros(1, x.size(0), self.hidden_size).to(x.device)
         out, _ = self.gru(x, h0)
         out = self.fc(out[:, -1, :])
         return out
+
