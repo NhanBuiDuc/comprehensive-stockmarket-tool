@@ -68,30 +68,39 @@ class Movement(nn.Module):
         super(Movement, self).__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
-        self.autoencoder = Autoencoder(1, self.window_size, **self.conv1D_param)
-
+        # self.autoencoder = Autoencoder(1, self.window_size, **self.conv1D_param)
+        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
+        self.autoencoder_2 = Autoencoder(41, self.window_size, **self.conv1D_param)
         self.relu = nn.ReLU()
         self.selu = nn.SELU()
         self.tanh = nn.Tanh()
+        self.bn_1 = nn.BatchNorm1d(num_features=44)
+        self.bn_2 = nn.BatchNorm1d(num_features=100)
         self.sigmoid = nn.Sigmoid()
         self.soft_max = nn.Softmax(dim=1)
         self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(39, 5)
-        self.linear_2 = nn.Linear(14, 1)
+        self.linear_1 = nn.Linear(28, 1)
+        self.linear_2 = nn.Linear(826, 1)
         self.linear_3 = nn.Linear(2, 1)
         
         self.linear_4 = nn.Linear(39, 1)
-        # self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
-        #                     num_layers=self.lstm_num_layer,
-        #                     batch_first=True)
-
-        self.lstm = nn.LSTM(1, hidden_size=self.lstm_hidden_layer_size,
+        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
                             num_layers=self.lstm_num_layer,
                             batch_first=True)
+
+        # self.lstm = nn.LSTM(self.num_feature, hidden_size=self.lstm_hidden_layer_size,
+        #                     num_layers=self.lstm_num_layer,
+        #                     batch_first=True)
+        self.lstm_1 = nn.LSTM(59, hidden_size=self.lstm_hidden_layer_size,
+                    num_layers=self.lstm_num_layer,
+                    batch_first=True)
+        self.lstm_2 = nn.LSTM(59, hidden_size=self.lstm_hidden_layer_size,
+                    num_layers=self.lstm_num_layer,
+                    batch_first=True)
         self.init_weights()
 
     def init_weights(self):
-        for name, param in self.lstm.named_parameters():
+        for name, param in self.lstm_1.named_parameters():
             if 'bias' in name:
                 nn.init.constant_(param, 0.0)
             elif 'weight' in name:
@@ -102,19 +111,37 @@ class Movement(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         # Data extract
-        x = self.linear_4(x)
-        # x = self.autoencoder(x)
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = x.permute(1, 0, 2).reshape(batchsize, -1)
-        # x = self.linear_1(x)
-        # x = self.tanh(x)
-        x = self.linear_2(x)
+        x1 = x.clone()
+        x2 = x.clone()
+        x3 = x.clone()
+
+        x = self.autoencoder(x)
+        x = torch.concat([x, x1], dim=2)
+        x = self.drop_out(x)
+        x = self.relu(x)
+        lstm_out, (h_n, c_n) = self.lstm_1(x)
+        # x = h_n.permute(1, 2, 0).reshape(batchsize, -1)
+        x = h_n.permute(1, 2, 0)
+        x = torch.concat([x, x2], dim=2)
+        x = self.relu(x)
+        x = self.autoencoder_2(x)
+        x = torch.concat([x, x3], dim=2)
+        x = self.drop_out(x)
+        x = self.relu(x)
+        lstm_out, (h_n, c_n) = self.lstm_2(x)
+        # x = h_n.permute(1, 2, 0).reshape(batchsize, -1)
+        x = h_n.permute(1, 2, 0)
+        # x = torch.concat([x, x2], dim=2)
+        x = self.relu(x)
+        x = self.drop_out(x)
+        x = x.reshape(batchsize, -1)
+        x = self.linear_1(x)
         x = self.sigmoid(x)
         return x
 
 
 class Autoencoder(nn.Module):
-    def __init__(self, num_feature, window_size, **param):
+    def __init__(self, num_feature, window_size, output_size, **param):
         super(Autoencoder, self).__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
@@ -122,6 +149,7 @@ class Autoencoder(nn.Module):
         self.main_layer = nn.ModuleList()
         self.sub_small_layer = nn.ModuleList()
         self.sub_big_layer = nn.ModuleList()
+        self.output_size = output_size
         self.conv1D_type_dict = {
             1: "spatial",
             2: "temporal"
@@ -235,7 +263,6 @@ class Autoencoder(nn.Module):
         x3 = self.maxpool(x3)
         concat = torch.cat([x1, x2, x3], dim=2)
         out = self.linear_1(concat)
-        out = self.relu(out)
         return out
 
 
