@@ -7,7 +7,7 @@ config = {
     },
     "data": {
         "window_size": 14,
-        "train_test_split_size": 0.9,
+        "train_test_split_size": 0.7,
         "train_val_split_size": 0.7,
         "smoothing": 2,
     },
@@ -58,11 +58,11 @@ config = {
         "movement_1": {
             "lstm_num_layer": 2,
             "lstm_hidden_layer_size": 14,
-            "drop_out": 0.2,
+            "drop_out": 0.5,
             "output_step": 1,
             "window_size": 14,
             "conv1D_param": {
-                "type": 2,
+                "type": 1,
                 "kernel_size": 4,
                 "dilation_base": 3,
                 "max_pooling_kernel_size": 2,
@@ -70,13 +70,13 @@ config = {
                 "sub_big_num_layer": 1,
                 "sub_small_kernel_size": 3,
                 "sub_big_kernel_size": 30,
-                "output_size": 5
+                "output_size": 20
             }
         },
         "magnitude_1": {
             "lstm_num_layers": 4.5,
             "lstm_hidden_layer_size": 64,
-            "drop_out": 0.2,
+            "drop_out": 0.4,
             "output_step": 1,
             "window_size": 14,
             "conv1d_kernel_size": 4,
@@ -182,9 +182,9 @@ config = {
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
-                "scheduler_step_size": 100,
-                "patient": 1000,
-                "start": "2021-04-01",
+                "scheduler_step_size": 50,
+                "patient": 100,
+                "start": "2020-01-01",
                 "end": None,
                 "best_model": True,
                 "early_stop": True,
@@ -204,7 +204,7 @@ config = {
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
                 "patient": 200,
-                "from": "2000-01-01",
+                "from": "2021-01-01",
                 "to": None,
                 "best_model": True,
                 "early_stop": True,
@@ -295,7 +295,7 @@ config = {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
                 "num_epoch": 1000,
-                "learning_rate": 0.001,
+                "learning_rate": 0.01,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
@@ -319,7 +319,7 @@ config = {
             "optimizer": "adam",
             "scheduler_step_size": 50,
             "patient": 1000,
-            "start": "2000-01-01",
+            "start": "2015-01-01",
             "end": None,
             "best_model": True,
             "early_stop": True,

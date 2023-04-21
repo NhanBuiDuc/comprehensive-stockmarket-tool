@@ -1,6 +1,6 @@
 import pandas as pd
 import torch
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset,ConcatDataset
 from model import Model
 from config import config as cf
 import torch.nn as nn
@@ -17,7 +17,8 @@ import numpy as np
 import os
 from torch.utils.data import DataLoader, WeightedRandomSampler
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
-
+import datetime
+import matplotlib.pyplot as plt
 
 # Main
 class Trainer:
@@ -25,7 +26,7 @@ class Trainer:
 
         self.model_type_dict = cf["pytorch_timeseries_model_type_dict"]
 
-    def train(self, model_name, new_data=False):
+    def train(self, model_name, new_data=False, full_data = False):
         training_param = cf["training"][model_name]
         device = training_param["device"]
         batch_size = training_param["batch_size"]
@@ -86,49 +87,93 @@ class Trainer:
 
         if early_stop:
             stop = False
+        # Run train valid
+        if full_data == False:
+            for epoch in range(num_epoch):
+                loss_train, lr_train = run_epoch(model, train_dataloader, optimizer, criterion, scheduler,
+                                                is_training=True, device=device)
+                loss_val, lr_val = run_epoch(model, valid_dataloader, optimizer, criterion, scheduler,
+                                            is_training=False, device=device)
+                scheduler.step(loss_val)
+                if best_model:
+                    if check_best_loss(best_loss=best_loss, loss=loss_val):
+                        best_loss = loss_val
+                        patient_count = 0
+                        model.train_stop_lr = lr_train
+                        model.train_stop_epoch = epoch
 
-        for epoch in range(num_epoch):
-            loss_train, lr_train = run_epoch(model, train_dataloader, optimizer, criterion, scheduler,
-                                             is_training=True, device=device)
-            loss_val, lr_val = run_epoch(model, valid_dataloader, optimizer, criterion, scheduler,
-                                         is_training=False, device=device)
-            scheduler.step(loss_val)
-            if best_model:
-                if check_best_loss(best_loss=best_loss, loss=loss_val):
-                    best_loss = loss_val
-                    patient_count = 0
-                    model.train_stop_lr = lr_train
-                    model.train_stop_epoch = epoch
-
+                        model.state_dict = model.structure.state_dict()
+                        model.train_stop_epoch = epoch
+                        model.train_stop_lr = lr_train
+                        torch.save({"model": model,
+                                    "state_dict": model.structure.state_dict()
+                                    },
+                                "./models/" + model.full_name + ".pth")
+                    else:
+                        if early_stop:
+                            stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss, current_loss=loss_val,
+                                                                            patient_count=patient_count,
+                                                                            max_patient=patient)
+                else:
                     model.state_dict = model.structure.state_dict()
                     model.train_stop_epoch = epoch
                     model.train_stop_lr = lr_train
                     torch.save({"model": model,
                                 "state_dict": model.structure.state_dict()
                                 },
-                               "./models/" + model.full_name + ".pth")
+                            "./models/" + model.full_name + ".pth")
+
+                print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
+                    .format(epoch + 1, num_epoch, loss_train, loss_val, lr_train))
+
+                print("patient", patient_count)
+                if stop:
+                    print("Early Stopped At Epoch: {}", epoch + 1)
+                    break
+        elif full_data:
+            combined_dataset = ConcatDataset([train_dataloader.dataset, valid_dataloader.dataset])
+
+            # Create a new data loader using the combined dataset
+            combined_dataset = DataLoader(combined_dataset, batch_size=32, shuffle=True)
+            for epoch in range(num_epoch):
+                loss_train, lr_train = run_epoch(model, combined_dataset, optimizer, criterion, scheduler,
+                                                is_training=True, device=device)
+                scheduler.step(loss_train)
+                if best_model:
+                    if check_best_loss(best_loss=best_loss, loss=loss_train):
+                        best_loss = loss_train
+                        patient_count = 0
+                        model.train_stop_lr = lr_train
+                        model.train_stop_epoch = epoch
+
+                        model.state_dict = model.structure.state_dict()
+                        model.train_stop_epoch = epoch
+                        model.train_stop_lr = lr_train
+                        torch.save({"model": model,
+                                    "state_dict": model.structure.state_dict()
+                                    },
+                                "./models/" + model.full_name + ".pth")
+                    else:
+                        if early_stop:
+                            stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss, current_loss=loss_train,
+                                                                            patient_count=patient_count,
+                                                                            max_patient=patient)
                 else:
-                    if early_stop:
-                        stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss, current_loss=loss_val,
-                                                                          patient_count=patient_count,
-                                                                          max_patient=patient)
-            else:
-                model.state_dict = model.structure.state_dict()
-                model.train_stop_epoch = epoch
-                model.train_stop_lr = lr_train
-                torch.save({"model": model,
-                            "state_dict": model.structure.state_dict()
-                            },
-                           "./models/" + model.full_name + ".pth")
+                    model.state_dict = model.structure.state_dict()
+                    model.train_stop_epoch = epoch
+                    model.train_stop_lr = lr_train
+                    torch.save({"model": model,
+                                "state_dict": model.structure.state_dict()
+                                },
+                            "./models/" + model.full_name + ".pth")
 
-            print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
-                  .format(epoch + 1, num_epoch, loss_train, loss_val, lr_train))
+                print('Epoch[{}/{}] | loss train:{:.6f}| lr:{:.6f}'
+                    .format(epoch + 1, num_epoch, loss_train, lr_train))
 
-            print("patient", patient_count)
-            if stop:
-                print("Early Stopped At Epoch: {}", epoch + 1)
-                break
-
+                print("patient", patient_count)
+                if stop:
+                    print("Early Stopped At Epoch: {}", epoch + 1)
+                    break
         return model
 
     def eval(self, model):
@@ -196,11 +241,17 @@ class Trainer:
             save_folder = "./eval/"
             if not os.path.exists(save_folder):
                 os.makedirs(save_folder)
+            # Get the current date and time
+            current_datetime = datetime.datetime.now()
+
+            # Format the date and time as a string
+            datetime_str = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
             # Open the file in write mode
             save_path = os.path.join(save_folder, model_full_name + "_eval")
             # Open the file in write mode
             with open(save_path, "a") as f:
+                f.write(datetime_str)
                 f.write(json.dumps(data_param, indent=4))
                 f.write("\n")
                 f.write("Epoch:")
@@ -604,6 +655,8 @@ class Trainer:
 #     return train_dataloader, valid_dataloader, test_dataloader, \
 #         num_feature, num_data_points, \
 #         train_date, valid_date, test_date
+
+
 def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
                  output_step, batch_size, train_shuffle, val_shuffle, test_shuffle):
     df = u.prepare_stock_dataframe(window_size, start, end, new_data)
@@ -630,8 +683,9 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
     close_df = pd.DataFrame({'close': df['close']})
     
     # prepare X data
-    X, y = u.prepare_timeseries_data(df.to_numpy(), window_size=window_size, output_step = output_step, stride=3)
-    dataset_check(X, y, window_size, output_step, stride = 3)
+    X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=window_size, output_step = output_step, dilation=1)
+    
+
     # Split train, validation, and test sets
     trainval_test_split_index = int(len(X) * cf["data"]["train_test_split_size"])
     X_trainval, X_test, y_trainval, y_test = X[:trainval_test_split_index], X[trainval_test_split_index:], y[
@@ -643,6 +697,7 @@ def prepare_data(model_type, model_full_name, window_size, start, end, new_data,
                                                                                train_valid_split_index:], y_trainval[
                                                                                                           :train_valid_split_index], y_trainval[
                                                                                                                                      train_valid_split_index:]
+
 
     # Create StratifiedShuffleSplit object
     sss = StratifiedShuffleSplit(n_splits=1, test_size=1 - cf["data"]["train_val_split_size"], random_state=42)
@@ -765,9 +820,9 @@ def dataset_check(X, y, window_size, output_size, stride):
     result = []
     batch = X.shape[0]
     for i in range(0, batch-1, 1):
-        if (X[i + 1][(output_size - 1)  + stride][0] > X[i][(window_size - 1)][0]) and y[i] == 1:
+        if (X[i + 1][(output_size - 1)][0] > X[i][(window_size - 1)][0]) and y[i] == 1:
             result.append(True)
-        elif (X[i + 1][(output_size - 1) + stride][0] < X[i][(window_size - 1) ][0]) and y[i] == 0:
+        elif (X[i + 1][(output_size - 1)][0] < X[i][(window_size - 1) ][0]) and y[i] == 0:
             result.append(True)
         else:
             result.append(False)
