@@ -38,4 +38,4 @@ if False in false_list:
     print("Wrong data")
 else:
     print("Correct data")
-return X, np.array(y)
+# return X, np.array(y)
