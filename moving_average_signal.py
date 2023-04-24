@@ -78,9 +78,9 @@ class Signal:
                 signal[i] = np.nan
         return signal
     
-    def smi_signal(self, df, period):
+    def sma_signal(self, df, period):
         signal = []
-        for i in range(1, len(df)):
+        for i in range(0, len(df)):
             if df['SMA_' + str(period)].iloc[i] is not None:
                 if df['SMA_' + str(period)].iloc[i] > df['4. close'].iloc[i]:
                     signal[i] = -1
@@ -127,7 +127,7 @@ class Signal:
     def rsi_signal(self, df):
         signal = []
         label = 'RSI_14'
-        for i in range(1, len(df)):
+        for i in range(0, len(df)):
             if df[label][i] is not None:
                 if df[label][i] > 70:
                     signal[i] = -1
@@ -142,7 +142,7 @@ class Signal:
     def stochrsi_signal(self, df):
         label = 'STOCHRSIk_14_14_3_3'
         signal = []
-        for i in range(1, len(df)):
+        for i in range(0, len(df)):
             if df[label][i] is not None:
                 if df[label][i] < 20:
                     signal[i] = 1
@@ -157,7 +157,7 @@ class Signal:
     def willr_signal(self, df):
         signal = []
         label = 'WILLR_14'
-        for i in range(1, len(df)):
+        for i in range(0, len(df)):
             if df[label][i] is not None:
                 if df[label][i] > -20 & df[label][i] < 0:
                     signal[i] = -1
@@ -208,7 +208,7 @@ class Signal:
     def cci_signal(self, df):
         signal = []
         label = 'CCI_20_0.015'
-        for i in range(1, len(df)):
+        for i in range(0, len(df)):
             if df[label][i] is not None:
                 if df[label][i] > 100:
                     signal[i] = 1
