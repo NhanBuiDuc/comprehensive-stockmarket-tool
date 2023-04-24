@@ -220,10 +220,22 @@ class Signal:
                 signal[i] = np.nan
         return signal
 
-    # def bbands_signal(self, df):
-    #     signal = []
-    #     label = '_5_2.0'
-    #     for i in range(1, len(df)):
+    def bbands_signal(self, df):
+        signal = np.zeros(len(df))
+        label = '_5_2.0'
+        for i in range(1, len(df)):
+            if df['BBL' + label][i] is not None and df['BBU' + label][i] is not None and df['BBB' + label][i] is not None:
+                if (df['4. close'][i] > df['BBL' + label][i]) & \
+                    (df['BBB' + label][i] > df['BBB' + label].rolling(14).mean()):
+                    signal[i] = 1
+                elif (df['4. close'][i] < df['BBL' + label][i]) & \
+                        (df['BBB' + label][i] < df['BBB' + label].rolling(14).mean()):
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
 
 
 
