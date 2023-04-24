@@ -6,6 +6,7 @@ from util import *
 import numpy as np
 import pandas as pd
 from config import config as cf
+import pandas_ta as ta
 
 # window_size = [10,20,30,50,100,200] for MA
 class Signal:
@@ -24,11 +25,11 @@ class Signal:
         df = download_stock_csv_file(path, filename, symbol, date_length)
         df = df.iloc[-200:]
         df = pd.DataFrame({
-            'close': df['4. close'],
-            'open': df['1. open'],
-            'high': df['2. high'],
-            'low': df['3. low'],
-            'volume': df['6. volume']
+            '4. close': df['close'],
+            '1. open': df['open'],
+            '2. high': df['high'],
+            '3. low': df['low'],
+            '6. volume': df['volume']
         })
         # Moving Average
         for i in [10, 20, 30, 50, 100, 200]:
@@ -40,6 +41,83 @@ class Signal:
         df = pd.concat([df, hma], axis=1)
 
         # Oscillators
+        for i in [12, 26]:
+            macd = MACD(df, i)
+            df = pd.concat([df, macd], axis=1)
+            
+        stochrsi = STOCHRSI(df, window_size=14)
+        cci = CCI(df, 20)
+        willr = WILLR(df, 14)
+        mom = MOM(df, 10)
+        eri = ERI(df, 14)
+        bbands = BBANDS(df, 5)
+        df = pd.concat([df, stochrsi], axis=1)
+        df = pd.concat([df, willr], axis=1)
+        df = pd.concat([df, cci], axis=1)
+        df = pd.concat([df, mom], axis=1)
+        df = pd.concat([df, eri], axis=1)
+        df = pd.concat([df, bbands], axis=1)
+        df.to_csv(f"{path}{filename}")
+        return df
+    def ema_signal(self, df, short, long):
+        ema_fast = df['EMA_' + str(short)]
+        ema_slow = df['EMA_' + str(long)]
+        signal = []
+        for i in range(1, len(df)):
+            if ema_fast.iloc[i] is not None and ema_slow.iloc[i] is not None :
+                if ema_fast.iloc[i] > ema_slow.iloc[i] and ema_fast.iloc[i-1] <= ema_slow.iloc[i-1]:
+                    signal[i] = 1
+                elif ema_fast.iloc[i] < ema_slow.iloc[i] and ema_fast.iloc[i-1] >= ema_slow.iloc[i-1]:
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+    
+    def smi_signal(self, df, period):
+        signal = []
+        for i in range(1, len(df)):
+            if df['SMA_' + str(period)].iloc[i] is not None:
+                if df['SMA_' + str(period)].iloc[i] > df['4. close'].iloc[i]:
+                    signal[i] = -1
+                elif df['SMA_' + str(period)].loc[i] < df['4. close'].iloc[i]:
+                    signal[i] = 1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+    
+    def hma_signal(self, df, period):
+        signal = []
+        for i in range(1, len(df)):
+            if df['HMA_' + str(period)][i] is not None:
+                if df['HMA_' + str(period)][i] > df['Close'][i] and df['HMA_' + str(period)][i-1] <= df['Close'][i-1]:
+                    signal[i] = 1
+                elif df['HMA_' + str(period)][i] < df['Close'][i] and df['HMA_' + str(period)][i-1] >= df['Close'][i-1]:
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+    
+    
+    
+    def define_signal(self, path, filename, new_data):
+        if new_data:
+            df = self.get_stock_dataframe(date_length=200)
+        else:
+            if not file_exist(path, file_name=filename):
+                df = self.get_stock_dataframe(date_length=200)
+            else:
+                df = read_csv_file(path, filename)
+        
+        
+    
+    
+        
 
 
 
