@@ -50,7 +50,7 @@ class Signal:
         cci = CCI(df, 20)
         willr = WILLR(df, 14)
         mom = MOM(df, 10)
-        eri = ERI(df, 14)
+        eri = ERI(df, window_size=13)
         bbands = BBANDS(df, 5)
         df = pd.concat([df, rsi], axis=1)
         df = pd.concat([df, macd], axis=1)
@@ -107,11 +107,13 @@ class Signal:
         return signal
     
     def macd_signal(self, df):
+        # return macds, signal
         label_macd = 'MACD_12_26_9'
         label_macds = 'MACDs_12_26_9'
         signal = []
         for i in range(1, len(df)):
-            if df[label_macd] is not None and df[label_macds] is not None:
+            if df[label_macd][i] is not None and df[label_macds][i] is not None and \
+                    df[label_macd][i-1] is not None and df[label_macds][i-1] is not None:
                 if df[label_macd][i] > df[label_macds][i] and df[label_macd][i-1] <= df[label_macds][i-1]:
                     signal[i] = 1
                 elif df[label_macd][i] < df[label_macds][i] and df[label_macd][i-1] >= df[label_macds][i-1]:
@@ -125,8 +127,106 @@ class Signal:
     def rsi_signal(self, df):
         signal = []
         label = 'RSI_14'
-        
-    
+        for i in range(1, len(df)):
+            if df[label][i] is not None:
+                if df[label][i] > 70:
+                    signal[i] = -1
+                elif df[label][i] < 30:
+                    signal[i] = 1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+
+    def stochrsi_signal(self, df):
+        label = 'STOCHRSIk_14_14_3_3'
+        signal = []
+        for i in range(1, len(df)):
+            if df[label][i] is not None:
+                if df[label][i] < 20:
+                    signal[i] = 1
+                elif df[label][i] > 80:
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+
+    def willr_signal(self, df):
+        signal = []
+        label = 'WILLR_14'
+        for i in range(1, len(df)):
+            if df[label][i] is not None:
+                if df[label][i] > -20 & df[label][i] < 0:
+                    signal[i] = -1
+                elif df[label][i] > -100 & df[label][i] < -80:
+                    signal[i] = 1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+
+    def mom_signal(self, df):
+        label = 'MOM_10'
+        signal = np.zeros(len(df))
+        for i in range(1, len(df)):
+            if df[label][i] is not None and df[label][i-1] is not None:
+                if (df[label][i] > 0 and df[label][i-1] <= 0) or \
+                        (df[label][i] > 0 and df[label][i-1] > 0 and signal[i-1] == 1):
+                    signal[i] = 1
+                elif (df[label][i] < 0 and df[label][i-1] >= 0) or \
+                    (df[label][i] < 0 and df[label][i-1] < 0 and signal[i-1] == -1):
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+
+    def eri_signal(self, df):
+        signal = []
+        be = 'BEARP_13'
+        bu = 'BULLP_13'
+        for i in range(1, len(df)):
+            if (df[bu][i] is not None and df[bu][i-1] is not None) or \
+                (df[be][i] is not None and df[be][i-1] is not None):
+                if (df[bu][i] > 0 and df[bu][i-1] < 0) or \
+                        (df[bu][i] > 0 and df[bu][i-1] > 0 and signal[i-1] == 1):
+                    signal[i] = 1
+                elif (df[be][i] < 0 and df[be][i-1] > 0) or \
+                        (df[be][i] < 0 and df[be][i-1] < 0 and signal[i-1] == -1):
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+
+    def cci_signal(self, df):
+        signal = []
+        label = 'CCI_20_0.015'
+        for i in range(1, len(df)):
+            if df[label][i] is not None:
+                if df[label][i] > 100:
+                    signal[i] = 1
+                elif df[label][i] < 100:
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+
+    # def bbands_signal(self, df):
+    #     signal = []
+    #     label = '_5_2.0'
+    #     for i in range(1, len(df)):
+
+
+
     def define_signal(self, path, filename, new_data):
         if new_data:
             df = self.get_stock_dataframe(date_length=200)
