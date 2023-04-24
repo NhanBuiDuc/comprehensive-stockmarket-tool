@@ -257,7 +257,7 @@ def ERI(df, window_size):
 
 
 def BBANDS(df, window_size):
-    return ta.bbands(close=df['4. close'], lenght=window_size, std=2)
+    return ta.bbands(close=df['4. close'], length=window_size, std=2)
 
 
 def SMA(df, window_size):
