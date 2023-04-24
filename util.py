@@ -280,6 +280,8 @@ def HMA(df, window_size):
     """
     return ta.hma(df['4. close'], window_size)
 
+def RSI(df, window_size):
+    return ta.rsi(df['4. close'], length=window_size)
 
 def CMF(df, window_size):
     return ta.cmf(df['2. high'], df['3. low'], df['4. close'], df['6. volume'], lenght=window_size)
