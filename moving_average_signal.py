@@ -41,16 +41,19 @@ class Signal:
         df = pd.concat([df, hma], axis=1)
 
         # Oscillators
-        for i in [12, 26]:
-            macd = MACD(df, i)
-            df = pd.concat([df, macd], axis=1)
-            
+        # for i in [12, 26]:
+        #     macd = MACD(df, i)
+        #     df = pd.concat([df, macd], axis=1)
+        macd = MACD(df, 12)
+        rsi = RSI(df, 14)
         stochrsi = STOCHRSI(df, window_size=14)
         cci = CCI(df, 20)
         willr = WILLR(df, 14)
         mom = MOM(df, 10)
         eri = ERI(df, 14)
         bbands = BBANDS(df, 5)
+        df = pd.concat([df, rsi], axis=1)
+        df = pd.concat([df, macd], axis=1)
         df = pd.concat([df, stochrsi], axis=1)
         df = pd.concat([df, willr], axis=1)
         df = pd.concat([df, cci], axis=1)
@@ -89,7 +92,7 @@ class Signal:
                 signal[i] = np.nan
         return signal
     
-    def hma_signal(self, df, period):
+    def hma_signal(self, df, period=9):
         signal = []
         for i in range(1, len(df)):
             if df['HMA_' + str(period)][i] is not None:
@@ -103,7 +106,26 @@ class Signal:
                 signal[i] = np.nan
         return signal
     
-    
+    def macd_signal(self, df):
+        label_macd = 'MACD_12_26_9'
+        label_macds = 'MACDs_12_26_9'
+        signal = []
+        for i in range(1, len(df)):
+            if df[label_macd] is not None and df[label_macds] is not None:
+                if df[label_macd][i] > df[label_macds][i] and df[label_macd][i-1] <= df[label_macds][i-1]:
+                    signal[i] = 1
+                elif df[label_macd][i] < df[label_macds][i] and df[label_macd][i-1] >= df[label_macds][i-1]:
+                    signal[i] = -1
+                else:
+                    signal[i] = 0
+            else:
+                signal[i] = np.nan
+        return signal
+        
+    def rsi_signal(self, df):
+        signal = []
+        label = 'RSI_14'
+        
     
     def define_signal(self, path, filename, new_data):
         if new_data:
