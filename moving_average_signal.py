@@ -62,12 +62,12 @@ class Signal:
         df = pd.concat([df, bbands], axis=1)
         df.to_csv(f"{path}{filename}")
         return df
-    def ema_signal(self, df, short, long):
+    def ema_signal(df, short, long):
         ema_fast = df['EMA_' + str(short)]
         ema_slow = df['EMA_' + str(long)]
-        signal = []
+        signal = np.zeros(len(df))
         for i in range(1, len(df)):
-            if ema_fast.iloc[i] is not None and ema_slow.iloc[i] is not None :
+            if ema_fast.iloc[i] != np.nan and ema_slow.iloc[i] != np.nan :
                 if ema_fast.iloc[i] > ema_slow.iloc[i] and ema_fast.iloc[i-1] <= ema_slow.iloc[i-1]:
                     signal[i] = 1
                 elif ema_fast.iloc[i] < ema_slow.iloc[i] and ema_fast.iloc[i-1] >= ema_slow.iloc[i-1]:
@@ -77,23 +77,23 @@ class Signal:
             else:
                 signal[i] = np.nan
         return signal
-    
-    def sma_signal(self, df, period):
+
+    def sma_signal(df, period):
         signal = []
         for i in range(0, len(df)):
-            if df['SMA_' + str(period)].iloc[i] is not None:
+            if df['SMA_' + str(period)].iloc[i] != np.nan:
                 if df['SMA_' + str(period)].iloc[i] > df['4. close'].iloc[i]:
-                    signal[i] = -1
-                elif df['SMA_' + str(period)].loc[i] < df['4. close'].iloc[i]:
-                    signal[i] = 1
+                    signal.append(-1)
+                elif df['SMA_' + str(period)].iloc[i] < df['4. close'].iloc[i]:
+                    signal.append(1)
                 else:
-                    signal[i] = 0
+                    signal.append(0)
             else:
-                signal[i] = np.nan
+                signal.append(np.nan)
         return signal
-    
+
     def hma_signal(self, df, period=9):
-        signal = []
+        signal = np.zeros(len(df))
         for i in range(1, len(df)):
             if df['HMA_' + str(period)][i] is not None:
                 if df['HMA_' + str(period)][i] > df['Close'][i] and df['HMA_' + str(period)][i-1] <= df['Close'][i-1]:
@@ -108,24 +108,25 @@ class Signal:
     
     def macd_signal(self, df):
         # return macds, signal
+        # need to check
         label_macd = 'MACD_12_26_9'
         label_macds = 'MACDs_12_26_9'
-        signal = []
+        signal = [0]
         for i in range(1, len(df)):
             if df[label_macd][i] is not None and df[label_macds][i] is not None and \
                     df[label_macd][i-1] is not None and df[label_macds][i-1] is not None:
                 if df[label_macd][i] > df[label_macds][i] and df[label_macd][i-1] <= df[label_macds][i-1]:
-                    signal[i] = 1
+                    signal.append(1)
                 elif df[label_macd][i] < df[label_macds][i] and df[label_macd][i-1] >= df[label_macds][i-1]:
-                    signal[i] = -1
+                    signal.append(-1)
                 else:
-                    signal[i] = 0
+                    signal.append(0)
             else:
-                signal[i] = np.nan
+                signal.append(np.nan)
         return signal
         
     def rsi_signal(self, df):
-        signal = []
+        signal = np.zeros(len(df))
         label = 'RSI_14'
         for i in range(0, len(df)):
             if df[label][i] is not None:
@@ -236,7 +237,6 @@ class Signal:
             else:
                 signal[i] = np.nan
         return signal
-
 
 
     def define_signal(self, path, filename, new_data):
