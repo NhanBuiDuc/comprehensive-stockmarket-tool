@@ -62,7 +62,7 @@ class Signal:
         df = pd.concat([df, bbands], axis=1)
         df.to_csv(f"{path}{filename}")
         return df
-    def ema_signal(df, short, long):
+    def ema_signal1(df, short, long):
         ema_fast = df['EMA_' + str(short)]
         ema_slow = df['EMA_' + str(long)]
         signal = np.zeros(len(df))
@@ -78,6 +78,19 @@ class Signal:
                 signal[i] = np.nan
         return signal
 
+    def ema_signal2(self,df, period):
+        signal = []
+        for i in range(0, len(df)):
+            if df['EMA_' + str(period)].iloc[i] != np.nan:
+                if df['EMA_' + str(period)].iloc[i] > df['4. close'].iloc[i]:
+                    signal.append(-1)
+                elif df['EMA_' + str(period)].iloc[i] < df['4. close'].iloc[i]:
+                    signal.append(1)
+                else:
+                    signal.append(0)
+            else:
+                signal.append(np.nan)
+        return signal
     def sma_signal(df, period):
         signal = []
         for i in range(0, len(df)):
@@ -221,19 +234,29 @@ class Signal:
                 signal[i] = np.nan
         return signal
 
-    def bbands_signal(self, df):
+    def bbands_signal(df):
         signal = np.zeros(len(df))
         label = '_5_2.0'
-        for i in range(1, len(df)):
-            if df['BBL' + label][i] is not None and df['BBU' + label][i] is not None and df['BBB' + label][i] is not None:
-                if (df['4. close'][i] > df['BBL' + label][i]) & \
-                    (df['BBB' + label][i] > df['BBB' + label].rolling(14).mean()):
+        for i in range(40, len(df)):
+            if pd.isna(df['BBL' + label][i]) or pd.isna(df['BBU' + label][i]) or pd.isna(df['BBB' + label][i]):
+                signal[i] = np.nan
+            elif df['4. close'][i] < df['BBL' + label][i] and df['4. close'][i-1] > df['BBL' + label][i-1]:
+                signal[i] = 1
+            elif df['4. close'][i] > df['BBU' + label][i] and df['4. close'][i-1] < df['BBU' + label][i-1]:
+                signal[i] = -1
+            else:
+                signal[i] = 0
+        return signal
+
+    def uo_signal(self, df):
+        signal = np.zeros(len(df))
+        label = 'UO_7_14_28'
+        for i in range(0, len(df)):
+            if df[label][i] is not None:
+                if df[label][i] < 30:
                     signal[i] = 1
-                elif (df['4. close'][i] < df['BBU' + label][i]) & \
-                        (df['BBB' + label][i] < df['BBB' + label].rolling(14).mean()):
+                elif df[label][i] > 70:
                     signal[i] = -1
-                else:
-                    signal[i] = 0
             else:
                 signal[i] = np.nan
         return signal
@@ -247,6 +270,44 @@ class Signal:
                 df = self.get_stock_dataframe(date_length=200)
             else:
                 df = read_csv_file(path, filename)
+        for i in [10, 20, 30, 50, 100, 200]:
+            sma_s = self.sma_signal(df, i)
+            df['s_SMA_' + str(i)] = sma_s
+            ema_s = self.ema_signal2(df, i)
+            df['s_EMA_' + str(i)] = ema_s
+
+        hma_s = self.hma_signal(df, 9)
+        df['s_HMA'] = hma_s
+
+        macd_s = self.macd_signal(df)
+        df['s_MACD'] = macd_s
+
+        rsi_s = self.rsi_signal(df)
+        df['s_RSI'] = rsi_s
+
+        stochrsi_s = self.stochrsi_signal(df)
+        df['s_STOCHRSI'] = stochrsi_s
+
+        willr_s = self.willr_signal(df)
+        df['s_WILLR'] = willr_s
+
+        mom_s = self.mom_signal(df)
+        df['s_MOM'] = mom_s
+
+        eri_s = self.eri_signal(df)
+        df['s_ERI'] = eri_s
+
+        cci_s = self.cci_signal(df)
+        df['s_CCI'] = cci_s
+
+        bbands_s = self.bbands_signal(df)
+        df['s_BBANDS'] = bbands_s
+
+        uo_s = self.uo_signal(df)
+        df['s_UO'] = uo_s
+
+        return df
+
         
         
     
