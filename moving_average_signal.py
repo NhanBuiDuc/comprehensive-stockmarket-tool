@@ -229,7 +229,7 @@ class Signal:
                 if (df['4. close'][i] > df['BBL' + label][i]) & \
                     (df['BBB' + label][i] > df['BBB' + label].rolling(14).mean()):
                     signal[i] = 1
-                elif (df['4. close'][i] < df['BBL' + label][i]) & \
+                elif (df['4. close'][i] < df['BBU' + label][i]) & \
                         (df['BBB' + label][i] < df['BBB' + label].rolling(14).mean()):
                     signal[i] = -1
                 else:

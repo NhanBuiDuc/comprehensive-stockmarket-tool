@@ -283,5 +283,8 @@ def HMA(df, window_size):
 def RSI(df, window_size):
     return ta.rsi(df['4. close'], length=window_size)
 
+def UO(df, window_size):
+    return ta.uo(high=df['2. high'], low=df['3. low'], close=df['4. close'], fast=window_size/2, medium=window_size, slow=window_size*2)
+
 def CMF(df, window_size):
     return ta.cmf(df['2. high'], df['3. low'], df['4. close'], df['6. volume'], lenght=window_size)
