@@ -358,14 +358,24 @@ class Movement_trainer(Trainer):
         # print("Number of 0s and 1s in y_valid:", np.bincount(y_valid))
         # save train data
 
-        np.save('./dataset/X_train_' + self.model_full_name + '.npy', X_train)
-        np.save('./dataset/y_train_' + self.model_full_name + '.npy', y_train)
-        # save validation data
-        np.save('./dataset/X_valid_' + self.model_full_name + '.npy', X_valid)
-        np.save('./dataset/y_valid_' + self.model_full_name + '.npy', y_valid)
-        # save test data
-        np.save('./dataset/X_test_' + self.model_full_name + '.npy', X_test)
-        np.save('./dataset/y_test_' + self.model_full_name + '.npy', y_test)
+        # set the file paths
+        train_file = './dataset/X_train_' + self.model_full_name + '.npy'
+        valid_file = './dataset/X_valid_' + self.model_full_name + '.npy'
+        test_file = './dataset/X_test_' + self.model_full_name + '.npy'
+
+        # check if the files already exist, and delete them if they do
+        if os.path.exists(train_file):
+            os.remove(train_file)
+        if os.path.exists(valid_file):
+            os.remove(valid_file)
+        if os.path.exists(test_file):
+            os.remove(test_file)
+
+        # save the data
+        np.save(train_file, X_train)
+        np.save(valid_file, X_valid)
+        np.save(test_file, X_test)
+
         # create datasets and dataloaders
         train_dataset = Classification_TimeSeriesDataset(X_train, y_train)
         valid_dataset = Classification_TimeSeriesDataset(X_valid, y_valid)
