@@ -8,37 +8,36 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 class Model:
-    def __init__(self, name=None, num_feature=None, model_type=None):
+    def __init__(self, parameters=None, name=None, num_feature=None, model_type=None, full_name = None):
         self.num_feature = num_feature
         self.model_type = model_type
         self.structure = None
         self.name = name
-        self.full_name = None
-        self.parameters = None
+        self.full_name = full_name
+        self.parameters = parameters
         self.train_stop_lr = None
         self.train_stop_epoch = None
         self.state_dict = None
         self.pytorch_timeseries_model_type_dict = cf["pytorch_timeseries_model_type_dict"]
         self.tensorflow_timeseries_model_type_dict = cf["tensorflow_timeseries_model_type_dict"]
-        if self.num_feature is not None:
+        if self.name is not None:
             self.construct_structure()
 
     def construct_structure(self):
-        self.parameters = cf["model"][self.name]
 
         if self.model_type == self.pytorch_timeseries_model_type_dict[1]:
-            self.parameters = cf["model"][self.name]
-            self.structure = Movement(self.num_feature, **self.parameters)
+            parameters = self.parameters["model"][self.name]
+            self.structure = Movement(self.num_feature, **parameters)
 
         elif self.model_type == self.pytorch_timeseries_model_type_dict[2]:
             pass
         elif self.model_type == self.pytorch_timeseries_model_type_dict[3]:
             pass
         elif self.model_type == self.pytorch_timeseries_model_type_dict[4]:
-            self.parameters = cf["model"][self.name]
+            self.parameters = self.parameters["model"][self.name]
             self.structure = bm.LSTM_bench_mark(self.num_feature, **self.parameters)
         elif self.model_type == self.pytorch_timeseries_model_type_dict[5]:
-            self.parameters = cf["model"][self.name]
+            self.parameters = self.parameters["model"][self.name]
             self.structure = bm.GRU_bench_mark(self.num_feature, **self.parameters)
 
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[1]:
@@ -70,20 +69,22 @@ class Movement(nn.Module):
         self.num_feature = num_feature
         # self.autoencoder = Autoencoder(1, self.window_size, **self.conv1D_param)
         self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
-        self.autoencoder_2 = Autoencoder(41, self.window_size, **self.conv1D_param)
+        self.autoencoder_2 = Autoencoder(61, self.window_size, **self.conv1D_param)
         self.relu = nn.ReLU()
         self.selu = nn.SELU()
         self.tanh = nn.Tanh()
-        self.bn_1 = nn.BatchNorm1d(num_features=44)
-        self.bn_2 = nn.BatchNorm1d(num_features=100)
+        self.bn_1 = nn.BatchNorm1d(num_features=826)
+        self.bn_2 = nn.BatchNorm1d(num_features=854)
+        self.bn_3 = nn.BatchNorm1d(num_features=1134)
+        self.bn_4 = nn.BatchNorm1d(num_features=1708)
         self.sigmoid = nn.Sigmoid()
         self.soft_max = nn.Softmax(dim=1)
         self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(28, 1)
-        self.linear_2 = nn.Linear(826, 1)
-        self.linear_3 = nn.Linear(2, 1)
-        
-        self.linear_4 = nn.Linear(39, 1)
+        self.linear_1 = nn.Linear(1708, 500)
+        self.linear_2 = nn.Linear(500, 100)
+        self.linear_3 = nn.Linear(100, 1)
+
+        self.linear_4 = nn.Linear(1163, 1)
         self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
                             num_layers=self.lstm_num_layer,
                             batch_first=True)
@@ -92,11 +93,11 @@ class Movement(nn.Module):
         #                     num_layers=self.lstm_num_layer,
         #                     batch_first=True)
         self.lstm_1 = nn.LSTM(59, hidden_size=self.lstm_hidden_layer_size,
-                    num_layers=self.lstm_num_layer,
-                    batch_first=True)
-        self.lstm_2 = nn.LSTM(59, hidden_size=self.lstm_hidden_layer_size,
-                    num_layers=self.lstm_num_layer,
-                    batch_first=True)
+                              num_layers=self.lstm_num_layer,
+                              batch_first=True)
+        self.lstm_2 = nn.LSTM(81, hidden_size=self.lstm_hidden_layer_size,
+                              num_layers=self.lstm_num_layer,
+                              batch_first=True)
         self.init_weights()
 
     def init_weights(self):
@@ -112,30 +113,47 @@ class Movement(nn.Module):
         batchsize = x.shape[0]
         # Data extract
         x1 = x.clone()
-        x2 = x.clone()
-        x3 = x.clone()
-
+        x_c = x.clone()
         x = self.autoencoder(x)
         x = torch.concat([x, x1], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_1(x)
+        x = x.reshape(batchsize, self.window_size, -1)
         x = self.drop_out(x)
         x = self.relu(x)
+        x1 = x.clone()
         lstm_out, (h_n, c_n) = self.lstm_1(x)
         # x = h_n.permute(1, 2, 0).reshape(batchsize, -1)
         x = h_n.permute(1, 2, 0)
-        x = torch.concat([x, x2], dim=2)
+        x = torch.concat([x, x1], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_2(x)
+        x = x.reshape(batchsize, self.window_size, -1)
         x = self.relu(x)
+        x1 = x.clone()
         x = self.autoencoder_2(x)
-        x = torch.concat([x, x3], dim=2)
+        x = torch.concat([x, x1], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_3(x)
+        x = x.reshape(batchsize, self.window_size, -1)
         x = self.drop_out(x)
         x = self.relu(x)
+        x1 = x.clone()
         lstm_out, (h_n, c_n) = self.lstm_2(x)
         # x = h_n.permute(1, 2, 0).reshape(batchsize, -1)
         x = h_n.permute(1, 2, 0)
-        # x = torch.concat([x, x2], dim=2)
+        x = torch.concat([x, x1, x_c], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_4(x)
+        x = x.reshape(batchsize, self.window_size, -1)
         x = self.relu(x)
         x = self.drop_out(x)
         x = x.reshape(batchsize, -1)
         x = self.linear_1(x)
+        x = self.relu(x)
+        x = self.linear_2(x)
+        x = self.relu(x)
+        x = self.linear_3(x)
         x = self.sigmoid(x)
         return x
 
