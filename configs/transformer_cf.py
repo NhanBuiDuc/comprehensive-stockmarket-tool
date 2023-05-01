@@ -1,26 +1,15 @@
 config = {
     "model": {
-        "movement_1": {
-            "lstm_num_layer": 2,
-            "lstm_hidden_layer_size": 14,
-            "drop_out": 0.5,
-            "output_step": 1,
-            "window_size": 14,
-            "conv1D_param": {
-                "type": 1,
-                "kernel_size": 4,
-                "dilation_base": 3,
-                "max_pooling_kernel_size": 2,
-                "sub_small_num_layer": 1,
-                "sub_big_num_layer": 1,
-                "sub_small_kernel_size": 3,
-                "sub_big_kernel_size": 30,
-                "output_size": 20
-            }
+        "transformer": {
+            "d_model": 512,
+            "nhead": 8,
+            "drop_out": 6,
+            "dim_feedforward": 2048,
+            "dropout": 0.1,
         }
     },
     "training": {
-        "movement_1":
+        "transformer":
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
