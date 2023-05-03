@@ -1,57 +1,167 @@
 import torch.nn as nn
-from config import config as cf
+from configs.config import config as cf
 import torch
 import math
+import benchmark as bm
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
 
 class Model:
-    def __init__(self, name=None, num_feature=None, model_type=None):
+    def __init__(self, parameters=None, name=None, num_feature=None, model_type=None, full_name=None):
         self.num_feature = num_feature
         self.model_type = model_type
         self.structure = None
         self.name = name
-        self.full_name = None
-        self.parameters = None
+        self.full_name = full_name
+        self.parameters = parameters
         self.train_stop_lr = None
         self.train_stop_epoch = None
         self.state_dict = None
-        self.model_type_dict = {
-            1: "movement",
-            2: "magnitude",
-            3: "assembler"
-        }
-        if self.num_feature is not None:
+        self.pytorch_timeseries_model_type_dict = cf["pytorch_timeseries_model_type_dict"]
+        self.tensorflow_timeseries_model_type_dict = cf["tensorflow_timeseries_model_type_dict"]
+        if self.name is not None:
             self.construct_structure()
 
-    def predict(self):
-        pass
-
     def construct_structure(self):
-        self.parameters = cf["model"][self.name]
 
-        if self.model_type == self.model_type_dict[1]:
-            self.parameters = cf["model"][self.name]
-            self.structure = Movement(self.num_feature, **self.parameters)
+        if self.model_type == self.pytorch_timeseries_model_type_dict[1]:
+            parameters = self.parameters["model"][self.name]
+            self.structure = Movement(self.num_feature, **parameters)
 
-        elif self.model_type == self.model_type_dict[2]:
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[2]:
             pass
-        elif self.model_type == self.model_type_dict[2]:
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[3]:
             pass
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[4]:
+            self.parameters = self.parameters["model"][self.name]
+            self.structure = bm.LSTM_bench_mark(self.num_feature, **self.parameters)
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[5]:
+            self.parameters = self.parameters["model"][self.name]
+            self.structure = bm.GRU_bench_mark(self.num_feature, **self.parameters)
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[6]:
+            self.parameters = self.parameters["model"][self.name]
+            self.structure = TransformerClassifier(self.num_feature, **self.parameters)
+        elif self.model_type == self.tensorflow_timeseries_model_type_dict[1]:
+            self.structure = SVC()
+
+        elif self.model_type == self.tensorflow_timeseries_model_type_dict[2]:
+            self.structure = RandomForestClassifier()
 
     def load_check_point(self, file_name):
         check_point = torch.load('./models/' + file_name)
         self = check_point["model"]
-        self.construct_structure()
+        # self.construct_structure()
         self.structure.load_state_dict(check_point['state_dict'])
         return self
 
     def predict(self, x):
-        y = self.structure(x)
-        return y
+        if self.model_type in self.pytorch_timeseries_model_type_dict.values():
+            y = self.structure(x)
+            return y
+        elif self.model_type in self.tensorflow_timeseries_model_type_dict.values():
+            y = self.structure.predict(x)
+            return y
+
+
+class Movement(nn.Module):
+    def __init__(self, num_feature, **param):
+        super(Movement, self).__init__()
+        self.__dict__.update(param)
+        self.num_feature = num_feature
+        # self.autoencoder = Autoencoder(1, self.window_size, **self.conv1D_param)
+        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
+        self.autoencoder_2 = Autoencoder(61, self.window_size, **self.conv1D_param)
+        self.relu = nn.ReLU()
+        self.selu = nn.SELU()
+        self.tanh = nn.Tanh()
+        self.bn_1 = nn.BatchNorm1d(num_features=826)
+        self.bn_2 = nn.BatchNorm1d(num_features=854)
+        self.bn_3 = nn.BatchNorm1d(num_features=1134)
+        self.bn_4 = nn.BatchNorm1d(num_features=1708)
+        self.sigmoid = nn.Sigmoid()
+        self.soft_max = nn.Softmax(dim=1)
+        self.drop_out = nn.Dropout(self.drop_out)
+        self.linear_1 = nn.Linear(1708, 500)
+        self.linear_2 = nn.Linear(500, 100)
+        self.linear_3 = nn.Linear(100, 1)
+
+        self.linear_4 = nn.Linear(1163, 1)
+        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
+                            num_layers=self.lstm_num_layer,
+                            batch_first=True)
+
+        # self.lstm = nn.LSTM(self.num_feature, hidden_size=self.lstm_hidden_layer_size,
+        #                     num_layers=self.lstm_num_layer,
+        #                     batch_first=True)
+        self.lstm_1 = nn.LSTM(59, hidden_size=self.lstm_hidden_layer_size,
+                              num_layers=self.lstm_num_layer,
+                              batch_first=True)
+        self.lstm_2 = nn.LSTM(81, hidden_size=self.lstm_hidden_layer_size,
+                              num_layers=self.lstm_num_layer,
+                              batch_first=True)
+        self.init_weights()
+
+    def init_weights(self):
+        for name, param in self.lstm_1.named_parameters():
+            if 'bias' in name:
+                nn.init.constant_(param, 0.0)
+            elif 'weight' in name:
+                nn.init.xavier_uniform_(param)
+            elif 'weight_hh' in name:
+                nn.init.orthogonal_(param)
+
+    def forward(self, x):
+        batchsize = x.shape[0]
+        # Data extract
+        x1 = x.clone()
+        x_c = x.clone()
+        x = self.autoencoder(x)
+        x = torch.concat([x, x1], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_1(x)
+        x = x.reshape(batchsize, self.window_size, -1)
+        x = self.drop_out(x)
+        x = self.relu(x)
+        x1 = x.clone()
+        lstm_out, (h_n, c_n) = self.lstm_1(x)
+        # x = h_n.permute(1, 2, 0).reshape(batchsize, -1)
+        x = h_n.permute(1, 2, 0)
+        x = torch.concat([x, x1], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_2(x)
+        x = x.reshape(batchsize, self.window_size, -1)
+        x = self.relu(x)
+        x1 = x.clone()
+        x = self.autoencoder_2(x)
+        x = torch.concat([x, x1], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_3(x)
+        x = x.reshape(batchsize, self.window_size, -1)
+        x = self.drop_out(x)
+        x = self.relu(x)
+        x1 = x.clone()
+        lstm_out, (h_n, c_n) = self.lstm_2(x)
+        # x = h_n.permute(1, 2, 0).reshape(batchsize, -1)
+        x = h_n.permute(1, 2, 0)
+        x = torch.concat([x, x1, x_c], dim=2)
+        x = x.reshape(batchsize, -1)
+        x = self.bn_4(x)
+        x = x.reshape(batchsize, self.window_size, -1)
+        x = self.relu(x)
+        x = self.drop_out(x)
+        x = x.reshape(batchsize, -1)
+        x = self.linear_1(x)
+        x = self.relu(x)
+        x = self.linear_2(x)
+        x = self.relu(x)
+        x = self.linear_3(x)
+        x = self.sigmoid(x)
+        return x
 
 
 class Autoencoder(nn.Module):
-    def __init__(self, num_feature, window_size, **param):
+    def __init__(self, num_feature, window_size, output_size, **param):
         super(Autoencoder, self).__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
@@ -59,6 +169,7 @@ class Autoencoder(nn.Module):
         self.main_layer = nn.ModuleList()
         self.sub_small_layer = nn.ModuleList()
         self.sub_big_layer = nn.ModuleList()
+        self.output_size = output_size
         self.conv1D_type_dict = {
             1: "spatial",
             2: "temporal"
@@ -101,9 +212,9 @@ class Autoencoder(nn.Module):
                 self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
 
             self.small_sub_receptive_field_size = int((self.num_feature - self.sub_small_kernel_size + 2 * (
-                        self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
+                    self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
             self.big_sub_receptive_field_size = int((self.num_feature - self.sub_big_kernel_size + 2 * (
-                        self.sub_big_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
+                    self.sub_big_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
             self.receptive_field_size = int(
                 self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
         elif self.conv1D_type_dict[self.type] == "temporal":
@@ -144,11 +255,11 @@ class Autoencoder(nn.Module):
                 self.dilation_base ** i for i in range(self.num_layer))) / self.max_pooling_kernel_size)
 
             self.small_sub_receptive_field_size = int((self.window_size - self.sub_small_kernel_size + 2 * (
-                        self.sub_small_kernel_size - 1)) / self.max_pooling_kernel_size)
+                    self.sub_small_kernel_size - 1) + 1) / self.max_pooling_kernel_size)
             self.big_sub_receptive_field_size = int((self.window_size - self.sub_big_kernel_size + 2 * (
-                        self.sub_big_kernel_size - 1)) / self.max_pooling_kernel_size)
+                    self.sub_big_kernel_size - 1 + 1)) / self.max_pooling_kernel_size)
             self.receptive_field_size = int(
-                self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size)
+                self.receptive_field_size + self.small_sub_receptive_field_size + self.big_sub_receptive_field_size) - 1
 
         self.maxpool = nn.MaxPool1d(kernel_size=self.max_pooling_kernel_size)
         self.linear_1 = nn.Linear(self.receptive_field_size, self.output_size)
@@ -156,6 +267,8 @@ class Autoencoder(nn.Module):
 
     def forward(self, x):
         batch = x.shape[0]
+        if self.conv1D_type_dict[self.type] == "temporal":
+            x = x.permute(0, 2, 1)
         x1 = x.clone()
         x2 = x.clone()
         x3 = x.clone()
@@ -170,49 +283,7 @@ class Autoencoder(nn.Module):
         x3 = self.maxpool(x3)
         concat = torch.cat([x1, x2, x3], dim=2)
         out = self.linear_1(concat)
-        out = self.relu(out)
         return out
-
-
-class Movement(nn.Module):
-    def __init__(self, num_feature, **param):
-        super(Movement, self).__init__()
-        self.__dict__.update(param)
-        self.num_feature = num_feature
-        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
-
-        self.relu = nn.ReLU()
-        self.selu = nn.SELU()
-        self.tanh = nn.Tanh()
-        self.sigmoid = nn.Sigmoid()
-        self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
-        self.linear_2 = nn.Linear(10, 5)
-        self.linear_3 = nn.Linear(5, 1)
-
-        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
-                            num_layers=self.lstm_num_layer,
-                            batch_first=True)
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm.named_parameters():
-            if 'bias' in name:
-                nn.init.constant_(param, 0.0)
-            elif 'weight' in name:
-                nn.init.xavier_uniform_(param)
-            elif 'weight_hh' in name:
-                nn.init.orthogonal_(param)
-
-    def forward(self, x):
-        batchsize = x.shape[0]
-        # Data extract
-        x = self.autoencoder(x)
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x = self.linear_1(x)
-        x = self.sigmoid(x)
-        return x
 
 
 class CausalDilatedConv1d(nn.Module):
@@ -242,47 +313,21 @@ class CausalConv1d(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         return x
-class LSTMModel(nn.Module):
-    def __init__(self, num_feature, **param):
-        super(LSTMModel, self).__init__()
+
+
+class TransformerClassifier(nn.Module):
+    def __init__(self, num_feature,  **param):
+        super().__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
-        self.autoencoder = Autoencoder(self.num_feature, self.window_size, **self.conv1D_param)
-
-        self.relu = nn.ReLU()
-        self.selu = nn.SELU()
-        self.tanh = nn.Tanh()
+        self.transformer = nn.Transformer(d_model=self.num_feature, nhead=self.nhead, num_encoder_layers=self.num_encoder_layers,
+                                          dim_feedforward=self.dim_feedforward, dropout=self.dropout)
+        self.fc = nn.Linear( self.num_feature * self.window_size, 1)
         self.sigmoid = nn.Sigmoid()
-        self.drop_out = nn.Dropout(self.drop_out)
-        self.linear_1 = nn.Linear(self.lstm_hidden_layer_size * self.lstm_num_layer, 1)
-        self.linear_2 = nn.Linear(65, 10)
-        self.linear_3 = nn.Linear(10, 1)
-
-        self.lstm = nn.LSTM(self.conv1D_param["output_size"], hidden_size=self.lstm_hidden_layer_size,
-                            num_layers=self.lstm_num_layer,
-                            batch_first=True)
-        self.init_weights()
-
-    def init_weights(self):
-        for name, param in self.lstm.named_parameters():
-            if 'bias' in name:
-                nn.init.constant_(param, 0.0)
-            elif 'weight' in name:
-                nn.init.xavier_uniform_(param)
-            elif 'weight_hh' in name:
-                nn.init.orthogonal_(param)
-
     def forward(self, x):
-        batchsize = x.shape[0]
-        # Data extract
-        x = self.autoencoder(x)
-        lstm_out, (h_n, c_n) = self.lstm(x)
-        x1 = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x2 = h_n.permute(1, 0, 2).reshape(batchsize, -1)
-        x1 = self.linear_1(x)
-        x1 = self.sigmoid(x)
-        x2 = torch.cat(x1, x2, dim=1)
-        x2 = self.linear_2(x2)
-        x2 = self.linear_3(x2)
-        return x2
-
+        batch = x.shape[0]
+        x = self.transformer(x, x)  # self-attention over the input sequence
+        x = x.reshape(batch, -1)
+        x = self.fc(x)
+        x = self.sigmoid(x)
+        return x

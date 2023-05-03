@@ -1,5 +1,5 @@
 import os
-from config import config as cf
+from configs.config import config as cf
 from alpha_vantage.timeseries import TimeSeries
 from alpha_vantage.techindicators import TechIndicators
 import pandas as pd
@@ -118,32 +118,49 @@ def prepare_stock_dataframe(window_size, start, end, new_data):
     return df
 
 
-def prepare_timeseries_data_x(x, window_size):
-    """
-    x: 1D arr, window_size: int
-    Note: len(x) > window_size
-    window_size: the size of the sliding window
-    n_row: the number of rows in the windowed data. Can take it by func below.
-    output return view of x with the shape is (n_row,window_size) and the strides equal to (x.strides[0],x.strides[0])
-    which ensures that the rows of the output are contiguous in memory.
+def prepare_timeseries_dataset(data, window_size, output_step, dilation,  stride = 1):
+    features = data.shape[-1]
+    n_samples = (len(data) - dilation * (window_size - 1) - output_step)
+    X = np.zeros((n_samples, window_size, features))
+    y = []
+    features = len(data)
 
-    return:
-    tuple of 2 array
-    output[:-1]: has shape (n_row, window_size)
-    output[-1]: has shape (window_size,) and contains the last window of x.
-    """
-    x = np.array(x)
-    num_features = x.shape[-1]
-    n_row = x.shape[0] - window_size
-    output = np.zeros((n_row, window_size, num_features))
-    for i in range(n_row):
+    for i in range(n_samples):
+        end_index = i + (window_size - stride) * dilation
+        output_index = end_index + output_step
         for j in range(window_size):
-            output[i][j] = x[i + j]
+            X[i][j] = (data[i + (j * dilation)])
+        # X[i] = data[i:i+window_size]
+        if data[end_index][0] < data[output_index][0]:
+            y.append(1)
+        else:
+            y.append(0)
 
-    # return (all the element but the last one, return the last element)
-    return output
+    # check X, y
+    false_list = []
+    for i in range(len(X)):
+        end_index = i + (window_size - stride) * dilation
+        output_index = end_index + output_step
+        if X[i][-1][0] < data[output_index][0] and y[i] == 1:
+            false_list.append(True)
+        elif X[i][-1][0] > data[output_index][0] and y[i] == 0:
+            false_list.append(True)
+        else:
+            false_list.append(False)
+    if False in false_list:
+        print("Wrong data")
+    else:
+        print("Correct data")
+    false_count = 0
 
+    for item in false_list:
+        if item == False:
+            false_count += 1
 
+    print("Number of false items:", false_count)
+    y = np.array(y).reshape(len(y), 1)
+    
+    return X, y
 def prepare_timeseries_data_y(num_rows, data, window_size, output_size):
     # X has 10 datapoints, y is the label start from the windowsize 3 with output dates of 3
     # Then x will have 6 rows, 4 usable row
@@ -163,28 +180,47 @@ def prepare_timeseries_data_y(num_rows, data, window_size, output_size):
     return output
 
 
-def prepare_timeseries_data_y_trend(num_rows, data, output_size):
-    output = np.zeros((num_rows, 1), dtype=float)
+def prepare_data_y(num_rows, data, output_size):
+    # X has 10 datapoints, y is the label start from the windowsize 3 with output dates of 3
+    # Then x will have 6 rows, 4 usable row
+    # x: 0, 1, 2 || 1, 2, 3 || 2, 3, 4 || 3, 4, 5 || 4, 5, 6 || 6, 7, 8 || 7, 8, 9
+    # y: 3, 4, 5 || 4, 5, 6 || 5, 6, 7 || 6, 7, 8 || 7, 8, 9
+
+    # X has 10 datapoints, y is the label start from the windowsize 4 with output dates of 3
+    # Then x will have 6 rows, 4 usable row
+    # x: 0, 1, 2, 3 || 1, 2, 3, 4 || 2, 3, 4, 5 || 3, 4, 5, 6 || 4, 5, 6, 7 || 5, 6, 7, 8 || 6, 7, 8, 9
+    # y: 4, 5, 6    || 5, 6, 7    || 6, 7, 8    || 7, 8, 9    || 8, 9
+
+    # Create empty array to hold reshaped array
+    output = np.empty((num_rows, output_size))
     # Iterate over original array and extract windows of size 3
-    # (1) means up
-    # (0) means down
-    for i in range(num_rows - 1):
-        # Go up
-        if data[i + output_size] > data[i]:
-            output[i] = 1
-        # Go down
-        else:
-            output[i] = 0
+    for i in range(num_rows):
+        output[i] = data[i:i + output_size]
     return output
 
 
-def prepare_timeseries_data_y_percentage(num_rows, data, output_size):
+def prepare_data_y_trend(data, window_size, output_size, stride = 1):
+    n_row = (len(data) - window_size + output_size) // stride + 1   
+    output = []
+    # Iterate over original array and extract windows of size 3
+    # (1) means up
+    # (0) means down
+    for i in range(0, len(data) - n_row, stride):
+        # Go up
+        if data[i + output_size + (window_size - 1)] > data[i + (window_size - 1)]:
+            output.append(1)
+        # Go down
+        else:
+            output.append(0)
+    return output
+
+
+def prepare_timeseries_data_y_percentage(num_rows, data, window_size, output_size, stride = 1):
     output = np.zeros((num_rows, 1), dtype=float)
-    window_size = cf["data"]["window_size"]
     for i in range(num_rows):
-        change_percentage = ((data[i + window_size + output_size - 1] - data[window_size + i - 1]) * 100) / data[
-            window_size + i - 1]
-        output[i] = (abs(change_percentage))
+        change_percentage = ((data[i + window_size + output_size - 1] - data[window_size + i - 1]) * 100) / data[window_size + i - 1]
+        if change_percentage > 2.5:
+            output[i] = (1)
     return output
 
 
