@@ -80,5 +80,5 @@ if __name__ == "__main__":
         # Print the content of each <p> tag
         for p in p_tags:
             full_page += p.text + " "
-    print(full_page)
-    print("done")
+        print(full_page)
+        break
