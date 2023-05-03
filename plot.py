@@ -1,5 +1,5 @@
 import torch
-from config import config as cf
+from configs import config as cf
 import numpy as np
 from old import model
 from matplotlib import pyplot as plt
