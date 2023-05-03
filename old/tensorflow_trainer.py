@@ -2,7 +2,7 @@
 # import pandas as pd
 # import torch
 # from model import Model
-# from config import config as cf
+# from configs import configs as cf
 # from joblib import dump, load
 # from sklearn.metrics import classification_report
 # from sklearn.metrics import confusion_matrix
@@ -164,7 +164,7 @@
 #                     f.write(print_string + "\n" + "Classification report:\n")
 #                     f.write(report)
 #
-#                     # Write the config dictionary to the file
+#                     # Write the configs dictionary to the file
 #                     f.write("\nTraining Config:\n")
 #                     f.write(json.dumps(training_param, indent=4))
 #                     f.write("\nModel Config:\n")

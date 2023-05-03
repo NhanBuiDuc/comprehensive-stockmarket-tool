@@ -1,5 +1,5 @@
 from old import utils
-from config import config as cf
+from configs import config as cf
 import pandas as pd
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 from plot import to_plot

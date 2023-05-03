@@ -1,5 +1,5 @@
 import os
-from config import config as cf
+from configs.config import config as cf
 from alpha_vantage.timeseries import TimeSeries
 from alpha_vantage.techindicators import TechIndicators
 import pandas as pd

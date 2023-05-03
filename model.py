@@ -1,5 +1,5 @@
 import torch.nn as nn
-from config import config as cf
+from configs.config import config as cf
 import torch
 import math
 import benchmark as bm
@@ -8,7 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 class Model:
-    def __init__(self, parameters=None, name=None, num_feature=None, model_type=None, full_name = None):
+    def __init__(self, parameters=None, name=None, num_feature=None, model_type=None, full_name=None):
         self.num_feature = num_feature
         self.model_type = model_type
         self.structure = None
@@ -39,7 +39,9 @@ class Model:
         elif self.model_type == self.pytorch_timeseries_model_type_dict[5]:
             self.parameters = self.parameters["model"][self.name]
             self.structure = bm.GRU_bench_mark(self.num_feature, **self.parameters)
-
+        elif self.model_type == self.pytorch_timeseries_model_type_dict[6]:
+            self.parameters = self.parameters["model"][self.name]
+            self.structure = TransformerClassifier(self.num_feature, **self.parameters)
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[1]:
             self.structure = SVC()
 
@@ -49,7 +51,7 @@ class Model:
     def load_check_point(self, file_name):
         check_point = torch.load('./models/' + file_name)
         self = check_point["model"]
-        self.construct_structure()
+        # self.construct_structure()
         self.structure.load_state_dict(check_point['state_dict'])
         return self
 
@@ -310,4 +312,22 @@ class CausalConv1d(nn.Module):
 
     def forward(self, x):
         x = self.conv(x)
+        return x
+
+
+class TransformerClassifier(nn.Module):
+    def __init__(self, num_feature,  **param):
+        super().__init__()
+        self.__dict__.update(param)
+        self.num_feature = num_feature
+        self.transformer = nn.Transformer(d_model=self.num_feature, nhead=self.nhead, num_encoder_layers=self.num_encoder_layers,
+                                          dim_feedforward=self.dim_feedforward, dropout=self.dropout)
+        self.fc = nn.Linear( self.num_feature * self.window_size, 1)
+        self.sigmoid = nn.Sigmoid()
+    def forward(self, x):
+        batch = x.shape[0]
+        x = self.transformer(x, x)  # self-attention over the input sequence
+        x = x.reshape(batch, -1)
+        x = self.fc(x)
+        x = self.sigmoid(x)
         return x

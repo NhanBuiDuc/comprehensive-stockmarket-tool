@@ -1,4 +1,4 @@
-from config import config as cf
+from configs.config import config as cf
 import torch
 from tqdm import tqdm
 

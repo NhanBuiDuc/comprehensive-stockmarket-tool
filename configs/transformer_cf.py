@@ -1,19 +1,21 @@
-config = {
+transformer_cf = {
     "model": {
-        "transformer": {
-            "d_model": 512,
-            "nhead": 8,
-            "drop_out": 6,
-            "dim_feedforward": 2048,
+        "transformer_1": {
+            "d_model": 14,
+            "nhead": 3,
+            "num_encoder_layers": 6,
+            "dim_feedforward": 14,
             "dropout": 0.1,
+            "window_size": 14,
+            "output_step": 1
         }
     },
     "training": {
-        "transformer":
+        "transformer_1":
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 10,
+                "num_epoch": 100,
                 "learning_rate": 0.01,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],

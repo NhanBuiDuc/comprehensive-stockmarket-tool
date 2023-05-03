@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from torch.utils.data import ConcatDataset
 from model import Model
-from config.mv_config import config as mv_cf
+from configs.config import config as mv_cf
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -39,18 +39,12 @@ class Movement_trainer(Trainer):
         self.new_data = new_data
         self.model_type = "movement"
         self.model_type_dict = self.cf["pytorch_timeseries_model_type_dict"]
-        self.model_type = model_type
         self.model = model
         self.model_full_name = self.cf["alpha_vantage"]["symbol"] + "_" + self.model_name
         self.prepare_data(self.new_data)
         self.indentify()
 
     def indentify(self):
-        for t in self.model_type_dict:
-            if self.model_type_dict[t] or self.model_type_dict[t].upper() in self.model_name:
-                self.model_type = self.model_type_dict[t]
-                break
-
         self.model = Model(name=self.model_name, num_feature=self.num_feature, parameters=self.config,
                            model_type=self.model_type,
                            full_name=self.model_full_name)

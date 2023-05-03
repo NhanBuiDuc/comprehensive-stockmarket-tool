@@ -113,7 +113,8 @@ config = {
             2: "magnitude",
             3: "assembler",
             4: "lstm",
-            5: "gru"
+            5: "gru",
+            6: "transformer"
     },
     "tensorflow_timeseries_model_type_dict": {
         1: "svm",
