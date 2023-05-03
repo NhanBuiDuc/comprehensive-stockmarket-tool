@@ -1,4 +1,4 @@
-mv_config = {
+lstm_cf = {
     "model": {
         "movement_1": {
             "lstm_num_layer": 2,
