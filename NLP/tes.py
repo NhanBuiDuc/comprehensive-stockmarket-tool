@@ -1,23 +1,21 @@
-import transformers
-from transformers import BertModel, BertTokenizer, AdamW, get_linear_schedule_with_warmup
-import torch
-
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from pylab import rcParams
-import matplotlib.pyplot as plt
-from matplotlib import rc
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix, classification_report
 from collections import defaultdict
 from textwrap import wrap
 
-from torch import nn, optim
-from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import torch
 import torch.nn.functional as F
-from model import SentimentClassifier
+from pylab import rcParams
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.model_selection import train_test_split
+from torch import nn
+from torch.utils.data import DataLoader
+from transformers import BertModel, BertTokenizer, AdamW, get_linear_schedule_with_warmup
+
 from Dataset import GPReviewDataset
+from model import SentimentClassifier
 
 
 def to_sentiment(rating):
@@ -53,17 +51,18 @@ def eval_model(model, data_loader, loss_fn, device, n_examples):
 
     with torch.no_grad():
         for d in data_loader:
-            encoded_input = d["encoded_input"].to(device)
-            targets = d["targets"].to(device)
+            input, target = d
+
+            target = target.to(device)
 
             outputs = model(
-                encoded_input=encoded_input,
+                x =input,
             )
             _, preds = torch.max(outputs, dim=1)
+            preds = preds.to("cuda")
+            loss = loss_fn(outputs, target)
 
-            loss = loss_fn(outputs, targets)
-
-            correct_predictions += torch.sum(preds == targets)
+            correct_predictions += torch.sum(preds == target)
             losses.append(loss.item())
 
     return correct_predictions.double() / n_examples, np.mean(losses)
@@ -79,22 +78,27 @@ def train_epoch(
         n_examples
 ):
     model = model.train()
-
+    model.to(device)
     losses = []
     correct_predictions = 0
 
     for d in data_loader:
-        encoded_input = d["encoded_input"].to(device)
-        targets = d["targets"].to(device)
+        input, target = d
 
+        torch.cuda.empty_cache()
+
+        # Set the maximum memory limit to 50%
+        torch.cuda.set_per_process_memory_fraction(0.5)
         outputs = model(
-            encoded_input=encoded_input,
-        )
+            x=input,
+        ).to(device)
+        # Clear the GPU cache
 
         _, preds = torch.max(outputs, dim=1)
-        loss = loss_fn(outputs, targets)
-
-        correct_predictions += torch.sum(preds == targets)
+        loss = loss_fn(outputs, target.to("cuda"))
+        preds = preds.to("cuda")
+        target = target.to("cuda")
+        correct_predictions += torch.sum(preds == target)
         losses.append(loss.item())
 
         loss.backward()
@@ -118,6 +122,8 @@ def get_predictions(model, data_loader):
         for d in data_loader:
             texts = d["review_text"]
             encoded_input = d["encoded_input"].to(device)
+            encoded_input["input_ids"].to(device)
+            encoded_input["attention_mask"].to(device)
             targets = d["targets"].to(device)
 
             outputs = model(
@@ -159,8 +165,8 @@ if __name__ == "__main__":
     np.random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    df = pd.read_csv("./NLP/reviews.csv")
+    device = "cuda"
+    df = pd.read_csv("./reviews.csv")
     print(df.info())
     sns.countplot(df.score)
     plt.xlabel('review score')
@@ -190,7 +196,7 @@ if __name__ == "__main__":
     df_train, df_test = train_test_split(df, test_size=0.1, random_state=RANDOM_SEED)
     df_val, df_test = train_test_split(df_test, test_size=0.5, random_state=RANDOM_SEED)
 
-    BATCH_SIZE = 16
+    BATCH_SIZE = 2
 
     train_data_loader = create_data_loader(df_train, tokenizer, MAX_LEN, BATCH_SIZE)
     val_data_loader = create_data_loader(df_val, tokenizer, MAX_LEN, BATCH_SIZE)
@@ -203,7 +209,7 @@ if __name__ == "__main__":
     model = SentimentClassifier(len(class_names), PRE_TRAINED_MODEL_NAME)
     model = model.to(device)
 
-    EPOCHS = 10
+    EPOCHS = 2
 
     optimizer = AdamW(model.parameters(), lr=2e-5, correct_bias=False)
     total_steps = len(train_data_loader) * EPOCHS
