@@ -3,7 +3,8 @@ config = {
         "api_key": "XOLA7URKCZHU7C9X",  # Claim your free API key here: https://www.alphavantage.co/support/#api-key
         "symbol": "AAPL",
         "output_size": "full",
-        "url": "https://www.alphavantage.co"
+        "url": "https://www.alphavantage.co",
+        "key_adjusted_close": "5. adjusted close"
     },
     "data": {
         "window_size": 14,
@@ -12,7 +13,7 @@ config = {
         "smoothing": 2,
     },
     "plots": {
-        "show_plots": True,
+        "show_plots": False,
         "xticks_interval": 90,
         "color_actual_val": "#001f3f",
         "color_actual_test": "#4D1BF3",
@@ -114,7 +115,8 @@ config = {
             3: "assembler",
             4: "lstm",
             5: "gru",
-            6: "transformer"
+            6: "transformer",
+            7: "pred_price_LSTM"
     },
     "tensorflow_timeseries_model_type_dict": {
         1: "svm",

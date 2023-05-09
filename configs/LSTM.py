@@ -40,5 +40,22 @@ lstm_cf = {
                 "test_shuffle": True,
                 "weight_decay": 0.0001
             },
+    },
+    "predict_price": {
+        "training": {
+            "model": {
+                "input_size": 1,
+                "num_lstm_layers": 2,
+                "lstm_size": 32,
+                "dropout": 0.2
+            },
+            "training": {
+                "device": "cuda",
+                "batch_size": 64,
+                "num_epoch": 100,
+                "learning_rate": 0.01,
+                "scheduler_step_size": 40
+            }
+        }
     }
 }
