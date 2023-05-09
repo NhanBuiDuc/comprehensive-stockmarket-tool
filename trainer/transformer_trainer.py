@@ -19,7 +19,7 @@ import os
 from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedShuffleSplit
 import datetime
-
+import NLP.util as nlp_u
 
 class Transformer_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
@@ -299,8 +299,6 @@ class Transformer_trainer(Trainer):
 
         df = u.prepare_stock_dataframe(self.window_size, self.start, self.end, new_data)
         num_data_points = df.shape[0]
-        num_feature = df.shape[1]
-        self.num_feature = num_feature
         data_date = df.index.strftime("%Y-%m-%d").tolist()
 
         # Split train val 80%
@@ -324,7 +322,9 @@ class Transformer_trainer(Trainer):
         # prepare X data
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
-
+        whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
+        X = np.concatenate((X, whether_X), axis=2)
+        self.num_feature = X.shape[2]
         # Split train, validation, and test sets
         trainval_test_split_index = int(len(X) * self.cf["data"]["train_test_split_size"])
         X_trainval, X_test, y_trainval, y_test = X[:trainval_test_split_index], X[trainval_test_split_index:], y[
