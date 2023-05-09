@@ -24,15 +24,18 @@ categories = ['Sunny', 'Partly cloudy', 'Cloudy', 'Overcast', 'Mist', 'Patchy ra
               'Patchy light snow with thunder', 'Moderate or heavy snow with thunder']
 
 
-def download_historical_whether(api_key, query, delta):
+def download_historical_whether(api_key, query, from_date, to_date):
     # Subtract the timedelta object from the from_date to get the to_date
-    from_date = datetime.now() - delta
+    if to_date is None:
+        to_date = datetime.now()
+    else:
+        to_date = datetime.strptime(to_date, "%Y-%m-%d")
     results = []
     folder_path = "./NLP/whether_data"
     filename = query + "_whether_data.csv"
     # Loop over the dates between from_date and to_date
-    dt = from_date
-    while dt < datetime.now():
+    dt = datetime.strptime(from_date, "%Y-%m-%d")
+    while dt < to_date:
         # Convert the date to a string in the format expected by the API
         dt_str = dt.strftime('%Y-%m-%d')
 
@@ -45,7 +48,6 @@ def download_historical_whether(api_key, query, delta):
             data = response.json()
             results.extend(data['forecast']['forecastday'])
 
-        # Move on to the previous date
         dt = dt + timedelta(days=1)
 
     # Check if file with the given name exists in the folder
@@ -61,24 +63,32 @@ def download_historical_whether(api_key, query, delta):
     # Export the DataFrame to a CSV file
     df.to_csv(file_path)
 
+def prepare_time_series_whether_data(data, window_size, output_step, dilation,  stride = 1):
+    features = data.shape[-1]
+    n_samples = (len(data) - dilation * (window_size - 1) - output_step)
+    X = np.zeros((n_samples, window_size, features))
+    features = len(data)
 
-def prepare_whether_data(new_data=False):
+    for i in range(n_samples):
+        for j in range(window_size):
+            X[i][j] = (data[i + (j * dilation)])
+    return X
+
+def prepare_whether_data(stock_df, window_size, from_date, to_date, output_step, new_data=False):
     # Set the API key
     api_key = 'b7a439cb870a4a09be9114748230705'
     # Create the encoder
     encoder = OneHotEncoder(categories=[categories])
-    window_size = 7
 
     # Set the search parameters
     query1 = "Ha Noi"
     query2 = "Ho Chi Minh"
     query3 = "Da Nang"
     # Define the from_date as the current date and time
-    delta = timedelta(days=window_size - 1)
-    if new_data:
-        download_historical_whether(api_key, query1, delta)
-        download_historical_whether(api_key, query2, delta)
-        download_historical_whether(api_key, query3, delta)
+    # if new_data:
+    #     download_historical_whether(api_key, query1, from_date, to_date)
+    #     download_historical_whether(api_key, query2, from_date, to_date)
+    #     download_historical_whether(api_key, query3, from_date, to_date)
 
     # Create an empty list to store day arrays
     day_arrays = []
@@ -88,7 +98,7 @@ def prepare_whether_data(new_data=False):
     for filename in os.listdir(folder_path):
         if filename.endswith('.csv'):
             # Load CSV file into DataFrame
-            df = pd.read_csv(os.path.join(folder_path, filename))
+            df = load_data_with_index(os.path.join(folder_path, filename), stock_df.index)
             # Extract 'day' column into NumPy array and append to list
             dict_column = df['day'].values
             results = []
@@ -105,5 +115,17 @@ def prepare_whether_data(new_data=False):
 
     # Merge all day arrays into one NumPy array
     whether_day_array = np.array(day_arrays)
-    whether_day_array = whether_day_array.reshape(window_size, -1)
-    return whether_day_array
+    whether_day_array = whether_day_array.reshape(whether_day_array.shape[1], whether_day_array.shape[0] * whether_day_array.shape[2])
+
+    output = prepare_time_series_whether_data(whether_day_array, window_size, output_step, 1)
+    return output
+# define function to load csv file with given index
+def load_data_with_index(csv_file, index):
+    df = pd.read_csv(csv_file, index_col='date')
+    df.index = pd.to_datetime(df.index)
+    # merge the two dataframes on index
+    df = df[df.index.isin(index)]
+    df = df.set_index(index)
+    return df
+
+

@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from torch.utils.data import ConcatDataset
 from model import Model
-from configs.transformer_cf import transformer_cf as cf
+from configs.config import config as mv_cf
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -19,15 +19,15 @@ import os
 from torch.utils.data import DataLoader
 from sklearn.model_selection import StratifiedShuffleSplit
 import datetime
-import NLP.util as nlp_u
 
-class Transformer_trainer(Trainer):
+
+class Movement_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
                  model=None):
-        super(Transformer_trainer, self).__init__()
+        super(Movement_trainer, self).__init__()
         self.__dict__.update(self.cf)
-        self.config = cf
+        self.config = mv_cf
         self.model_name = model_name
         self.__dict__.update(self.config["model"][self.model_name])
         self.__dict__.update(self.config["training"][self.model_name])
@@ -37,7 +37,7 @@ class Transformer_trainer(Trainer):
         self.full_data = full_data
         self.num_feature = num_feature
         self.new_data = new_data
-        self.model_type = "transformer"
+        self.model_type = "movement"
         self.model_type_dict = self.cf["pytorch_timeseries_model_type_dict"]
         self.model = model
         self.model_full_name = self.cf["alpha_vantage"]["symbol"] + "_" + self.model_name
@@ -299,6 +299,8 @@ class Transformer_trainer(Trainer):
 
         df = u.prepare_stock_dataframe(self.window_size, self.start, self.end, new_data)
         num_data_points = df.shape[0]
+        num_feature = df.shape[1]
+        self.num_feature = num_feature
         data_date = df.index.strftime("%Y-%m-%d").tolist()
 
         # Split train val 80%
@@ -322,9 +324,7 @@ class Transformer_trainer(Trainer):
         # prepare X data
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
-        whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
-        X = np.concatenate((X, whether_X), axis=2)
-        self.num_feature = X.shape[2]
+
         # Split train, validation, and test sets
         trainval_test_split_index = int(len(X) * self.cf["data"]["train_test_split_size"])
         X_trainval, X_test, y_trainval, y_test = X[:trainval_test_split_index], X[trainval_test_split_index:], y[
@@ -351,33 +351,22 @@ class Transformer_trainer(Trainer):
         # save train data
 
         # set the file paths
-        X_train_file = './dataset/X_train_' + self.model_full_name + '.npy'
-        X_valid_file = './dataset/X_valid_' + self.model_full_name + '.npy'
-        X_test_file = './dataset/X_test_' + self.model_full_name + '.npy'
-        # set the file paths
-        y_train_file = './dataset/y_train_' + self.model_full_name + '.npy'
-        y_valid_file = './dataset/y_valid_' + self.model_full_name + '.npy'
-        y_test_file = './dataset/y_test_' + self.model_full_name + '.npy'
+        train_file = './dataset/X_train_' + self.model_full_name + '.npy'
+        valid_file = './dataset/X_valid_' + self.model_full_name + '.npy'
+        test_file = './dataset/X_test_' + self.model_full_name + '.npy'
+
         # check if the files already exist, and delete them if they do
-        if os.path.exists(X_train_file):
-            os.remove(X_train_file)
-        if os.path.exists(X_valid_file):
-            os.remove(X_valid_file)
-        if os.path.exists(X_test_file):
-            os.remove(X_test_file)
-        if os.path.exists(y_train_file):
-            os.remove(y_train_file)
-        if os.path.exists(y_valid_file):
-            os.remove(y_valid_file)
-        if os.path.exists(y_test_file):
-            os.remove(y_test_file)
+        if os.path.exists(train_file):
+            os.remove(train_file)
+        if os.path.exists(valid_file):
+            os.remove(valid_file)
+        if os.path.exists(test_file):
+            os.remove(test_file)
+
         # save the data
-        np.save(X_train_file, X_train)
-        np.save(X_valid_file, X_valid)
-        np.save(X_test_file, X_test)
-        np.save(y_train_file, y_train)
-        np.save(y_valid_file, y_valid)
-        np.save(y_test_file, y_test)
+        np.save(train_file, X_train)
+        np.save(valid_file, X_valid)
+        np.save(test_file, X_test)
 
         # create datasets and dataloaders
         train_dataset = Classification_TimeSeriesDataset(X_train, y_train)
@@ -401,9 +390,9 @@ class Transformer_trainer(Trainer):
         valid_dataset = Classification_TimeSeriesDataset(X_valid, y_valid)
         test_dataset = Classification_TimeSeriesDataset(X_test, y_test)
 
-        self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
-        self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
-        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
+        valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
+        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
-        return self.train_dataloader, self.valid_dataloader, self.test_dataloader
+        return train_dataloader, valid_dataloader, test_dataloader
         # train_date, valid_date, test_date
