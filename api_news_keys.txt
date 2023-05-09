@@ -8,3 +8,5 @@ Access Token:
 1652768162256162816-eldHcAdcsajo0WH0eyquH1rgQcpH1Z
 Access Token Secret:
 iMXwExuRJfdlFO239cHkcH8AZLY2A90o9rM4grQXr891z
+Weather:
+b7a439cb870a4a09be9114748230705
