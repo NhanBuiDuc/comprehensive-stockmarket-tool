@@ -12,13 +12,21 @@ import pandas as pd
 import requests
 import json
 from datetime import datetime, timedelta
+import csv
 
 
-def download_nyt_news(query, from_date, delta, page_size, total_results, api_key):
+def download_nyt_news(query, folder, from_date, to_date, page_size):
     # Subtract the timedelta object from the from_date to get the to_date
-    to_date = from_date - delta
-    from_date_str = from_date.strftime('%Y%m%d')
-    to_date_str = to_date.strftime('%Y%m%d')
+    # api_key = 'fa24ffdbf32f4feeb3ef755fad66a2bd'
+    api_key = '8rcgDc65Yn8HCXG68vhA42bvawaKJ8xk'
+    date_format = '%Y-%m-%d'
+    if to_date is None:
+        to_date = datetime.now()
+        to_date = to_date.strftime(date_format)
+    # else:
+    #     to_date = datetime.strptime(to_date, date_format)
+
+    # from_date = datetime.strptime(from_date, date_format)
 
     # Define an empty list to store the results
     results = []
@@ -26,20 +34,15 @@ def download_nyt_news(query, from_date, delta, page_size, total_results, api_key
     # Define a counter to keep track of the number of articles retrieved
     count = 0
 
-    # Loop through the pages of results until the desired number of articles is retrieved
-    while count < total_results:
-        # Calculate the page number
-        page_num = count // page_size
-
-        # Define the API endpoint
-        endpoint = 'https://api.nytimes.com/svc/search/v2/articlesearch.json'
-
+    # Define the API endpoint
+    endpoint = 'https://api.nytimes.com/svc/search/v2/articlesearch.json'
+    for page in range(0, page_size):
         # Define the query parameters
         params = {
             'q': query,
-            'begin_date': from_date_str,
-            'end_date': to_date_str,
-            'page': page_num,
+            'begin_date': from_date,
+            'end_date': to_date,
+            'page': page,
             'api-key': "fs5aF1Yb7hl5u7L3AZDrAAZn125qhxv8"
         }
 
@@ -57,35 +60,27 @@ def download_nyt_news(query, from_date, delta, page_size, total_results, api_key
         # Check if there are no more articles to retrieve
         if not data['response']['docs']:
             break
-
+        data = data['response']['docs']
         # Loop through the articles and extract the relevant information
-        for article in data['response']['docs']:
+        for article in data:
             # Check if the article has a valid publication date
             if 'pub_date' not in article or not article['pub_date']:
                 continue
 
             # Convert the publication date string to a datetime object
-            pub_date = datetime.strptime(article['pub_date'], '%Y-%m-%dT%H:%M:%S%z')
-
+            pub_date = datetime.strptime(article['pub_date'], '%Y-%m-%dT%H:%M:%S%z').date()
+            # Check if the article's _id already exists in results
+            article_id = article.get('_id')
+            if article_id and any(a.get('_id') == article_id for a in results):
+                continue
             # Add the relevant information to the results list
-            results.append({
-                'datetime': pub_date.strftime('%Y-%m-%d %H:%M:%S'),
-                'title': article['headline']['main'],
-                'description': article['abstract'],
-                'url': article['web_url']
-            })
-
-            # Increment the counter
-            count += 1
-
-            # Check if the desired number of articles is reached
-            if count >= total_results:
-                break
+            results.append(article)
 
     # Save the results to a CSV file
-    folder_path = "./NLP/news_data/"
+    folder_path = "./news_data/" + folder + "/"
     filename = "nyt_news.csv"
-
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
     # Check if file with the given name exists in the folder
     file_path = os.path.join(folder_path, filename)
     if os.path.exists(file_path):
@@ -102,11 +97,109 @@ def download_nyt_news(query, from_date, delta, page_size, total_results, api_key
         print(f"Renamed file {filename} to {new_filename}")
         # Update the file path to the new prefixed filename
         file_path = new_file_path
-    else:
-        # Save the articles to a CSV file
-        df = pd.DataFrame.from_records(results)
-        df.to_csv(file_path, index=False)
+    # Save the articles to a CSV file
+    df = pd.DataFrame.from_records(results)
+    df = df.rename(columns={'pub_date': 'date'})
+    df = df.rename(columns={'web_url': 'url'})
+    # Convert the `datetime` column to a pandas datetime format
+    df['date'] = pd.to_datetime(df['date'])
 
+    # Set the `date` column as the index
+    df.set_index('date', inplace=True)
+    df.to_csv(file_path, index=False)
+
+def download_nyt_news(query, folder, from_date, to_date, page_size):
+    # Subtract the timedelta object from the from_date to get the to_date
+    # api_key = 'fa24ffdbf32f4feeb3ef755fad66a2bd'
+    api_key = '8rcgDc65Yn8HCXG68vhA42bvawaKJ8xk'
+    date_format = '%Y-%m-%d'
+    if to_date is None:
+        to_date = datetime.now()
+        to_date = to_date.strftime(date_format)
+    # else:
+    #     to_date = datetime.strptime(to_date, date_format)
+
+    # from_date = datetime.strptime(from_date, date_format)
+
+    # Define an empty list to store the results
+    results = []
+
+    # Define a counter to keep track of the number of articles retrieved
+    count = 0
+
+    # Define the API endpoint
+    endpoint = 'https://api.nytimes.com/svc/search/v2/articlesearch.json'
+    for page in range(0, page_size):
+        # Define the query parameters
+        params = {
+            'q': query,
+            'begin_date': from_date,
+            'end_date': to_date,
+            'page': page,
+            'api-key': "fs5aF1Yb7hl5u7L3AZDrAAZn125qhxv8"
+        }
+
+        # Send the HTTP GET request to the API endpoint and retrieve the response
+        response = requests.get(endpoint, params=params)
+
+        # Check if the response was successful
+        if response.status_code != 200:
+            print(f"Error retrieving news articles: {response.text}")
+            break
+
+        # Parse the JSON response
+        data = json.loads(response.text)
+
+        # Check if there are no more articles to retrieve
+        if not data['response']['docs']:
+            break
+        data = data['response']['docs']
+        # Loop through the articles and extract the relevant information
+        for article in data:
+            # Check if the article has a valid publication date
+            if 'pub_date' not in article or not article['pub_date']:
+                continue
+
+            # Convert the publication date string to a datetime object
+            pub_date = datetime.strptime(article['pub_date'], '%Y-%m-%dT%H:%M:%S%z').date()
+            # Check if the article's _id already exists in results
+            article_id = article.get('_id')
+            if article_id and any(a.get('_id') == article_id for a in results):
+                continue
+            # Add the relevant information to the results list
+            results.append(article)
+
+    # Save the results to a CSV file
+    folder_path = "./news_data/" + folder + "/"
+    filename = "nyt_news.csv"
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    # Check if file with the given name exists in the folder
+    file_path = os.path.join(folder_path, filename)
+    if os.path.exists(file_path):
+        # If it does, find an available numeric prefix
+        i = 1
+        while True:
+            new_filename = f"{i}_{filename}"
+            new_file_path = os.path.join(folder_path, new_filename)
+            if not os.path.exists(new_file_path):
+                break
+            i += 1
+        # Rename the file with the new prefixed filename
+        os.rename(file_path, new_file_path)
+        print(f"Renamed file {filename} to {new_filename}")
+        # Update the file path to the new prefixed filename
+        file_path = new_file_path
+    # Save the articles to a CSV file
+    df = pd.DataFrame.from_records(results)
+    df = df.rename(columns={'pub_date': 'date'})
+    df = df.rename(columns={'web_url': 'url'})
+    # Convert the `datetime` column to a pandas datetime format
+    df['date'] = pd.to_datetime(df['date'])
+
+    # Set the `date` column as the index
+    df.set_index('date', inplace=True)
+    df.to_csv(file_path, index=False)
 
 def download_news(query, from_date, delta, page_size, total_results):
     # Subtract the timedelta object from the from_date to get the to_date
@@ -215,7 +308,7 @@ def download_google_news(query, from_date, delta, page_size, total_results):
         df.set_index('datetime', inplace=True)
 
         # Export the DataFrame to a CSV file
-        df.to_csv(file_path)
+        df.to_csv(file_path, index=True)
 
 
 if __name__ == "__main__":
@@ -229,41 +322,47 @@ if __name__ == "__main__":
     query1 = "APPLE"
     # Define the from_date as the current date and time
     from_date = "2015-01-01"
+    to_date = None
     delta = timedelta(days=14)
     page_size = 100
     total_results = 1000
     summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
     # download_news(query1, from_date, delta, page_size, total_results)
     # download_news(query2, from_date, delta, page_size, total_results)
-    download_google_news(query1, from_date, delta, page_size, total_results)
+    # download_google_news(query1, from_date, delta, page_size, total_results)
     # Read JSON file and convert to dictionary
-    # download_nyt_news(query1, from_date, delta, page_size, total_results, api_key)
-    folder_path = "./NLP/news_data"
+    # download_nyt_news(query1, query1, from_date, to_date, page_size)
+    folder_path = "./news_data"
 
-    # Loop through all files in the folder
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        # Check if the file is a regular file and has a ".json" extension
-        if os.path.isfile(file_path) and filename.endswith(".json"):
-            # Open the file and load its contents into a dictionary
-            with open(file_path, "r") as json_file:
-                json_data = json_file.read()
-                results = json.loads(json_data)
-            # Process the dictionary as needed
-            for article in results:
-                url = article["link"]
-                response = requests.get(url)
-                html_content = response.content
-                # Parse the HTML content using BeautifulSoup
-                soup = BeautifulSoup(html_content, 'html.parser')
-                # Parse the HTML content using BeautifulSoup
-                # Find all the <p> tags in the document
-                p_tags = soup.find_all('p')
-                full_page = ""
-                # Print the content of each <p> tag
-                for p in p_tags:
-                    full_page += p.text + " "
+    # Loop through all the subfolders in the main folder
+    for subdir_name in os.listdir(folder_path):
+        # Get the full path of the subfolder
+        subdir_path = os.path.join(folder_path, subdir_name)
 
-                for i in range(0, len(full_page), 1000):
-                    chunk = full_page[i:i + 1000]
-                    print(summarizer(chunk))
+        # Check if the subfolder is actually a folder
+        if os.path.isdir(subdir_path):
+            # Loop through all the files in the subfolder
+            for filename in os.listdir(subdir_path):
+                # Get the full path of the file
+                file_path = os.path.join(subdir_path, filename)
+                if os.path.isfile(file_path) and filename.endswith(".csv"):
+                    # Open the file and load its contents into a dictionary
+                    with open(file_path, 'r') as csv_file:
+                        csv_reader = csv.DictReader(csv_file)
+                        for row in csv_reader:
+                            url = row["url"]
+                            response = requests.get(url)
+                            html_content = response.content
+                            # Parse the HTML content using BeautifulSoup
+                            soup = BeautifulSoup(html_content, 'html.parser')
+                            # Parse the HTML content using BeautifulSoup
+                            # Find all the <p> tags in the document
+                            p_tags = soup.find_all('p')
+                            full_page = ""
+                            # Print the content of each <p> tag
+                            for p in p_tags:
+                                full_page += p.text + " "
+
+                            for i in range(0, len(full_page), 1000):
+                                chunk = full_page[i:i + 1000]
+                                print(summarizer(chunk))
