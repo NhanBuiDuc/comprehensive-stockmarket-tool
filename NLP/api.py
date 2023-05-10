@@ -13,6 +13,7 @@ import requests
 import json
 from datetime import datetime, timedelta
 import csv
+import finnhub
 
 
 def download_nyt_news(query, folder, from_date, to_date, page_size):
@@ -310,6 +311,9 @@ def download_google_news(query, from_date, delta, page_size, total_results):
         # Export the DataFrame to a CSV file
         df.to_csv(file_path, index=True)
 
+def download_finnhub_news(query, folder, from_date, to_date, symbol):
+    finnhub_client = finnhub.Client(api_key='chdrr1pr01qi6ghjsatgchdrr1pr01qi6ghjsau0')
+    df = pd.DataFrame(finnhub_client.company_news('AAPL', _from="2022-06-01", to="2023-05-10"))
 
 if __name__ == "__main__":
     # Set the API key
