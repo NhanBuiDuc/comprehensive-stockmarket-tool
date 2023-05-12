@@ -1,4 +1,4 @@
-from config import config as cf
+from configs import config as cf
 from old import model
 from torch.utils.data import DataLoader
 from loss import Unified_Adversarial_Loss as UAL
