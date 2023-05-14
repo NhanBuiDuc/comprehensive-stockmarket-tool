@@ -52,6 +52,7 @@ class Signal:
         mom = MOM(df, 10)
         eri = ERI(df, window_size=13)
         bbands = BBANDS(df, 5)
+        uo = UO(df, 14)
         df = pd.concat([df, rsi], axis=1)
         df = pd.concat([df, macd], axis=1)
         df = pd.concat([df, stochrsi], axis=1)
@@ -60,9 +61,11 @@ class Signal:
         df = pd.concat([df, mom], axis=1)
         df = pd.concat([df, eri], axis=1)
         df = pd.concat([df, bbands], axis=1)
-        df.to_csv(f"{path}{filename}")
+        df = pd.concat([df, uo], axis=1)
         return df
-    def ema_signal1(df, short, long):
+    
+    
+    def ema_signal1(self, df, short, long):
         ema_fast = df['EMA_' + str(short)]
         ema_slow = df['EMA_' + str(long)]
         signal = np.zeros(len(df))
@@ -91,7 +94,7 @@ class Signal:
             else:
                 signal.append(np.nan)
         return signal
-    def sma_signal(df, period):
+    def sma_signal(self, df, period):
         signal = []
         for i in range(0, len(df)):
             if df['SMA_' + str(period)].iloc[i] != np.nan:
@@ -109,9 +112,9 @@ class Signal:
         signal = np.zeros(len(df))
         for i in range(1, len(df)):
             if df['HMA_' + str(period)][i] is not None:
-                if df['HMA_' + str(period)][i] > df['Close'][i] and df['HMA_' + str(period)][i-1] <= df['Close'][i-1]:
+                if df['HMA_' + str(period)][i] > df['4. close'][i] and df['HMA_' + str(period)][i-1] <= df['4. close'][i-1]:
                     signal[i] = 1
-                elif df['HMA_' + str(period)][i] < df['Close'][i] and df['HMA_' + str(period)][i-1] >= df['Close'][i-1]:
+                elif df['HMA_' + str(period)][i] < df['4. close'][i] and df['HMA_' + str(period)][i-1] >= df['4. close'][i-1]:
                     signal[i] = -1
                 else:
                     signal[i] = 0
@@ -155,7 +158,7 @@ class Signal:
 
     def stochrsi_signal(self, df):
         label = 'STOCHRSIk_14_14_3_3'
-        signal = []
+        signal = np.zeros(len(df))
         for i in range(0, len(df)):
             if df[label][i] is not None:
                 if df[label][i] < 20:
@@ -169,13 +172,13 @@ class Signal:
         return signal
 
     def willr_signal(self, df):
-        signal = []
+        signal = np.zeros(len(df))
         label = 'WILLR_14'
         for i in range(0, len(df)):
             if df[label][i] is not None:
-                if df[label][i] > -20 & df[label][i] < 0:
+                if df[label][i] > -20 and df[label][i] < 0:
                     signal[i] = -1
-                elif df[label][i] > -100 & df[label][i] < -80:
+                elif df[label][i] > -100 and df[label][i] < -80:
                     signal[i] = 1
                 else:
                     signal[i] = 0
@@ -201,7 +204,7 @@ class Signal:
         return signal
 
     def eri_signal(self, df):
-        signal = []
+        signal = np.zeros(len(df))
         be = 'BEARP_13'
         bu = 'BULLP_13'
         for i in range(1, len(df)):
@@ -220,7 +223,7 @@ class Signal:
         return signal
 
     def cci_signal(self, df):
-        signal = []
+        signal = np.zeros(len(df))
         label = 'CCI_20_0.015'
         for i in range(0, len(df)):
             if df[label][i] is not None:
@@ -234,7 +237,7 @@ class Signal:
                 signal[i] = np.nan
         return signal
 
-    def bbands_signal(df):
+    def bbands_signal(self, df):
         signal = np.zeros(len(df))
         label = '_5_2.0'
         for i in range(40, len(df)):
@@ -305,20 +308,16 @@ class Signal:
 
         uo_s = self.uo_signal(df)
         df['s_UO'] = uo_s
+        
+        name = str(cf['alpha_vantage']['symbol']) +'_signal' +'.csv'
+        df.to_csv('./technical_signal/'+name)
 
         return df
 
-        
-        
+
+
+if __name__ == "__main__":
+    print(os.getcwd())
+    signal = Signal()
+    df = signal.define_signal(path='./technical_signal', filename='AAPL.csv', new_data=True)
     
-    
-        
-
-
-
-
-
-
-
-
-
