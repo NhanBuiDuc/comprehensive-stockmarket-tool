@@ -6,7 +6,8 @@ transformer_cf = {
             "dim_feedforward": 512,
             "dropout": 0.1,
             "window_size": 7,
-            "output_step": 1
+            "output_step": 1,
+            "topk": 5
         }
     },
     "training": {

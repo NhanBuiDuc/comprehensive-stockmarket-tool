@@ -28,6 +28,7 @@ class Transformer_trainer(Trainer):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
+        self.symbol = self.cf["alpha_vantage"]["symbol"] 
         self.model_name = model_name
         self.__dict__.update(self.config["model"][self.model_name])
         self.__dict__.update(self.config["training"][self.model_name])
@@ -40,7 +41,7 @@ class Transformer_trainer(Trainer):
         self.model_type = "transformer"
         self.model_type_dict = self.cf["pytorch_timeseries_model_type_dict"]
         self.model = model
-        self.model_full_name = self.cf["alpha_vantage"]["symbol"] + "_" + self.model_name
+        self.model_full_name = self.symbol + "_" + self.model_name
         self.prepare_data(self.new_data)
         self.indentify()
 
@@ -295,8 +296,6 @@ class Transformer_trainer(Trainer):
                 print(f"Loss written to {save_path}.")
 
     def prepare_data(self, new_data):
-        training_param = self.config["training"][self.model_name]
-
         df = u.prepare_stock_dataframe(self.window_size, self.start, self.end, new_data)
         num_data_points = df.shape[0]
         data_date = df.index.strftime("%Y-%m-%d").tolist()
@@ -322,8 +321,9 @@ class Transformer_trainer(Trainer):
         # prepare X data
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
-        whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
-        X = np.concatenate((X, whether_X), axis=2)
+        # whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
+        news_X = nlp_u.prepare_news_data(df, self.symbol. self.window_size, self.start, self.end, new_data, self.output_step, self.topk)
+        X = np.concatenate((X, news_X), axis=2)
         self.num_feature = X.shape[2]
         # Split train, validation, and test sets
         trainval_test_split_index = int(len(X) * self.cf["data"]["train_test_split_size"])
