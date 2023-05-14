@@ -21,11 +21,12 @@ import numpy as np
 import torch
 from NLP import util as u
 from newsplease import NewsPlease
+
 untrustworthy_url = ["https://www.zac.com",
-                    "https://www.thefly.com",
-                    "https://www.investing.com",
-                    'https://investorplace.com',
-                    'https://www.nasdaq.com'
+                     "https://www.thefly.com",
+                     "https://www.investing.com",
+                     'https://investorplace.com',
+                     'https://www.nasdaq.com'
                      ]
 trustworthy_url = ["zac.com",
                    "guru.com",
@@ -359,7 +360,7 @@ if __name__ == "__main__":
         queries = json.load(f)
     keyword_query = list(queries.values())
     model_name = 'philschmid/bart-large-cnn-samsum'
-    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum", max_length = max_summary_lenght)
+    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum", max_length=max_summary_lenght)
 
     # download_news(query1, from_date, delta, page_size, total_results)
     # download_news(query2, from_date, delta, page_size, total_results)
@@ -385,7 +386,7 @@ if __name__ == "__main__":
                     df = pd.read_csv(file_path, encoding=file_encoding)
                     # filtered_df = df[df['source'].isin(trustworthy_source)]
                     df = df[~df["source"].isin(untrustworthy_source)]
-                    df = df[:100]
+                    df = df[:10]
                     for index, row in df.iterrows():
                         # summary = row["summary"]
                         # summary = u.preprocess_text(summary, tokenizer)
@@ -409,7 +410,7 @@ if __name__ == "__main__":
                                 # # Print the content of each <p> tag
                                 # for p in p_tags:
                                 #     full_page += p.text + " "
-                                
+
                                 article = NewsPlease.from_url(response.url)
                                 if article is not None:
                                     if article.maintext is not None:
@@ -418,16 +419,25 @@ if __name__ == "__main__":
                                         top_sentence = u.get_similar_sentences(full_text, keyword_query)
                                         if len(top_sentence) > 0:
                                             summary_top_sentence = summarizer(top_sentence)
+                                            # summary_top_sentence = summary_top_sentence[0]["summary_text"]
+                                            unique_summaries = set()
+                                            for summary in summary_top_sentence:
+                                                # Check if this summary is unique
+                                                if summary not in unique_summaries:
+                                                    unique_summaries.add(summary)
+
+                                            # Merge the unique summaries into a single string
+                                            summary_top_sentence = " ".join(unique_summaries)
                                             print(base_url)
                                             print(source)
                                             print(summary_top_sentence)
                                             summary_df = pd.DataFrame({
-                                            'datetime': index,
-                                            'symbol': stock_name,
-                                            'source': source,
-                                            'summary': summary_top_sentence,
-                                            "base_url": base_url,
-                                            "url": response.url
+                                                'datetime': index,
+                                                'symbol': stock_name,
+                                                'source': source,
+                                                'summary': summary_top_sentence,
+                                                "base_url": base_url,
+                                                "url": response.url
                                             }, index=[index])
                                             dataframes_to_concat.append(summary_df)
                         except Exception as e:
