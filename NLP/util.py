@@ -6,6 +6,13 @@ from datetime import datetime, timedelta
 import numpy as np
 import json
 from sklearn.preprocessing import OneHotEncoder
+from transformers import pipeline, AutoTokenizer, AutoModel
+import re
+from sentence_transformers import SentenceTransformer, util
+from sklearn.metrics.pairwise import cosine_similarity
+import torch
+import nltk
+from keras_preprocessing.sequence import pad_sequences
 
 # Define the categories
 categories = ['Sunny', 'Partly cloudy', 'Cloudy', 'Overcast', 'Mist', 'Patchy rain possible',
@@ -63,7 +70,20 @@ def download_historical_whether(api_key, query, from_date, to_date):
     # Export the DataFrame to a CSV file
     df.to_csv(file_path)
 
-def prepare_time_series_whether_data(data, window_size, output_step, dilation,  stride = 1):
+
+def prepare_time_series_whether_data(data, window_size, output_step, dilation, stride=1):
+    features = data.shape[-1]
+    n_samples = (len(data) - dilation * (window_size - 1) - output_step)
+    X = np.zeros((n_samples, window_size, features))
+    features = len(data)
+
+    for i in range(n_samples):
+        for j in range(window_size):
+            X[i][j] = (data[i + (j * dilation)])
+    return X
+
+
+def prepare_time_series_news_data(data, window_size, output_step, dilation, stride=1):
     features = data.shape[-1]
     n_samples = (len(data) - dilation * (window_size - 1) - output_step)
     X = np.zeros((n_samples, window_size, features))
@@ -115,10 +135,52 @@ def prepare_whether_data(stock_df, window_size, from_date, to_date, output_step,
 
     # Merge all day arrays into one NumPy array
     whether_day_array = np.array(day_arrays)
-    whether_day_array = whether_day_array.reshape(whether_day_array.shape[1], whether_day_array.shape[0] * whether_day_array.shape[2])
+    whether_day_array = whether_day_array.reshape(whether_day_array.shape[1],
+                                                  whether_day_array.shape[0] * whether_day_array.shape[2])
 
     output = prepare_time_series_whether_data(whether_day_array, window_size, output_step, 1)
     return output
+
+def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
+    # Read the csv file
+    # Get the index stock news save with stock dataframe
+    # Get top 5 summary text
+    # Merge into 1 text, preprocess
+    # if merged text have lenght < max_input_lenght, add zero to it to meet the lenght
+    # if larger, remove sentences until meet the lenght, than add zero
+    # tokenize the text, convert tokens into ids
+    # convert into (batch, 14, n) data
+
+    model_name = "bert-base-uncased"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModel.from_pretrained(model_name)
+    
+    file_path = './NLP/news_data/' + symbol + "_" + "data.csv"
+    merged_dataset_path = "./csv/" + symbol + "/" + symbol + "_" + "price_news.csv"
+    news_query_folder = "./NLP/news_query"
+    news_query_file_name = symbol + "_" + "query.json"
+    news_query_path = news_query_folder + "/" + news_query_file_name
+    with open(news_query_path, "r") as f:
+        queries = json.load(f)
+    keyword_query = list(queries.values())
+    df = load_data_with_index(file_path, stock_df.index)
+    top_sentences_dict = []
+    for index in df.index:
+        summary_columns = df.loc[index, "summary"]
+        top_sentences = get_similar_summary(summary_columns)[:topK]
+
+        merged_sentences = " ".join(top_sentences)
+        ids, tokens = tokenize(merged_sentences, tokenizer)
+        top_sentences_dict.append(ids)
+
+    max_length = max([len(lst) for lst in top_sentences_dict])
+    # pad sequences to a fixed length
+    padded_top_sentences_seq = pad_sequences(top_sentences_dict, maxlen=max_length, dtype="long", 
+                                            value=tokenizer.pad_token_id, truncating="post", padding="post")
+    data = prepare_time_series_news_data(padded_top_sentences_seq, window_size, output_step, 1)
+
+    return data
+
 # define function to load csv file with given index
 def load_data_with_index(csv_file, index):
     df = pd.read_csv(csv_file, index_col='date')
@@ -128,4 +190,98 @@ def load_data_with_index(csv_file, index):
     df = df.set_index(index)
     return df
 
+def tokenize(text, tokenizer):
+    text = preprocess_text(text)
+    # Tokenize the text
+    tokens = tokenizer.tokenize(text)
+    
+    # Remove stopwords
+    stopwords = tokenizer.get_added_vocab()
+    filtered_tokens = [token for token in tokens if token not in stopwords]
+    
+    # Perform lemmatization
+    lemmatized_tokens = [tokenizer.decode(tokenizer.encode(token, add_special_tokens=False)) for token in
+                         filtered_tokens]
+    
+    # Convert tokens to IDs
+    token_ids = tokenizer.convert_tokens_to_ids(lemmatized_tokens)
+    # Convert IDs back to text
+    # processed_text = tokenizer.decode(token_ids)
+    return token_ids, lemmatized_tokens
 
+def preprocess_text(text):
+    # Lowercase the text
+    text = text.lower()
+
+    # Remove non-text elements
+    text = re.sub(r'[^\w\s.]', '', text)
+
+    text = re.sub(r'[ \t]+(?=\n)', ' ', text)
+    text = re.sub(r'[ \t]+', ' ', text)
+    return text
+
+
+
+def extract_sentences(text, queries):
+    # Split the text into sentences
+
+    nltk.download('punkt', quiet=True)
+    sentences = nltk.sent_tokenize(text)
+
+    # Create an empty list to store the matching sentences
+    matching_sentences = []
+
+    # Loop through each sentence
+    for sentence in sentences:
+        # Check if any of the query words are in the sentence
+        if any(query.lower() in sentence for query in queries):
+            # If a query word is found, add the sentence to the list of matching sentences
+            matching_sentences.append(sentence)
+
+    return matching_sentences
+
+
+def get_similarity_score(sentence, queries):
+    model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
+    sentence_embeddings = model.encode(sentence).reshape(1, -1)
+    sim_list = []
+    for query in queries:
+        query_embeddings = model.encode(query).reshape(1, -1)
+        similarity = cosine_similarity(sentence_embeddings, query_embeddings)
+        sim_list.append(similarity)
+
+    similarity = sum(sim_list) / len(sim_list)
+    return similarity
+
+
+def get_similar_sentences(paragraph, queries):
+
+    # Split the paragraph into individual sentences
+    sentences = extract_sentences(paragraph, queries)
+
+    # Calculate the similarity score between each sentence and the queries
+    similarity_scores = []
+    for sentence in sentences:
+        similarity = get_similarity_score(sentence, queries)
+        similarity_scores.append(similarity)
+
+    # Sort the sentences by similarity score (only consider scores > 0.5) and return the top k
+    top_sentences = [sentences[i] for i in
+                     sorted(range(len(sentences)), key=lambda i: similarity_scores[i], reverse=True)
+                     if similarity_scores[i] > 0.5]
+
+    return top_sentences
+def get_similar_summary(summaries, queries):
+
+    # Calculate the similarity score between each sentence and the queries
+    similarity_scores = []
+    for summary in summaries:
+        similarity = get_similarity_score(summary, queries)
+        similarity_scores.append(similarity)
+
+    # Sort the sentences by similarity score (only consider scores > 0.5) and return the top k
+    top_sentences = [summaries[i] for i in
+                     sorted(range(len(summaries)), key=lambda i: similarity_scores[i], reverse=True)
+                     if similarity_scores[i] > 0.5]
+
+    return top_sentences
