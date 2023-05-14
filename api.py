@@ -1,6 +1,7 @@
 from newsapi import NewsApiClient
 from datetime import datetime, timedelta
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer, AutoModel
+import re
 import json
 from bs4 import BeautifulSoup
 import requests
@@ -13,7 +14,26 @@ import requests
 import json
 from datetime import datetime, timedelta
 import csv
-import finnhub
+from urllib.parse import urlparse
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import torch
+from NLP import util as u
+from newsplease import NewsPlease
+untrustworthy_url = ["https://www.zac.com",
+                    "https://www.thefly.com",
+                    "https://www.investing.com",
+                    'https://investorplace.com',
+                    'https://www.nasdaq.com'
+                     ]
+trustworthy_url = ["zac.com",
+                   "guru.com",
+                   "Investing.com",
+                   ]
+trustworthy_source = ["CNBC", "GuruFocus"
+                      ]
+untrustworthy_source = ["Nasdaq", "Thefly.com", "Yahoo"]
 
 
 def download_nyt_news(query, folder, from_date, to_date, page_size):
@@ -109,6 +129,7 @@ def download_nyt_news(query, folder, from_date, to_date, page_size):
     df.set_index('date', inplace=True)
     df.to_csv(file_path, index=False)
 
+
 def download_nyt_news(query, folder, from_date, to_date, page_size):
     # Subtract the timedelta object from the from_date to get the to_date
     # api_key = 'fa24ffdbf32f4feeb3ef755fad66a2bd'
@@ -201,6 +222,7 @@ def download_nyt_news(query, folder, from_date, to_date, page_size):
     # Set the `date` column as the index
     df.set_index('date', inplace=True)
     df.to_csv(file_path, index=False)
+
 
 def download_news(query, from_date, delta, page_size, total_results):
     # Subtract the timedelta object from the from_date to get the to_date
@@ -303,25 +325,20 @@ def download_google_news(query, from_date, delta, page_size, total_results):
         df = pd.DataFrame.from_records(articles)
 
         # Convert the `datetime` column to a pandas datetime format
-        df['datetime'] = pd.to_datetime(df['datetime'])
+        df['date'] = pd.to_datetime(df['date'])
 
         # Set the `datetime` column as the index
-        df.set_index('datetime', inplace=True)
+        df.set_index('date', inplace=True)
 
         # Export the DataFrame to a CSV file
         df.to_csv(file_path, index=True)
 
-def download_finnhub_news(query, folder, from_date, to_date, symbol):
-    finnhub_client = finnhub.Client(api_key='chdrr1pr01qi6ghjsatgchdrr1pr01qi6ghjsau0')
-    df = pd.DataFrame(finnhub_client.company_news('AAPL', _from="2022-06-01", to="2023-05-10"))
 
 if __name__ == "__main__":
     # Set the API key
     api_key = 'fa24ffdbf32f4feeb3ef755fad66a2bd'
-
     # Init the NewsApiClient
     newsapi = NewsApiClient(api_key=api_key)
-
     # Set the search parameters
     query1 = "APPLE"
     # Define the from_date as the current date and time
@@ -330,18 +347,31 @@ if __name__ == "__main__":
     delta = timedelta(days=14)
     page_size = 100
     total_results = 1000
-    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
+    topK = 5
+    max_summary_lenght = 60
+    stock_name = "AAPL"
+    news_web_url_path = "./NLP/news_web_url"
+    news_data_path = "./NLP/news_data/" + stock_name + "_" + "data.csv"
+    news_query_folder = "./NLP/news_query"
+    news_query_file_name = stock_name + "_" + "query.json"
+    news_query_path = news_query_folder + "/" + news_query_file_name
+    with open(news_query_path, "r") as f:
+        queries = json.load(f)
+    keyword_query = list(queries.values())
+    model_name = 'philschmid/bart-large-cnn-samsum'
+    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum", max_length = max_summary_lenght)
+
     # download_news(query1, from_date, delta, page_size, total_results)
     # download_news(query2, from_date, delta, page_size, total_results)
     # download_google_news(query1, from_date, delta, page_size, total_results)
     # Read JSON file and convert to dictionary
     # download_nyt_news(query1, query1, from_date, to_date, page_size)
-    folder_path = "./news_data"
 
+    dataframes_to_concat = []
     # Loop through all the subfolders in the main folder
-    for subdir_name in os.listdir(folder_path):
+    for subdir_name in os.listdir(news_web_url_path):
         # Get the full path of the subfolder
-        subdir_path = os.path.join(folder_path, subdir_name)
+        subdir_path = os.path.join(news_web_url_path, subdir_name)
 
         # Check if the subfolder is actually a folder
         if os.path.isdir(subdir_path):
@@ -351,22 +381,63 @@ if __name__ == "__main__":
                 file_path = os.path.join(subdir_path, filename)
                 if os.path.isfile(file_path) and filename.endswith(".csv"):
                     # Open the file and load its contents into a dictionary
-                    with open(file_path, 'r') as csv_file:
-                        csv_reader = csv.DictReader(csv_file)
-                        for row in csv_reader:
-                            url = row["url"]
-                            response = requests.get(url)
-                            html_content = response.content
-                            # Parse the HTML content using BeautifulSoup
-                            soup = BeautifulSoup(html_content, 'html.parser')
-                            # Parse the HTML content using BeautifulSoup
-                            # Find all the <p> tags in the document
-                            p_tags = soup.find_all('p')
-                            full_page = ""
-                            # Print the content of each <p> tag
-                            for p in p_tags:
-                                full_page += p.text + " "
+                    file_encoding = 'ISO-8859-1'
+                    df = pd.read_csv(file_path, encoding=file_encoding)
+                    # filtered_df = df[df['source'].isin(trustworthy_source)]
+                    df = df[~df["source"].isin(untrustworthy_source)]
+                    df = df[:100]
+                    for index, row in df.iterrows():
+                        # summary = row["summary"]
+                        # summary = u.preprocess_text(summary, tokenizer)
+                        # if u.get_similarity_score(summary, keyword_query) > 0.0:
+                        url = row["url"]
+                        source = row["source"]
+                        top_sentences_str = ""
+                        try:
+                            response = requests.get(url, timeout=20)
+                            base_url = urlparse(response.url).scheme + '://' + urlparse(response.url).hostname
 
-                            for i in range(0, len(full_page), 1000):
-                                chunk = full_page[i:i + 1000]
-                                print(summarizer(chunk))
+                            # if source in trustworthy_source:
+                            if base_url not in untrustworthy_url:
+                                # html_content = response.content
+                                # # Parse the HTML content using BeautifulSoup
+                                # soup = BeautifulSoup(html_content, 'html.parser')
+                                # # Parse the HTML content using BeautifulSoup
+                                # # Find all the <p> tags in the document
+                                # p_tags = soup.find_all('p')
+                                # full_page = ""
+                                # # Print the content of each <p> tag
+                                # for p in p_tags:
+                                #     full_page += p.text + " "
+                                
+                                article = NewsPlease.from_url(response.url)
+                                if article is not None:
+                                    if article.maintext is not None:
+                                        # Preprocess the input text and the query
+                                        full_text = u.preprocess_text(article.maintext)
+                                        top_sentence = u.get_similar_sentences(full_text, keyword_query)
+                                        if len(top_sentence) > 0:
+                                            summary_top_sentence = summarizer(top_sentence)
+                                            print(base_url)
+                                            print(source)
+                                            print(summary_top_sentence)
+                                            summary_df = pd.DataFrame({
+                                            'datetime': index,
+                                            'symbol': stock_name,
+                                            'source': source,
+                                            'summary': summary_top_sentence,
+                                            "base_url": base_url,
+                                            "url": response.url
+                                            }, index=[index])
+                                            dataframes_to_concat.append(summary_df)
+                        except Exception as e:
+                            print("An exception occurred:", e)
+                            print(base_url)
+                            print(source)
+                            print(summary_top_sentence)
+    # Concatenate all the DataFrames into one
+    dataframe = pd.concat(dataframes_to_concat)
+    # Set the `datetime` column as the index
+    df.set_index('date', inplace=True)
+    # Export the DataFrame to a CSV file
+    df.to_csv(news_data_path, index=True)
