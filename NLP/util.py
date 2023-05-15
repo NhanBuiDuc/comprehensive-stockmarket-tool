@@ -268,7 +268,7 @@ def get_similar_sentences(paragraph, queries):
     # Sort the sentences by similarity score (only consider scores > 0.5) and return the top k
     top_sentences = [sentences[i] for i in
                      sorted(range(len(sentences)), key=lambda i: similarity_scores[i], reverse=True)
-                     if similarity_scores[i] > 0.5]
+                     if similarity_scores[i] > 0.1]
 
     return top_sentences
 def get_similar_summary(summaries, queries):

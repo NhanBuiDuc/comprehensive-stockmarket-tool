@@ -341,7 +341,7 @@ if __name__ == "__main__":
     # Init the NewsApiClient
     newsapi = NewsApiClient(api_key=api_key)
     # Set the search parameters
-    query1 = "AAPL"
+    query1 = "MSFT"
     # Define the from_date as the current date and time
     from_date = "2015-01-01"
     to_date = None
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     total_results = 1000
     topK = 5
     max_summary_lenght = 60
-    stock_name = "AAPL"
+    stock_name = "MSFT"
     news_web_url_path = "./NLP/news_web_url"
     news_data_path = "./NLP/news_data/" + stock_name + "/" + stock_name + "_" + "data.csv"
     news_query_folder = "./NLP/news_query"
@@ -392,6 +392,7 @@ if __name__ == "__main__":
                         # if u.get_similarity_score(summary, keyword_query) > 0.0:
                         url = row["url"]
                         source = row["source"]
+                        date = row["date"]
                         top_sentences_str = ""
                         try:
                             response = requests.get(url, timeout=20)
@@ -431,7 +432,7 @@ if __name__ == "__main__":
                                             print(source)
                                             print(summary_top_sentence)
                                             summary_df = pd.DataFrame({
-                                                'date': index,
+                                                'date': date,
                                                 'symbol': stock_name,
                                                 'source': source,
                                                 'summary': summary_top_sentence,
@@ -443,7 +444,6 @@ if __name__ == "__main__":
                             print("An exception occurred:", e)
                             print(base_url)
                             print(source)
-                            print(summary_top_sentence)
     # Concatenate all the DataFrames into one
     dataframe = pd.concat(dataframes_to_concat)
     # Set the `datetime` column as the index
