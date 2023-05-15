@@ -383,7 +383,7 @@ if __name__ == "__main__":
                 if os.path.isfile(file_path) and filename.endswith(".csv"):
                     # Open the file and load its contents into a dictionary
                     file_encoding = 'ISO-8859-1'
-                    df = pd.read_csv(file_path, encoding=file_encoding, index_col="date")
+                    df = pd.read_csv(file_path, encoding=file_encoding)
                     # filtered_df = df[df['source'].isin(trustworthy_source)]
                     df = df[~df["source"].isin(untrustworthy_source)]
                     for index, row in df.iterrows():
@@ -392,6 +392,7 @@ if __name__ == "__main__":
                         # if u.get_similarity_score(summary, keyword_query) > 0.0:
                         url = row["url"]
                         source = row["source"]
+                        date = row["date"]
                         top_sentences_str = ""
                         try:
                             response = requests.get(url, timeout=20)
@@ -431,7 +432,7 @@ if __name__ == "__main__":
                                             print(source)
                                             print(summary_top_sentence)
                                             summary_df = pd.DataFrame({
-                                                'date': index,
+                                                'date': date,
                                                 'symbol': stock_name,
                                                 'source': source,
                                                 'summary': summary_top_sentence,
@@ -443,7 +444,6 @@ if __name__ == "__main__":
                             print("An exception occurred:", e)
                             print(base_url)
                             print(source)
-                            print(summary_top_sentence)
     # Concatenate all the DataFrames into one
     dataframe = pd.concat(dataframes_to_concat)
     # Set the `datetime` column as the index
