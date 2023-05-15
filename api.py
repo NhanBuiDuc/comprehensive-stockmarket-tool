@@ -383,9 +383,10 @@ if __name__ == "__main__":
                 if os.path.isfile(file_path) and filename.endswith(".csv"):
                     # Open the file and load its contents into a dictionary
                     file_encoding = 'ISO-8859-1'
-                    df = pd.read_csv(file_path, encoding=file_encoding)
+                    df = pd.read_csv(file_path, encoding=file_encoding, index_col="date")
                     # filtered_df = df[df['source'].isin(trustworthy_source)]
                     df = df[~df["source"].isin(untrustworthy_source)]
+                    df = df[:10]
                     for index, row in df.iterrows():
                         # summary = row["summary"]
                         # summary = u.preprocess_text(summary, tokenizer)
