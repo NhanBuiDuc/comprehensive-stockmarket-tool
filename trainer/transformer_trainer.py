@@ -322,7 +322,7 @@ class Transformer_trainer(Trainer):
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
         # whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
-        news_X = nlp_u.prepare_news_data(df, self.symbol. self.window_size, self.start, self.end, new_data, self.output_step, self.topk)
+        news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, new_data, self.output_step, self.topk)
         X = np.concatenate((X, news_X), axis=2)
         self.num_feature = X.shape[2]
         # Split train, validation, and test sets

@@ -94,6 +94,7 @@ def prepare_time_series_news_data(data, window_size, output_step, dilation, stri
             X[i][j] = (data[i + (j * dilation)])
     return X
 
+
 def prepare_whether_data(stock_df, window_size, from_date, to_date, output_step, new_data=False):
     # Set the API key
     api_key = 'b7a439cb870a4a09be9114748230705'
@@ -141,6 +142,7 @@ def prepare_whether_data(stock_df, window_size, from_date, to_date, output_step,
     output = prepare_time_series_whether_data(whether_day_array, window_size, output_step, 1)
     return output
 
+
 def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
     # Read the csv file
     # Get the index stock news save with stock dataframe
@@ -154,7 +156,7 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     model_name = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name)
-    
+
     file_path = './NLP/news_data/' + symbol + "_" + "data.csv"
     merged_dataset_path = "./csv/" + symbol + "/" + symbol + "_" + "price_news.csv"
     news_query_folder = "./NLP/news_query"
@@ -175,11 +177,12 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
 
     max_length = max([len(lst) for lst in top_sentences_dict])
     # pad sequences to a fixed length
-    padded_top_sentences_seq = pad_sequences(top_sentences_dict, maxlen=max_length, dtype="long", 
-                                            value=tokenizer.pad_token_id, truncating="post", padding="post")
+    padded_top_sentences_seq = pad_sequences(top_sentences_dict, maxlen=max_length, dtype="long",
+                                             value=tokenizer.pad_token_id, truncating="post", padding="post")
     data = prepare_time_series_news_data(padded_top_sentences_seq, window_size, output_step, 1)
 
     return data
+
 
 # define function to load csv file with given index
 def load_data_with_index(csv_file, index):
@@ -190,24 +193,26 @@ def load_data_with_index(csv_file, index):
     df = df.set_index(index)
     return df
 
+
 def tokenize(text, tokenizer):
     text = preprocess_text(text)
     # Tokenize the text
     tokens = tokenizer.tokenize(text)
-    
+
     # Remove stopwords
     stopwords = tokenizer.get_added_vocab()
     filtered_tokens = [token for token in tokens if token not in stopwords]
-    
+
     # Perform lemmatization
     lemmatized_tokens = [tokenizer.decode(tokenizer.encode(token, add_special_tokens=False)) for token in
                          filtered_tokens]
-    
+
     # Convert tokens to IDs
     token_ids = tokenizer.convert_tokens_to_ids(lemmatized_tokens)
     # Convert IDs back to text
     # processed_text = tokenizer.decode(token_ids)
     return token_ids, lemmatized_tokens
+
 
 def preprocess_text(text):
     # Lowercase the text
@@ -219,7 +224,6 @@ def preprocess_text(text):
     text = re.sub(r'[ \t]+(?=\n)', ' ', text)
     text = re.sub(r'[ \t]+', ' ', text)
     return text
-
 
 
 def extract_sentences(text, queries):
@@ -255,7 +259,6 @@ def get_similarity_score(sentence, queries):
 
 
 def get_similar_sentences(paragraph, queries):
-
     # Split the paragraph into individual sentences
     sentences = extract_sentences(paragraph, queries)
 
@@ -271,8 +274,9 @@ def get_similar_sentences(paragraph, queries):
                      if similarity_scores[i] > 0.5]
 
     return top_sentences
-def get_similar_summary(summaries, queries):
 
+
+def get_similar_summary(summaries, queries):
     # Calculate the similarity score between each sentence and the queries
     similarity_scores = []
     for summary in summaries:
