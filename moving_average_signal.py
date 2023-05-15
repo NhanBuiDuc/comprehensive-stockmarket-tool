@@ -5,7 +5,7 @@ import util
 from util import *
 import numpy as np
 import pandas as pd
-from configs.config import config as cf
+from config import config as cf
 import pandas_ta as ta
 
 # window_size = [10,20,30,50,100,200] for MA
