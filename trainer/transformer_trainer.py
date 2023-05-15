@@ -10,13 +10,13 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 import util as u
-from dataset import Classification_TimeSeriesDataset
+from dataset import Classification_TimeSeriesDataset, MyDataset
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import json
 import numpy as np
 import os
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import StratifiedShuffleSplit
 import datetime
 import NLP.util as nlp_u
@@ -322,7 +322,7 @@ class Transformer_trainer(Trainer):
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
         # whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
-        news_X = nlp_u.prepare_news_data(df, self.symbol. self.window_size, self.start, self.end, new_data, self.output_step, self.topk)
+        news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, new_data, self.output_step, self.topk)
         X = np.concatenate((X, news_X), axis=2)
         self.num_feature = X.shape[2]
         # Split train, validation, and test sets
@@ -380,10 +380,9 @@ class Transformer_trainer(Trainer):
         np.save(y_test_file, y_test)
 
         # create datasets and dataloaders
-        train_dataset = Classification_TimeSeriesDataset(X_train, y_train)
-        valid_dataset = Classification_TimeSeriesDataset(X_valid, y_valid)
-        test_dataset = Classification_TimeSeriesDataset(X_test, y_test)
-
+        train_dataset = MyDataset(X_train, y_train)
+        valid_dataset = MyDataset(X_valid, y_valid)
+        test_dataset = MyDataset(X_test, y_test)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)

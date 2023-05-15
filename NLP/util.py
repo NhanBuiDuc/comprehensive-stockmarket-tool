@@ -93,6 +93,16 @@ def prepare_time_series_news_data(data, window_size, output_step, dilation, stri
         for j in range(window_size):
             X[i][j] = (data[i + (j * dilation)])
     return X
+def prepare_time_series_news_raw_data(data, window_size, output_step, dilation, stride=1):
+    features = data.shape[-1]
+    n_samples = (len(data) - dilation * (window_size - 1) - output_step)
+    X = np.empty((n_samples, window_size), dtype=object)
+    features = len(data)
+
+    for i in range(n_samples):
+        for j in range(window_size):
+            X[i][j] = (data[i + (j * dilation)])
+    return X
 
 def prepare_whether_data(stock_df, window_size, from_date, to_date, output_step, new_data=False):
     # Set the API key
@@ -141,6 +151,7 @@ def prepare_whether_data(stock_df, window_size, from_date, to_date, output_step,
     output = prepare_time_series_whether_data(whether_day_array, window_size, output_step, 1)
     return output
 
+
 def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
     # Read the csv file
     # Get the index stock news save with stock dataframe
@@ -150,12 +161,12 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     # if larger, remove sentences until meet the lenght, than add zero
     # tokenize the text, convert tokens into ids
     # convert into (batch, 14, n) data
-
+    max_string_lenght = 50
     model_name = "bert-base-uncased"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name)
-    
-    file_path = './NLP/news_data/' + symbol + "_" + "data.csv"
+    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
+    file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
     merged_dataset_path = "./csv/" + symbol + "/" + symbol + "_" + "price_news.csv"
     news_query_folder = "./NLP/news_query"
     news_query_file_name = symbol + "_" + "query.json"
@@ -166,21 +177,59 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     df = load_data_with_index(file_path, stock_df.index)
     top_sentences_dict = []
     for index in df.index:
+        
         summary_columns = df.loc[index, "summary"]
-        top_sentences = get_similar_summary(summary_columns)[:topK]
+        if isinstance(summary_columns, str):
 
-        merged_sentences = " ".join(top_sentences)
-        ids, tokens = tokenize(merged_sentences, tokenizer)
-        top_sentences_dict.append(ids)
-
+            top_sentences = summary_columns[:max_string_lenght]
+            ids, tokens = tokenize(top_sentences, tokenizer)
+            top_sentences_dict.append(ids)
+        else:
+            top_sentences = get_similar_summary(summary_columns, queries, sentence_model, topK)
     max_length = max([len(lst) for lst in top_sentences_dict])
     # pad sequences to a fixed length
-    padded_top_sentences_seq = pad_sequences(top_sentences_dict, maxlen=max_length, dtype="long", 
-                                            value=tokenizer.pad_token_id, truncating="post", padding="post")
+    padded_top_sentences_seq = pad_sequences(top_sentences_dict, maxlen=max_length, dtype="long",
+                                             value=tokenizer.pad_token_id, truncating="post", padding="post")
     data = prepare_time_series_news_data(padded_top_sentences_seq, window_size, output_step, 1)
 
     return data
 
+def prepare_raw_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
+    # Read the csv file
+    # Get the index stock news save with stock dataframe
+    # Get top 5 summary text
+    # Merge into 1 text, preprocess
+    # if merged text have lenght < max_input_lenght, add zero to it to meet the lenght
+    # if larger, remove sentences until meet the lenght, than add zero
+    # tokenize the text, convert tokens into ids
+    # convert into (batch, 14, n) data
+    max_string_lenght = 1000
+
+    file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
+    news_query_folder = "./NLP/news_query"
+    news_query_file_name = symbol + "_" + "query.json"
+    news_query_path = news_query_folder + "/" + news_query_file_name
+    with open(news_query_path, "r") as f:
+        queries = json.load(f)
+    keyword_query = list(queries.values())
+    df = load_data_with_index(file_path, stock_df.index)
+    top_sentences_dict = []
+    for index in df.index:
+        
+        summary_columns = df.loc[index, "summary"]
+        if isinstance(summary_columns, str):
+
+            top_sentences = summary_columns[:max_string_lenght]
+            top_sentences_dict.append(top_sentences)
+    top_sentences_dict = np.array(top_sentences_dict)
+    data = prepare_time_series_news_raw_data(top_sentences_dict, window_size, output_step, 1)
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            data[i, j] = f"string_{i}_{j}"
+
+    # Split the strings into a third dimension
+    array_3d = np.array([s.split("_") for s in data.flat]).reshape((data.shape[0], data.shape[1], -1))
+    return array_3d
 # define function to load csv file with given index
 def load_data_with_index(csv_file, index):
     df = pd.read_csv(csv_file, index_col='date')
@@ -190,24 +239,26 @@ def load_data_with_index(csv_file, index):
     df = df.set_index(index)
     return df
 
+
 def tokenize(text, tokenizer):
     text = preprocess_text(text)
     # Tokenize the text
     tokens = tokenizer.tokenize(text)
-    
+
     # Remove stopwords
     stopwords = tokenizer.get_added_vocab()
     filtered_tokens = [token for token in tokens if token not in stopwords]
-    
+
     # Perform lemmatization
     lemmatized_tokens = [tokenizer.decode(tokenizer.encode(token, add_special_tokens=False)) for token in
                          filtered_tokens]
-    
+
     # Convert tokens to IDs
     token_ids = tokenizer.convert_tokens_to_ids(lemmatized_tokens)
     # Convert IDs back to text
     # processed_text = tokenizer.decode(token_ids)
     return token_ids, lemmatized_tokens
+
 
 def preprocess_text(text):
     # Lowercase the text
@@ -219,7 +270,6 @@ def preprocess_text(text):
     text = re.sub(r'[ \t]+(?=\n)', ' ', text)
     text = re.sub(r'[ \t]+', ' ', text)
     return text
-
 
 
 def extract_sentences(text, queries):
@@ -241,12 +291,11 @@ def extract_sentences(text, queries):
     return matching_sentences
 
 
-def get_similarity_score(sentence, queries):
-    model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
-    sentence_embeddings = model.encode(sentence).reshape(1, -1)
+def get_similarity_score(sentence, queries, sentence_model):
+    sentence_embeddings = sentence_model.encode(sentence).reshape(1, -1)
     sim_list = []
     for query in queries:
-        query_embeddings = model.encode(query).reshape(1, -1)
+        query_embeddings = sentence_model.encode(query).reshape(1, -1)
         similarity = cosine_similarity(sentence_embeddings, query_embeddings)
         sim_list.append(similarity)
 
@@ -254,34 +303,27 @@ def get_similarity_score(sentence, queries):
     return similarity
 
 
-def get_similar_sentences(paragraph, queries):
-
+def get_similar_sentences(paragraph, queries, sentence_model, threshold=0.1):
     # Split the paragraph into individual sentences
     sentences = extract_sentences(paragraph, queries)
 
-    # Calculate the similarity score between each sentence and the queries
-    similarity_scores = []
-    for sentence in sentences:
-        similarity = get_similarity_score(sentence, queries)
-        similarity_scores.append(similarity)
+    # Calculate the similarity scores using vectorized operations
+    similarity_scores = np.array([get_similarity_score(sentence, queries, sentence_model) for sentence in sentences])
 
-    # Sort the sentences by similarity score (only consider scores > 0.5) and return the top k
-    top_sentences = [sentences[i] for i in
-                     sorted(range(len(sentences)), key=lambda i: similarity_scores[i], reverse=True)
-                     if similarity_scores[i] > 0.1]
+    # Filter the sentences based on the threshold
+    top_sentences = [sentence for sentence, score in zip(sentences, similarity_scores) if score > threshold]
+
+    # Sort the sentences by similarity score in descending order
+    top_sentences = sorted(top_sentences, key=lambda x: get_similarity_score(x, queries, sentence_model), reverse=True)
 
     return top_sentences
-def get_similar_summary(summaries, queries):
 
-    # Calculate the similarity score between each sentence and the queries
-    similarity_scores = []
-    for summary in summaries:
-        similarity = get_similarity_score(summary, queries)
-        similarity_scores.append(similarity)
 
-    # Sort the sentences by similarity score (only consider scores > 0.5) and return the top k
-    top_sentences = [summaries[i] for i in
-                     sorted(range(len(summaries)), key=lambda i: similarity_scores[i], reverse=True)
-                     if similarity_scores[i] > 0.5]
-
-    return top_sentences
+def get_similar_summary(summaries, queries, sentence_model, topK, threshold=0.1):
+    # Calculate the similarity scores using vectorized operations
+    if isinstance(summaries, list):
+        similarity_scores = np.array([get_similarity_score(summary, queries, sentence_model) for summary in summaries])
+        top_sentences = [summaries[i] for i in np.argsort(similarity_scores)[::-1] if similarity_scores[i] > threshold]
+        return top_sentences[:topK]
+    elif isinstance(summaries, str):
+        return summaries

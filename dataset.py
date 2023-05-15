@@ -18,6 +18,18 @@ class Normalizer:
     def inverse_transform(self, x):
         return (x * self.sd) + self.mu
 
+class MyDataset(Dataset):
+    def __init__(self, x_train, y_train):
+        self.x_train = x_train.astype(np.float32)
+        self.y_train = y_train.astype(np.float32)
+    def __len__(self):
+        return len(self.x_train)
+
+    def __getitem__(self, idx):
+        x = self.x_train[idx]
+        y = self.y_train[idx]
+        return x, y
+
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
