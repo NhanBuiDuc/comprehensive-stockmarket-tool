@@ -2,6 +2,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler, RobustScaler, StandardScaler
+import torch
 
 
 class Normalizer:
@@ -17,6 +18,20 @@ class Normalizer:
 
     def inverse_transform(self, x):
         return (x * self.sd) + self.mu
+    
+class MinMaxScaler():
+    def __init__(self):
+        self.min_val = None
+        self.max_val = None
+
+    def fit_transform(self, x):
+        self.min_val = torch.min(x, dim=0).values
+        self.max_val = torch.max(x, dim=0).values
+        normalized_x = (x - self.min_val) / (self.max_val - self.min_val)
+        return normalized_x
+
+    def inverse_transform(self, x):
+        return (x * (self.max_val - self.min_val)) + self.min_val
 
 
 class TimeSeriesDataset(Dataset):
@@ -73,3 +88,15 @@ class Classification_Dataset(Dataset):
 
     def __getitem__(self, idx):
         return self.x[idx], self.y[idx]
+    
+class PredictPrice_TimeSeriesDataset(Dataset):
+    def __init__(self, x, y):
+        x = np.expand_dims(x, 2) # in our case, we have only 1 feature, so we need to convert `x` into [batch, sequence, features] for LSTM
+        self.x = x.astype(np.float32)
+        self.y = y.astype(np.float32)
+        
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, idx):
+        return (self.x[idx], self.y[idx])
