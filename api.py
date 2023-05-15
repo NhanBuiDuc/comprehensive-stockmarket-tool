@@ -341,7 +341,7 @@ if __name__ == "__main__":
     # Init the NewsApiClient
     newsapi = NewsApiClient(api_key=api_key)
     # Set the search parameters
-    query1 = "MSFT"
+    query1 = "AAPL"
     # Define the from_date as the current date and time
     from_date = "2015-01-01"
     to_date = None
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     total_results = 1000
     topK = 5
     max_summary_lenght = 60
-    stock_name = "MSFT"
+    stock_name = "AAPL"
     news_web_url_path = "./NLP/news_web_url"
     news_data_path = "./NLP/news_data/" + stock_name + "/" + stock_name + "_" + "data.csv"
     news_query_folder = "./NLP/news_query"
