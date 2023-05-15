@@ -341,7 +341,7 @@ if __name__ == "__main__":
     # Init the NewsApiClient
     newsapi = NewsApiClient(api_key=api_key)
     # Set the search parameters
-    query1 = "AAPL"
+    query1 = "MSFT"
     # Define the from_date as the current date and time
     from_date = "2015-01-01"
     to_date = None
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     total_results = 1000
     topK = 5
     max_summary_lenght = 60
-    stock_name = "AAPL"
+    stock_name = "MSFT"
     news_web_url_path = "./NLP/news_web_url"
     news_data_path = "./NLP/news_data/" + stock_name + "/" + stock_name + "_" + "data.csv"
     news_query_folder = "./NLP/news_query"
@@ -386,7 +386,6 @@ if __name__ == "__main__":
                     df = pd.read_csv(file_path, encoding=file_encoding, index_col="date")
                     # filtered_df = df[df['source'].isin(trustworthy_source)]
                     df = df[~df["source"].isin(untrustworthy_source)]
-                    df = df[:10]
                     for index, row in df.iterrows():
                         # summary = row["summary"]
                         # summary = u.preprocess_text(summary, tokenizer)
