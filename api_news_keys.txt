@@ -10,3 +10,6 @@ Access Token Secret:
 iMXwExuRJfdlFO239cHkcH8AZLY2A90o9rM4grQXr891z
 Weather:
 b7a439cb870a4a09be9114748230705
+
+
+#### API finnhub: chdrr1pr01qi6ghjsatgchdrr1pr01qi6ghjsau0

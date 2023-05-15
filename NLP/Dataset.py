@@ -16,19 +16,15 @@ class GPReviewDataset(Dataset):
     def __getitem__(self, item):
         review = str(self.reviews[item])
         target = self.targets[item]
+        #
+        # encoding = self.tokenizer.encode_plus(
+        #     review,
+        #     add_special_tokens=True,
+        #     max_length=self.max_len,
+        #     return_token_type_ids=False,
+        #     pad_to_max_length=True,
+        #     return_attention_mask=True,
+        #     return_tensors='pt',
+        # )
 
-        encoding = self.tokenizer.encode_plus(
-            review,
-            add_special_tokens=True,
-            max_length=self.max_len,
-            return_token_type_ids=False,
-            pad_to_max_length=True,
-            return_attention_mask=True,
-            return_tensors='pt',
-        )
-
-        return {
-            'review_text': review,
-            'input_ids': encoding['data'],
-            'targets': torch.tensor(target, dtype=torch.long)
-        }
+        return review, torch.tensor(target, dtype=torch.long)
