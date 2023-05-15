@@ -21,7 +21,7 @@ import numpy as np
 import torch
 from NLP import util as u
 from newsplease import NewsPlease
-
+from sentence_transformers import SentenceTransformer
 untrustworthy_url = ["https://www.zac.com",
                      "https://www.thefly.com",
                      "https://www.investing.com",
@@ -341,7 +341,7 @@ if __name__ == "__main__":
     # Init the NewsApiClient
     newsapi = NewsApiClient(api_key=api_key)
     # Set the search parameters
-    query1 = "MSFT"
+    query1 = "AAPL"
     # Define the from_date as the current date and time
     from_date = "2015-01-01"
     to_date = None
@@ -350,7 +350,7 @@ if __name__ == "__main__":
     total_results = 1000
     topK = 5
     max_summary_lenght = 60
-    stock_name = "MSFT"
+    stock_name = "AAPL"
     news_web_url_path = "./NLP/news_web_url"
     news_data_path = "./NLP/news_data/" + stock_name + "/" + stock_name + "_" + "data.csv"
     news_query_folder = "./NLP/news_query"
@@ -360,8 +360,8 @@ if __name__ == "__main__":
         queries = json.load(f)
     keyword_query = list(queries.values())
     model_name = 'philschmid/bart-large-cnn-samsum'
-    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum", max_length=max_summary_lenght)
-
+    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
+    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
     # download_news(query1, from_date, delta, page_size, total_results)
     # download_news(query2, from_date, delta, page_size, total_results)
     # download_google_news(query1, from_date, delta, page_size, total_results)
@@ -416,7 +416,7 @@ if __name__ == "__main__":
                                     if article.maintext is not None:
                                         # Preprocess the input text and the query
                                         full_text = u.preprocess_text(article.maintext)
-                                        top_sentence = u.get_similar_sentences(full_text, keyword_query)
+                                        top_sentence = u.get_similar_sentences(full_text, keyword_query, sentence_model)
                                         if len(top_sentence) > 0:
                                             summary_top_sentence = summarizer(top_sentence)
                                             # summary_top_sentence = summary_top_sentence[0]["summary_text"]
