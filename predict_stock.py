@@ -165,8 +165,7 @@ class Predict_Stock_Price:
     
 if __name__ == "__main__":
     pred = Predict_Stock_Price()
-    data_date, data_close_price, num_data_points = pred.get_data_df(new_data=False)
-    print(num_data_points)
+    data_date, data_close_price, num_data_points = pred.get_data_df(new_data=True)
 
     
         

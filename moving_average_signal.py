@@ -1,30 +1,38 @@
 import os 
+import json
 import tensorflow as tf
 import datetime
 import util
 from util import *
 import numpy as np
 import pandas as pd
-from config import config as cf
+from configs.price_config import price_cf as cf
 import pandas_ta as ta
 
 # window_size = [10,20,30,50,100,200] for MA
 class Signal:
     def __init__(self):
         pass
+
     def get_start_date(self, date_length=200, end_date=None):
         end_date = datetime.strptime(end_date, '%Y-%m-%d')
         start_day = end_date - datetime.timedelta(days=date_length)
         start_day = start_day.strftime(end_date, '%Y-%m-%d')
         return start_day
-    def get_stock_dataframe(self, date_length=200):
+    
+    def get_stock_dataframe(self):
         symbol = cf['alpha_vantage']['symbol']
-        api_key = cf["alpha_vantage"]["api_key"]
+        api_key = cf["alpha_vantage"]["key"]
         filename = symbol + '.csv'
-        path = './technical_signal/'
-        df = download_stock_csv_file(path, filename, symbol, date_length)
-        df = df.iloc[-200:]
+        
+        src_path = './csv/'
+        if not file_exist(src_path, filename):
+            df = download_stock_csv_file(src_path, filename, api_key, 14)
+        df = pd.read_csv(src_path + filename)
+        #df = df.iloc[-date_length:]
+        df.rename(columns={df.columns[0]: 'date'}, inplace=True)
         df = pd.DataFrame({
+            'date':df['date'],
             '4. close': df['close'],
             '1. open': df['open'],
             '2. high': df['high'],
@@ -265,14 +273,17 @@ class Signal:
         return signal
 
 
-    def define_signal(self, path, filename, new_data):
-        if new_data:
-            df = self.get_stock_dataframe(date_length=200)
-        else:
-            if not file_exist(path, file_name=filename):
-                df = self.get_stock_dataframe(date_length=200)
-            else:
-                df = read_csv_file(path, filename)
+    def define_signal(self, path='./technical_signal/'):
+        # if new_data:
+        #     df = self.get_stock_dataframe(date_length=200)
+        # else:
+        #     if not file_exist(path, file_name=filename):
+        #         df = self.get_stock_dataframe(date_length=200)
+        #     else:
+        #         df = read_csv_file(path, filename)
+
+        df = self.get_stock_dataframe()
+
         for i in [10, 20, 30, 50, 100, 200]:
             sma_s = self.sma_signal(df, i)
             df['s_SMA_' + str(i)] = sma_s
@@ -308,10 +319,21 @@ class Signal:
 
         uo_s = self.uo_signal(df)
         df['s_UO'] = uo_s
-        
-        name = str(cf['alpha_vantage']['symbol']) +'_signal' +'.csv'
-        df.to_csv('./technical_signal/'+name)
 
+        file_name = cf['alpha_vantage']['symbol'] + '_signal.csv'
+        name = path + file_name
+        #save to csv file
+        df.to_csv(name)
+
+        #save to json file
+        df['date'] = pd.to_datetime(df['date'])
+        df['date'] = df['date'].dt.strftime('%d/%m/%Y')
+        df = df.fillna("")
+        df = df.to_dict(orient='records')
+        file_path = path + cf['alpha_vantage']['symbol'] + '_signal.json'
+        # Save the data to a JSON file with the specified path
+        with open(file_path, 'w') as file:
+            file.write(json.dumps(df, indent=2))
         return df
 
 
@@ -319,5 +341,5 @@ class Signal:
 if __name__ == "__main__":
     print(os.getcwd())
     signal = Signal()
-    df = signal.define_signal(path='./technical_signal', filename='AAPL.csv', new_data=True)
+    df = signal.define_signal(path='./technical_signal/')
     
