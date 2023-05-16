@@ -162,13 +162,10 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     # if larger, remove sentences until meet the lenght, than add zero
     # tokenize the text, convert tokens into ids
     # convert into (batch, 14, n) data
-    max_string_lenght = 10
+    max_string_lenght = 50
     model_name = "bert-base-uncased"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModel.from_pretrained(model_name)
     sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
     file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
-    merged_dataset_path = "./csv/" + symbol + "/" + symbol + "_" + "price_news.csv"
     news_query_folder = "./NLP/news_query"
     news_query_file_name = symbol + "_" + "query.json"
     news_query_path = news_query_folder + "/" + news_query_file_name
@@ -183,15 +180,16 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
         if isinstance(summary_columns, str):
 
             top_sentences = summary_columns[:max_string_lenght]
-            ids, tokens = tokenize(top_sentences, tokenizer)
+            ids = sentence_tokenize(top_sentences, sentence_model)
             top_sentences_dict.append(ids)
         else:
-            top_sentences = get_similar_summary(summary_columns, queries, sentence_model, topK)
-    max_length = max([len(lst) for lst in top_sentences_dict])
+            top_sentences = get_similar_summary(summary_columns, keyword_query, sentence_model, topK)
+    # max_length = max([len(lst) for lst in top_sentences_dict])
     # pad sequences to a fixed length
-    padded_top_sentences_seq = pad_sequences(top_sentences_dict, maxlen=max_length, dtype="long",
-                                             value=tokenizer.pad_token_id, truncating="post", padding="post")
-    data = prepare_time_series_news_data(padded_top_sentences_seq, window_size, output_step, 1)
+    # padded_top_sentences_seq = pad_sequences(top_sentences_dict, maxlen=max_length, dtype="long",
+    #                                          value=tokenizer.pad_token_id, truncating="post", padding="post")
+    top_sentences_dict = np.array(top_sentences_dict)
+    data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
 
     return data
 
@@ -261,6 +259,14 @@ def tokenize(text, tokenizer):
     return token_ids, lemmatized_tokens
 
 
+def sentence_tokenize(text, sentence_model):
+
+    # Encode the sentences using the sentence model
+    sentence_embeddings = sentence_model.encode(text)
+
+    return sentence_embeddings
+
+
 def preprocess_text(text):
     # Lowercase the text
     text = text.lower()
@@ -304,7 +310,7 @@ def get_similarity_score(sentence, queries, sentence_model):
     return similarity
 
 
-def get_similar_sentences(paragraph, queries, sentence_model, threshold=0.1):
+def get_similar_sentences(paragraph, queries, sentence_model, threshold=0.0):
     if isinstance(paragraph, list):
         # Split the paragraph into individual sentences
         sentences = extract_sentences(paragraph, queries)
@@ -333,7 +339,7 @@ def get_similar_sentences(paragraph, queries, sentence_model, threshold=0.1):
         else:
             return []
 
-def get_similar_summary(summaries, queries, sentence_model, topK, threshold=0.1):
+def get_similar_summary(summaries, queries, sentence_model, topK, threshold=0.5):
     # Calculate the similarity scores using vectorized operations
     if isinstance(summaries, list):
         similarity_scores = np.array(get_similarity_score(summaries, queries, sentence_model))
@@ -555,7 +561,7 @@ def download_finhub_news(symbol, from_date, to_date, save_folder, new_data):
             df = pd.read_csv(filepath, index_col='date')
             return df
         else:
-            stop_date = to_date.strptime(from_date, "%Y-%m-%d")
+            stop_date = datetime.strptime(to_date, "%Y-%m-%d")
             from_date_dt = datetime.strptime(from_date, "%Y-%m-%d")
 
             final_df = pd.DataFrame()
@@ -579,6 +585,73 @@ def download_finhub_news(symbol, from_date, to_date, save_folder, new_data):
             # Export the DataFrame to a CSV file
             final_df.to_csv(filepath, index=True)
             return final_df
+    else:
+        stop_date = datetime.strptime(to_date, "%Y-%m-%d")
+        from_date_dt = datetime.strptime(from_date, "%Y-%m-%d")
+
+        final_df = pd.DataFrame()
+        finnhub_client = finnhub.Client(api_key="chdrr1pr01qi6ghjsatgchdrr1pr01qi6ghjsau0")
+        while from_date_dt <= stop_date:
+            to_date = increase_n_days(from_date, 10)
+            df = pd.DataFrame(finnhub_client.company_news(symbol, _from=from_date, to=to_date))
+            df['datetime'] = df['datetime'].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d'))
+            df = df.sort_values('datetime')
+            df.drop_duplicates(subset='id', keep='first', inplace=True)
+            final_df = pd.concat([final_df, df])
+            from_date_dt = datetime.strptime(to_date, "%Y-%m-%d")
+            from_date = from_date_dt.strftime('%Y-%m-%d')
+        final_df.drop_duplicates(subset='id', keep='first', inplace=True)
+        final_df = final_df.rename(columns={'datetime': 'date'})
+        # Convert the `datetime` column to a pandas datetime format
+        final_df['date'] = pd.to_datetime(final_df['date'])
+        # # Set the `datetime` column as the index
+        final_df.set_index('date', inplace=True)
+        os.makedirs(save_folder, exist_ok=True)
+        # Export the DataFrame to a CSV file
+        final_df.to_csv(filepath, index=True)
+        return final_df
+    
+
+
+
+def download_benzinga_news(symbol, from_date, to_date, save_folder, new_data):
+    api_key = '936c241cdb1b4620b3bad6c77ba3ae4b'
+    endpoint = 'https://api.benzinga.com/api/v2/news'
+
+    # Set up query parameters
+    params = {
+        'tickers': symbol,  # Symbol passed as argument
+        'token': api_key,
+    }
+
+    # Make the API request
+    response = requests.get(endpoint, params=params)
+    data = response.json()
+
+    # Process the response
+    if response.status_code == 200:
+        # Extract and save relevant information
+        filename = f'{symbol}_benzinga_news.csv'
+        filepath = os.path.join(save_folder, filename)
+        
+        df = pd.DataFrame.from_records(data['articles'])
+        df = df[['published_at', 'title', 'content']]
+        df = df.rename(columns={'published_at': 'date'})
+        df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
+        df.set_index('date', inplace=True)
+        
+        os.makedirs(save_folder, exist_ok=True)
+        
+        if os.path.exists(filepath):
+            if not new_data:
+                print("File already exists. Skipping download.")
+                df_existing = pd.read_csv(filepath, index_col='date')
+                return pd.concat([df_existing, df])
+        
+        df.to_csv(filepath, index=True)
+        return df
+    else:
+        print("Error occurred while fetching news:", data['error'])
 
 def download_google_news(symbol, from_date, to_date, save_folder, new_data):
 
@@ -736,21 +809,18 @@ def download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_dat
             while from_date_obj <= current_date_obj:
                 # Format the current date as time_from and time_to
                 params['time_from'] = from_date_obj.strftime('%Y%m%dT%H%M')
-                params['time_to'] = from_date_obj.strftime('%Y%m%dT%H%M')
+                params['time_to'] = (from_date_obj + timedelta(days=3)).strftime('%Y%m%dT%H%M') 
 
                 # Make the API request to get the daily news articles
                 response = requests.get(api_endpoint, params=params)
                 data = response.json()
-                articles.extend(data['articles'])
+                articles.extend(data['feed'])
 
-                from_date_obj += timedelta(days=1)
+                from_date_obj += timedelta(days=3)
 
             # Convert the articles list into a DataFrame
             df = pd.DataFrame.from_records(articles)
-            df = df.drop(columns=['date'])
-            df = df.rename(columns={'link': 'url'})
-            df = df.rename(columns={'datetime': 'date'})
-            df = df.rename(columns={'media': 'source'})
+            df = df.rename(columns={'time_published': 'date'})
             # Convert the `date` column to a pandas datetime format
             df['date'] = pd.to_datetime(df['date'])
             # Convert 'date' to the format 'year-month-day'
@@ -761,18 +831,111 @@ def download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_dat
             # Save the DataFrame to the specified path
             df.to_csv(filepath, index=True)
             return df
+    
+def download_bing_news(symbol, from_date, to_date, save_folder, new_data):
+    filename = f'{symbol}_bing_url.csv'
+    filepath = os.path.join(save_folder, filename)
+    if os.path.exists(filepath):
+        if not new_data:
+            print("File already exists. Skipping download.")
+            df = pd.read_csv(filepath, index_col='date')
+            return df
+        else:
+            # Perform the Bing News API request
+            news_list = get_bing_news(symbol, from_date, to_date)
+
+            # Convert the news list to a DataFrame
+            df = pd.DataFrame(news_list)
+            df.set_index('date', inplace=True)
+
+            # Save the DataFrame to the specified path
+            df.to_csv(filepath, index=True)
+            return df
+    else:
+        # Perform the Bing News API request
+        news_list = get_bing_news(symbol, from_date, to_date)
+
+        # Convert the news list to a DataFrame
+        df = pd.DataFrame(news_list)
+        df.set_index('date', inplace=True)
+
+        # Create the folder if it doesn't exist
+        os.makedirs(save_folder, exist_ok=True)
+
+        # Save the DataFrame to the specified path
+        df.to_csv(filepath, index=True)
+        return df
+
+def get_bing_news(symbol, from_date, to_date):
+    # Define the Bing News API endpoint
+    api_endpoint = 'https://api.bing.microsoft.com/v7.0/news/search'
+
+    # Set up the request headers with the subscription key
+    headers = {
+        "X-BingApis-SDK": "true",
+        "X-RapidAPI-Key": "09bd01b3eemsh2b008d6bf606fc4p166c60jsnf4070b8bf6eb",
+        "X-RapidAPI-Host": "bing-news-search1.p.rapidapi.com"
+    }
+
+    # Set the query parameters
+    params = {
+        'q': symbol,
+        'count': 10,
+        'freshness': 'Day',
+        'mkt': 'en-US',
+        'safeSearch': 'Off',
+        'fromDate': from_date,
+        'toDate': to_date
+    }
+
+    # Send the GET request to the API
+    response = requests.get(api_endpoint, headers=headers, params=params)
+    data = response.json()
+
+    # Extract the articles from the response
+    articles = data.get('value', [])
+
+    # Process the articles as needed
+    news_list = []
+    for article in articles:
+        title = article.get('name')
+        description = article.get('description')
+        url = article.get('url')
+        published_at = article.get('datePublished')
+
+        # Add the article details to the list
+        news_list.append({
+            'title': title,
+            'description': description,
+            'url': url,
+            'published_at': published_at
+        })
+
+    return news_list
+
 def download_news(symbol, from_date, window_size, new_data = True):
     to_date = datetime.now().strftime('%Y-%m-%d')
     save_folder = f'./NPL/news_web_url/{symbol}/'
     file_name = f'{symbol}_url.csv'
+    save_path = os.path.join(save_folder, file_name)
+    main_df = pd.DataFrame()
     if not os.path.exists(save_folder + file_name):
         # Download news from all sources with the specified date range
-        google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
-        finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data)
-        alphavantage_df = download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_data)
+        # google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
+        finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data = False)
+        main_df = pd.concat([main_df, finhub_df])
+        benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data = False)
+        main_df = pd.concat([main_df, benzema_df])
+        
+        # alphavantage_df = download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_data)
+        # bing_df = download_bing_news(symbol, from_date, to_date, save_folder, new_data = True)
+        # main_df = pd.concat([main_df, bing_df])
 
-        # Merge the dataframes and save to CSV
-        main_df = pd.concat([apinews_df, google_df, finhub_df, alphavantage_df])
+        main_df.to_csv(save_path, index=True)
+        # Filter the dataframe by URL
+        window_df = main_df[main_df['URL'].isin(main_df['URL'].unique())]
+
+        # Save the updated dataframe to the CSV file
         main_df.to_csv(save_path, index=False)
     else:
         # Read the existing CSV file
