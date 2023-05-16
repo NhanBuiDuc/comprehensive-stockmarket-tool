@@ -1,9 +1,9 @@
 transformer_cf = {
     "model": {
         "transformer_1": {
-            "nhead": 58,
-            "num_encoder_layers": 10,
-            "dim_feedforward": 10,
+            "nhead": 3,
+            "num_encoder_layers": 500,
+            "dim_feedforward": 500,
             "dropout": 0.2,
             "window_size": 7,
             "output_step": 1,
@@ -22,7 +22,7 @@ transformer_cf = {
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
                 "patient": 100,
-                "start": "2022-05-16",
+                "start": "2022-07-01",
                 "end": None,
                 "best_model": True,
                 "early_stop": True,

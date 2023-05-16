@@ -168,6 +168,7 @@ class Transformer_trainer(Trainer):
         return self.model
 
     def eval(self, model):
+        
         train_dataloader, valid_dataloader, test_dataloader = self.prepare_eval_data()
         # Get the current date and time
         current_datetime = datetime.datetime.now()
@@ -196,11 +197,13 @@ class Transformer_trainer(Trainer):
             f.write("\n")
 
         model.structure.to(self.device)
-        for i in range(0, 3, 1):
+        for i in range(1, 3, 1):
             if i == 0:
+                torch.cuda.empty_cache()
                 dataloader = train_dataloader
                 print_string = "Train evaluate " + self.model_full_name
             if i == 1:
+                torch.cuda.empty_cache()
                 dataloader = valid_dataloader
                 print_string = "Valid evaluate " + self.model_full_name
             elif i == 2:
@@ -219,10 +222,10 @@ class Transformer_trainer(Trainer):
                 # Move inputs and labels to device
                 inputs = inputs.to(self.device)
                 labels = labels.to(self.device)
-
+                torch.cuda.empty_cache()
                 # Forward pass
                 outputs = model.predict(inputs)
-
+                torch.cuda.empty_cache()
                 target_list = torch.cat([target_list, labels], dim=0)
                 output_list = torch.cat([output_list, outputs], dim=0)
                 if "accuracy" or "precision" or "f1" in self.evaluate:
