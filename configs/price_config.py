@@ -1,4 +1,4 @@
-price_config = {
+price_cf = {
     "alpha_vantage": {
         "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
         "symbol": "MSFT",
