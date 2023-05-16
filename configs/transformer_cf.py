@@ -2,8 +2,8 @@ transformer_cf = {
     "model": {
         "transformer_1": {
             "nhead": 3,
-            "num_encoder_layers": 500,
-            "dim_feedforward": 500,
+            "num_encoder_layers": 50,
+            "dim_feedforward": 50,
             "dropout": 0.2,
             "window_size": 7,
             "output_step": 1,
@@ -14,7 +14,7 @@ transformer_cf = {
         "transformer_1":
             {
                 "device": "cuda",  # "cuda" or "cpu"
-                "batch_size": 64,
+                "batch_size": 2,
                 "num_epoch": 200,
                 "learning_rate": 0.001,
                 "loss": "bce",
