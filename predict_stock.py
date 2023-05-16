@@ -40,15 +40,15 @@ class Predict_Stock_Price:
         file_name = str(stock_key) + '.csv'
         if new_data == True:
             df = u.download_stock_csv_file(self.data_path, file_name, symbol=stock_key, window_size=14)
-        elif not u.file_exist(self.data_path, file_name):
-            df = u.download_stock_csv_file(self.data_path, file_name, symbol=stock_key, window_size=14)
-        else:
-            df = u.read_csv_file(self.data_path, file_name)
-
-        state_date = "2018-01-01"
+        elif not u.file_exist(self.data_path, file_name) and (new_data == False):
+            df = u.download_stock_csv_file(self.data_path, file_name, symbol=stock_key, window_size=14)   
+        
+        df = pd.read_csv(self.data_path + file_name)
+        start_day = pd.to_datetime('2018-01-01')
         df.rename(columns={df.columns[0]: 'date'}, inplace=True)
         df['date'] = pd.to_datetime(df['date'])
-        df = df[df['date'] > '2018-01-01']
+        df = df.loc[df['date'] > '2018-01-01']
+
         
         data_date = df['date'].tolist()
         data_close_price = df['adjusted close'].values
@@ -165,8 +165,9 @@ class Predict_Stock_Price:
     
 if __name__ == "__main__":
     pred = Predict_Stock_Price()
-    data_date, data_close_price, num_data_points = pred.get_data_df(new_data=True)
+    data_date, data_close_price, num_data_points = pred.get_data_df(new_data=False)
     print(num_data_points)
+
     
         
         

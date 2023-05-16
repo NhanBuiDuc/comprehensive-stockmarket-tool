@@ -71,7 +71,7 @@ def download_stock_csv_file(path, file_name, symbol, window_size):
     final_df = pd.concat([final_df, cmf], axis=1)
 
     # Save the data to a CSV file
-    final_df.to_csv(f"{path}{file_name}")
+    final_df.to_csv(f"{path}{file_name}", mode='w')
     return final_df
 
 
