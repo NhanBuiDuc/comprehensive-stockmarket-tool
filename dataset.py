@@ -25,13 +25,15 @@ class MinMaxScaler():
         self.max_val = None
 
     def fit_transform(self, x):
-        self.min_val = torch.min(x, dim=0).values
-        self.max_val = torch.max(x, dim=0).values
-        normalized_x = (x - self.min_val) / (self.max_val - self.min_val)
-        return normalized_x
+        x_tensor = torch.tensor(x)
+        self.min_val = torch.min(x_tensor, dim=0).values
+        self.max_val = torch.max(x_tensor, dim=0).values
+        normalized_x = (x_tensor - self.min_val) / (self.max_val - self.min_val)
+        return normalized_x.numpy()
 
     def inverse_transform(self, x):
-        return (x * (self.max_val - self.min_val)) + self.min_val
+        x_tensor = torch.tensor(x)
+        return (x_tensor * (self.max_val - self.min_val)) + self.min_val
 
 class MyDataset(Dataset):
     def __init__(self, x_train, y_train):

@@ -133,7 +133,7 @@ class Predict_Stock_Price:
 
         self.model.eval()
                 
-        model_name = config['alpha_vantage']['key'] + '_price.pth'
+        model_name = config['alpha_vantage']['symbol'] + '_price.pth'
         torch.save(self.model.state_dict(), self.models_path + model_name)
         
     def predict_model(self, data_x_unseen):
@@ -143,7 +143,7 @@ class Predict_Stock_Price:
         prediction = self.model(x)
         prediction = prediction.cpu().detach().numpy()
         prediction = self.scaler.inverse_transform(prediction)[0]
-        return round(prediction, 2)
+        return prediction
     
     def run_model(self):
         data_date, data_close_price, num_data_points = self.get_data_df(new_data=False)
@@ -153,19 +153,21 @@ class Predict_Stock_Price:
         dataset_val = dts.PredictPrice_TimeSeriesDataset(data_x_val, data_y_val)
         if config['training']['is_training'] == True:
             self.training_model(dataset_train=dataset_train, dataset_val=dataset_val, is_training=True)
-            model_name = config['alpha_vantage']['key'] + '_price.pth'
+            model_name = config['alpha_vantage']['symbol'] + '_price.pth'
             self.model.load_state_dict(torch.load(self.models_path + model_name))
             predict_next_day = self.predict_model(data_x_unseen)
         else:
-            model_name = config['alpha_vantage']['key'] + '_price.pth'
+            model_name = config['alpha_vantage']['symbol'] + '_price.pth'
             self.model.load_state_dict(torch.load(self.models_path + model_name))
             predict_next_day = self.predict_model(data_x_unseen)
         return predict_next_day
     
     
 if __name__ == "__main__":
+
     pred = Predict_Stock_Price()
-    data_date, data_close_price, num_data_points = pred.get_data_df(new_data=True)
+    price = pred.run_model()
+    print(price)
 
     
         
