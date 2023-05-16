@@ -49,6 +49,7 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training, d
         y = y.to(device)
 
         out = model.predict(x)
+        torch.cuda.empty_cache()
         loss = criterion(out, y)
         if is_training:
             if loss != torch.nan:
