@@ -14,7 +14,7 @@ transformer_cf = {
         "transformer_1":
             {
                 "device": "cuda",  # "cuda" or "cpu"
-                "batch_size": 2,
+                "batch_size": 16,
                 "num_epoch": 200,
                 "learning_rate": 0.001,
                 "loss": "bce",
