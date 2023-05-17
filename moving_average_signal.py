@@ -319,6 +319,11 @@ class Signal:
 
         uo_s = self.uo_signal(df)
         df['s_UO'] = uo_s
+        
+        df['SELL'] = (df.iloc[:, 36:] == -1).sum(axis=1)
+        df['NEU'] = (df.iloc[:, 36:] == 0).sum(axis=1)
+        df['BUY'] = (df.iloc[:, 36:] == 1).sum(axis=1)
+        
 
         file_name = cf['alpha_vantage']['symbol'] + '_signal.csv'
         name = path + file_name
