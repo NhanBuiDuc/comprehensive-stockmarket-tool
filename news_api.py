@@ -20,6 +20,7 @@ import numpy as np
 from NLP import util as u
 from newsplease import NewsPlease
 from sentence_transformers import SentenceTransformer
+
 untrustworthy_url = ["https://www.zac.com",
                      "https://www.thefly.com",
                      "https://www.investing.com",
@@ -33,8 +34,6 @@ trustworthy_url = ["zac.com",
 trustworthy_source = ["CNBC", "GuruFocus"
                       ]
 untrustworthy_source = ["Nasdaq", "Thefly.com", "Yahoo"]
-
-
 
 if __name__ == "__main__":
 
@@ -65,10 +64,9 @@ if __name__ == "__main__":
     # Read JSON file and convert to dictionary
     # download_nyt_news(query1, query1, from_date, to_date, page_size)
 
-
     # download_finhub_news(stock_name, from_date, news_web_url_path)
-
-    u.download_news(symbol, from_date=from_date, window_size=7)
+    #
+    # u.download_news(symbol, from_date=from_date, window_size=7)
 
     dataframes_to_concat = []
     # Loop through all the subfolders in the main folder
@@ -88,7 +86,6 @@ if __name__ == "__main__":
                     df = pd.read_csv(file_path, encoding=file_encoding)
                     # filtered_df = df[df['source'].isin(trustworthy_source)]
                     df = df[~df["source"].isin(untrustworthy_source)]
-                    df = df[:10]
                     for index, row in df.iterrows():
                         # summary = row["summary"]
                         # summary = u.preprocess_text(summary, tokenizer)
@@ -103,23 +100,13 @@ if __name__ == "__main__":
 
                             # if source in trustworthy_source:
                             if base_url not in untrustworthy_url:
-                                # html_content = response.content
-                                # # Parse the HTML content using BeautifulSoup
-                                # soup = BeautifulSoup(html_content, 'html.parser')
-                                # # Parse the HTML content using BeautifulSoup
-                                # # Find all the <p> tags in the document
-                                # p_tags = soup.find_all('p')
-                                # full_page = ""
-                                # # Print the content of each <p> tag
-                                # for p in p_tags:
-                                #     full_page += p.text + " "
-
                                 article = NewsPlease.from_url(response.url)
                                 if article is not None:
                                     if article.maintext is not None:
                                         # Preprocess the input text and the query
                                         full_text = u.preprocess_text(article.maintext)
-                                        top_sentence = u.get_similar_sentences(full_text, keyword_query, sentence_model)[:2]
+                                        top_sentence = u.get_similar_sentences(full_text, keyword_query,
+                                                                               sentence_model)[:5]
                                         if len(top_sentence) > 0:
                                             summary_top_sentence = summarizer(top_sentence)
                                             # summary_top_sentence = summary_top_sentence[0]["summary_text"]
@@ -131,6 +118,7 @@ if __name__ == "__main__":
 
                                             # Merge the unique summaries into a single string
                                             summary_top_sentence = " ".join(unique_summaries)
+                                            print(date)
                                             print(base_url)
                                             print(source)
                                             print(summary_top_sentence)
@@ -145,6 +133,7 @@ if __name__ == "__main__":
                                             dataframes_to_concat.append(summary_df)
                         except Exception as e:
                             print("An exception occurred:", e)
+                            print(date)
                             print(base_url)
                             print(source)
     # Concatenate all the DataFrames into one
