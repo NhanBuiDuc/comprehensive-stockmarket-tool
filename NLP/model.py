@@ -13,6 +13,7 @@ class SentimentClassifier(nn.Module):
         self.out = nn.Linear(self.bert.config.hidden_size, n_classes)
         self.tokenizer = BertTokenizer.from_pretrained(self.PRE_TRAINED_MODEL_NAME)
         self.softmax = nn.Softmax(dim=1)
+
     def forward(self, x):
         encoded_input = self.tokenizer(x, padding=True, truncation=True, return_tensors='pt')
         encoded_input.data["input_ids"] = encoded_input.data["input_ids"].to("cuda")

@@ -13,3 +13,5 @@ b7a439cb870a4a09be9114748230705
 
 
 #### API finnhub: chdrr1pr01qi6ghjsatgchdrr1pr01qi6ghjsau0
+
+#### API Benzinga: 936c241cdb1b4620b3bad6c77ba3ae4b

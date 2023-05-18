@@ -42,12 +42,10 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training, d
     for idx, (x, y) in enumerate(dataloader):
         if is_training:
             optimizer.zero_grad()
-
         batchsize = x.shape[0]
         # print(x.shape)
         x = x.to(device)
         y = y.to(device)
-
         out = model.predict(x)
         loss = criterion(out, y)
         if is_training:

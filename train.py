@@ -2,7 +2,7 @@ import trainer.transformer_trainer as ttn
 from model import Model
 model_name = "transformer_1"
 file_name = "AAPL_transformer_1.pth"
-trainer = ttn.Transformer_trainer(model_name=model_name, new_data=True, full_data=True)
+trainer = ttn.Transformer_trainer(model_name=model_name, new_data=True, full_data=False)
 
 model = trainer.train()
 # tf_trainer.train("svm_1", new_data=True)
