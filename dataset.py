@@ -48,9 +48,9 @@ class MyDataset(Dataset):
         x_stock = x_stock.reshape((x_stock.shape[0] * x_stock.shape[1], x_stock.shape[2]))
         x_stock = self.scaler.fit_transform(x_stock)
         # Reshape the scaled data back to the original shape
-        x_stock = x_stock.reshape((x_train.shape[0], x_stock.shape[1], slicing))
+        x_stock = x_stock.reshape((x_train.shape[0], x_train.shape[1], slicing))
         self.x_train = np.concatenate((x_stock, x_news), axis=2)
-        self.x_train = self.x.astype(np.float32)
+        self.x_train = self.x_train.astype(np.float32)
         self.y_train = y_train.astype(np.float32)
     def __len__(self):
         return len(self.x_train)
