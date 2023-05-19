@@ -29,7 +29,7 @@ class Predict_Stock_Price:
         self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=config["training"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=config["training"]["scheduler_step_size"], gamma=0.1)
-        self.scaler = dts.MinMaxScaler()
+        self.scaler = dts.MyMinMaxScaler()
         
         # define path to model, dataset
         self.data_path = './csv/'
