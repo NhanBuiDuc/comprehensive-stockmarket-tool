@@ -138,7 +138,7 @@ class Predict_Stock_Price:
         
     def predict_model(self, data_x_unseen):
         self.model.eval()
-
+        #print(self.model.eval())
         x = torch.tensor(data_x_unseen).float().to(config["training"]["device"]).unsqueeze(0).unsqueeze(2) # this is the data type and shape required, [batch, sequence, feature]
         prediction = self.model(x)
         prediction = prediction.cpu().detach().numpy()
