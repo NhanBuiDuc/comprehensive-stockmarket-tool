@@ -323,7 +323,7 @@ class TransformerClassifier(nn.Module):
         self.stock_transformer = nn.Transformer(d_model=39, nhead=13,
                                                 num_encoder_layers=self.num_encoder_layers,
                                                 dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-        self.news_transformer = nn.Transformer(d_model=self.num_feature, nhead=64,
+        self.news_transformer = nn.Transformer(d_model=768, nhead=64,
                                                num_encoder_layers=self.num_encoder_layers,
                                                dim_feedforward=self.dim_feedforward, dropout=self.dropout)
         self.fc = nn.Linear(self.num_feature * self.window_size, 1)
