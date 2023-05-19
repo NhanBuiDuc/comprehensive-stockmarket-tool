@@ -3,7 +3,7 @@ transformer_cf = {
         "transformer_1": {
             "nhead": 3,
             "num_encoder_layers": 50,
-            "dim_feedforward": 60,
+            "dim_feedforward": 100,
             "dropout": 0.5,
             "window_size": 7,
             "output_step": 1,
@@ -21,7 +21,7 @@ transformer_cf = {
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
-                "patient": 100,
+                "patient": 500,
                 "start": "2022-07-01",
                 "end": None,
                 "best_model": True,
