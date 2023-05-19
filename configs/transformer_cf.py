@@ -7,16 +7,16 @@ transformer_cf = {
             "dropout": 0.2,
             "window_size": 7,
             "output_step": 1,
-            "topk": 1
+            "topk": 5
         }
     },
     "training": {
         "transformer_1":
             {
                 "device": "cuda",  # "cuda" or "cpu"
-                "batch_size": 16,
-                "num_epoch": 200,
-                "learning_rate": 0.001,
+                "batch_size": 64,
+                "num_epoch": 500,
+                "learning_rate": 0.0001,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
