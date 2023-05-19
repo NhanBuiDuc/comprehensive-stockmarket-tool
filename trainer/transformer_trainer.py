@@ -197,7 +197,7 @@ class Transformer_trainer(Trainer):
             f.write("\n")
 
         model.structure.to(self.device)
-        for i in range(0, 3, 1):
+        for i in range(2, 3, 1):
             if i == 0:
                 torch.cuda.empty_cache()
                 dataloader = train_dataloader
@@ -324,6 +324,7 @@ class Transformer_trainer(Trainer):
         # prepare X data
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
+        dataset_slicing = X.shape[2]
         # whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
         news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step, self.topk, new_data)
         X = np.concatenate((X, news_X), axis=2)
@@ -383,9 +384,9 @@ class Transformer_trainer(Trainer):
         np.save(y_test_file, y_test)
 
         # create datasets and dataloaders
-        train_dataset = MyDataset(X_train, y_train)
-        valid_dataset = MyDataset(X_valid, y_valid)
-        test_dataset = MyDataset(X_test, y_test)
+        train_dataset = MyDataset(X_train, y_train, dataset_slicing)
+        valid_dataset = MyDataset(X_valid, y_valid, dataset_slicing)
+        test_dataset = MyDataset(X_test, y_test, dataset_slicing)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
