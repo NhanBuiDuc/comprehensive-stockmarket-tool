@@ -20,6 +20,8 @@ from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import StratifiedShuffleSplit
 import datetime
 import NLP.util as nlp_u
+from tqdm import tqdm
+
 
 class Transformer_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
@@ -28,7 +30,7 @@ class Transformer_trainer(Trainer):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
-        self.symbol = self.cf["alpha_vantage"]["symbol"] 
+        self.symbol = self.cf["alpha_vantage"]["symbol"]
         self.model_name = model_name
         self.__dict__.update(self.config["model"][self.model_name])
         self.__dict__.update(self.config["training"][self.model_name])
@@ -79,10 +81,11 @@ class Transformer_trainer(Trainer):
         # Run train valid
         if not self.full_data:
             for epoch in range(self.num_epoch):
-                loss_train, lr_train = run_epoch(self.model, self.train_dataloader, optimizer, criterion, scheduler,
-                                                 is_training=True, device=self.device)
-                loss_val, lr_val = run_epoch(self.model, self.valid_dataloader, optimizer, criterion, scheduler,
-                                             is_training=False, device=self.device)
+                loss_train, lr_train = self.run_epoch(self.model, self.train_dataloader, optimizer, criterion,
+                                                      scheduler,
+                                                      is_training=True, device=self.device)
+                loss_val, lr_val = self.run_epoch(self.model, self.valid_dataloader, optimizer, criterion, scheduler,
+                                                  is_training=False, device=self.device)
                 scheduler.step(loss_val)
                 if self.best_model:
                     if check_best_loss(best_loss=best_loss, loss=loss_val):
@@ -126,8 +129,8 @@ class Transformer_trainer(Trainer):
             # Create a new data loader using the combined dataset
             combined_dataset = DataLoader(combined_dataset, batch_size=32, shuffle=True)
             for epoch in range(self.num_epoch):
-                loss_train, lr_train = run_epoch(self.model, combined_dataset, optimizer, criterion, scheduler,
-                                                 is_training=True, device=self.device)
+                loss_train, lr_train = self.run_epoch(self.model, combined_dataset, optimizer, criterion, scheduler,
+                                                      is_training=True, device=self.device)
                 scheduler.step(loss_train)
                 if self.best_model:
                     if check_best_loss(best_loss=best_loss, loss=loss_train):
@@ -168,7 +171,7 @@ class Transformer_trainer(Trainer):
         return self.model
 
     def eval(self, model):
-        
+
         train_dataloader, valid_dataloader, test_dataloader = self.prepare_eval_data()
         # Get the current date and time
         current_datetime = datetime.datetime.now()
@@ -197,7 +200,7 @@ class Transformer_trainer(Trainer):
             f.write("\n")
 
         model.structure.to(self.device)
-        for i in range(2, 3, 1):
+        for i in range(0, 3, 1):
             if i == 0:
                 torch.cuda.empty_cache()
                 dataloader = train_dataloader
@@ -207,6 +210,7 @@ class Transformer_trainer(Trainer):
                 dataloader = valid_dataloader
                 print_string = "Valid evaluate " + self.model_full_name
             elif i == 2:
+                torch.cuda.empty_cache()
                 dataloader = test_dataloader
                 print_string = "Test evaluate " + self.model_full_name
             if "accuracy" or "precision" or "f1" in self.evaluate:
@@ -218,14 +222,13 @@ class Transformer_trainer(Trainer):
             target_list = torch.empty(0).to(self.device)
             output_list = torch.empty(0).to(self.device)
             # Iterate over the dataloader
-            for inputs, labels in dataloader:
+            for x_stock, x_news, labels in dataloader:
                 # Move inputs and labels to device
-                inputs = inputs.to(self.device)
+                x_stock = x_stock.to(self.device)
+                x_news = x_news.to(self.device)
                 labels = labels.to(self.device)
-                torch.cuda.empty_cache()
                 # Forward pass
-                outputs = model.predict(inputs)
-                torch.cuda.empty_cache()
+                outputs = model.structure(x_stock, x_news)
                 target_list = torch.cat([target_list, labels], dim=0)
                 output_list = torch.cat([output_list, outputs], dim=0)
                 if "accuracy" or "precision" or "f1" in self.evaluate:
@@ -326,7 +329,8 @@ class Transformer_trainer(Trainer):
                                             dilation=1)
         dataset_slicing = X.shape[2]
         # whether_X = nlp_u.prepare_whether_data(df, self.window_size, self.start, self.end, new_data, self.output_step)
-        news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step, self.topk, new_data)
+        news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
+                                         self.topk, new_data)
         X = np.concatenate((X, news_X), axis=2)
         self.num_feature = X.shape[2]
         # Split train, validation, and test sets
@@ -400,7 +404,7 @@ class Transformer_trainer(Trainer):
         X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
         y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
         dataset_slicing = X_train.shape[2]
-        train_dataset = MyDataset(X_train, y_train, dataset_slicing )
+        train_dataset = MyDataset(X_train, y_train, dataset_slicing)
         valid_dataset = MyDataset(X_valid, y_valid, dataset_slicing)
         test_dataset = MyDataset(X_test, y_test, dataset_slicing)
 
@@ -410,3 +414,43 @@ class Transformer_trainer(Trainer):
 
         return self.train_dataloader, self.valid_dataloader, self.test_dataloader
         # train_date, valid_date, test_date
+
+    def run_epoch(self, model, dataloader, optimizer, criterion, scheduler, is_training, device):
+        epoch_loss = 0
+
+        weight_decay = 0.001
+        if is_training:
+            model.structure.train()
+        else:
+            model.structure.eval()
+
+        # create a tqdm progress bar
+        dataloader = tqdm(dataloader)
+        for idx, (x_stock, x_news, y) in enumerate(dataloader):
+            if is_training:
+                optimizer.zero_grad()
+            batchsize = x_stock.shape[0]
+            # print(x.shape)
+            x_stock = x_stock.to(device)
+            x_news = x_news.to(device)
+            y = y.to(device)
+            out = model.structure(x_stock, x_news)
+            loss = criterion(out, y)
+            if is_training:
+                if loss != torch.nan:
+                    torch.autograd.set_detect_anomaly(True)
+                    loss.backward()
+                    optimizer.step()
+                else:
+                    print("loss = nan")
+            batch_loss = (loss.detach().item())
+            epoch_loss += batch_loss
+            # update the progress bar
+            dataloader.set_description(f"At index {idx:.4f}")
+
+        try:
+            lr = scheduler.get_last_lr()[0]
+
+        except:
+            lr = optimizer.param_groups[0]['lr']
+        return epoch_loss, lr
