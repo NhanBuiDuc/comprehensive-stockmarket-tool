@@ -15,7 +15,7 @@ transformer_cf = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 500,
+                "num_epoch": 300,
                 "learning_rate": 0.001,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
