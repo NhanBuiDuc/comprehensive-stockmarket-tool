@@ -399,10 +399,10 @@ class Transformer_trainer(Trainer):
         y_valid = np.load('./dataset/y_valid_' + self.model_full_name + '.npy', allow_pickle=True)
         X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
         y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
-
-        train_dataset = MyDataset(X_train, y_train)
-        valid_dataset = MyDataset(X_valid, y_valid)
-        test_dataset = MyDataset(X_test, y_test)
+        dataset_slicing = X_train.shape[2]
+        train_dataset = MyDataset(X_train, y_train, dataset_slicing )
+        valid_dataset = MyDataset(X_valid, y_valid, dataset_slicing)
+        test_dataset = MyDataset(X_test, y_test, dataset_slicing)
 
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
