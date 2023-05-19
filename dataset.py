@@ -36,8 +36,21 @@ class MinMaxScaler():
         return (x_tensor * (self.max_val - self.min_val)) + self.min_val
 
 class MyDataset(Dataset):
-    def __init__(self, x_train, y_train):
-        self.x_train = x_train.astype(np.float32)
+    def __init__(self, x_train, y_train, slicing):
+        self.scaler = MinMaxScaler()
+
+        x_train = x_train.astype(np.float32)
+        y_train = y_train.astype(np.float32)
+
+        x_stock = x_train[:, :, :slicing]
+        x_news = x_train[:, :, slicing:]
+
+        x_stock = x_stock.reshape((x_stock.shape[0] * x_stock.shape[1], x_stock.shape[2]))
+        x_stock = self.scaler.fit_transform(x_stock)
+        # Reshape the scaled data back to the original shape
+        x_stock = x_stock.reshape((x_train.shape[0], x_train.shape[1], slicing))
+        self.x_train = np.concatenate((x_stock, x_news), axis=2)
+        self.x_train = self.x_train.astype(np.float32)
         self.y_train = y_train.astype(np.float32)
     def __len__(self):
         return len(self.x_train)
@@ -51,7 +64,7 @@ class MyDataset(Dataset):
 class TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
         self.scaler = MinMaxScaler(feature_range=(-100, 100))
-        self.x = x.astype(np.float64)
+        self.x = x.astype(np.float32)
         # Reshape the data
         x = x.reshape((x.shape[0] * x.shape[1], x.shape[2]))
         # Apply the scaler
