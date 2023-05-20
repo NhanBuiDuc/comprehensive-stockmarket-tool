@@ -9,7 +9,7 @@ config = {
     "data": {
         "window_size": 14,
         "train_test_split_size": 0.7,
-        "train_val_split_size": 0.7,
+        "train_val_split_size": 0.6,
         "smoothing": 2,
     },
     "plots": {
