@@ -26,7 +26,7 @@ from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
 class Transformer_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
-                 model=None):
+                 model=None, mode = "train"):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
@@ -43,8 +43,12 @@ class Transformer_trainer(Trainer):
         self.model_type = "transformer"
         self.model_type_dict = self.cf["pytorch_timeseries_model_type_dict"]
         self.model = model
+        self.mode = mode
         self.model_full_name = self.symbol + "_" + self.model_name
-        self.prepare_data(self.new_data)
+        if self.mode == "train":
+            self.prepare_data(self.new_data)
+        else:
+            self.num_feature = 807
         self.indentify()
 
     def indentify(self):
@@ -533,7 +537,7 @@ class Transformer_trainer(Trainer):
         y_valid = np.load('./dataset/y_valid_' + self.model_full_name + '.npy', allow_pickle=True)
         X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
         y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
-        dataset_slicing = X_train.shape[2]
+        dataset_slicing = 39
         train_dataset = MyDataset(X_train, y_train, dataset_slicing)
         valid_dataset = MyDataset(X_valid, y_valid, dataset_slicing)
         test_dataset = MyDataset(X_test, y_test, dataset_slicing)

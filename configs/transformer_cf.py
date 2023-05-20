@@ -2,8 +2,8 @@ transformer_cf = {
     "model": {
         "transformer_1": {
             "nhead": 3,
-            "num_encoder_layers": 50,
-            "dim_feedforward": 60,
+            "num_encoder_layers": 10,
+            "dim_feedforward": 30,
             "dropout": 0.5,
             "window_size": 7,
             "output_step": 3,
