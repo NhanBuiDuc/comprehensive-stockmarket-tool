@@ -3,10 +3,10 @@ transformer_cf = {
         "transformer_1": {
             "nhead": 3,
             "num_encoder_layers": 50,
-            "dim_feedforward": 100,
+            "dim_feedforward": 50,
             "dropout": 0.5,
             "window_size": 7,
-            "output_step": 3,
+            "output_step": 7,
             "topk": 5
         }
     },
