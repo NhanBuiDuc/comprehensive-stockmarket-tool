@@ -5,6 +5,7 @@ price_cf = {
         "outputsize": "full",
         "key_adjusted_close": "5. adjusted close",
     },
+
     "data": {
         "window_size": 20,
         "train_split_size": 0.80,

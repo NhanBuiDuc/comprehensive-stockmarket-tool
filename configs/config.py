@@ -9,7 +9,7 @@ config = {
     "data": {
         "window_size": 14,
         "train_test_split_size": 0.7,
-        "train_val_split_size": 0.6,
+        "train_val_split_size": 0.8,
         "smoothing": 2,
     },
     "plots": {
@@ -105,7 +105,7 @@ config = {
             "train_shuffle": True,
             "val_shuffle": True,
             "test_shuffle": True,
-            "weight_decay": 0.1
+            "weight_decay": 0.5
         }
 
     },
