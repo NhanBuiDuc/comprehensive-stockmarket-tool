@@ -1,7 +1,7 @@
 price_cf = {
     "alpha_vantage": {
         "key": "XOLA7URKCZHU7C9X", # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "TSLA",
+        "symbol": "GOOGL",
         "outputsize": "full",
         "key_adjusted_close": "5. adjusted close",
     },
@@ -26,7 +26,7 @@ price_cf = {
         "dropout": 0.2,
     },
     "training": {
-        "is_training": True,
+        "is_training": False,
         "device": "cuda", # "cuda" or "cpu"
         "batch_size": 64,
         "num_epoch": 100,

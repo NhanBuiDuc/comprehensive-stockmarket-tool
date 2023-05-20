@@ -324,7 +324,15 @@ class Signal:
         df['NEU'] = (df.iloc[:, 36:] == 0).sum(axis=1)
         df['BUY'] = (df.iloc[:, 36:] == 1).sum(axis=1)
         
-
+        new_columns = {
+            '4. close': 'close',
+            '1. open': 'open',
+            '2. high': 'high',
+            '3. low': 'low',
+            '6. volume': 'volumn'
+        }
+        df = df.rename(columns=new_columns)
+        df.columns = df.columns.str.replace('.', '')
         file_name = cf['alpha_vantage']['symbol'] + '_signal.csv'
         name = path + file_name
         #save to csv file
