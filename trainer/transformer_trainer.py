@@ -552,7 +552,7 @@ class Transformer_trainer(Trainer):
             # Compute accuracy
             predictions = torch.argmax(out, dim=1)
             correct = (predictions == y).sum().item()
-            accuracy = correct / batch_size * 100  # Multiply by 100 to get percentage
+            accuracy = correct / batch_size  # Multiply by 100 to get percentage
 
             # Print loss and accuracy
             print("Accuracy: {:.2f}%".format(accuracy))
