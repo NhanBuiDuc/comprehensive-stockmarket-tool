@@ -42,20 +42,16 @@ def run_epoch(model, dataloader, optimizer, criterion, scheduler, is_training, d
     for idx, (x, y) in enumerate(dataloader):
         if is_training:
             optimizer.zero_grad()
-        torch.cuda.empty_cache()
         batchsize = x.shape[0]
         # print(x.shape)
         x = x.to(device)
         y = y.to(device)
-        torch.cuda.empty_cache()
         out = model.predict(x)
-        torch.cuda.empty_cache()
         loss = criterion(out, y)
         if is_training:
             if loss != torch.nan:
                 torch.autograd.set_detect_anomaly(True)
                 loss.backward()
-                torch.cuda.empty_cache()
                 optimizer.step()
             else:
                 print("loss = nan")

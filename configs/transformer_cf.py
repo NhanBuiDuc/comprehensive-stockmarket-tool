@@ -4,24 +4,24 @@ transformer_cf = {
             "nhead": 3,
             "num_encoder_layers": 50,
             "dim_feedforward": 50,
-            "dropout": 0.2,
+            "dropout": 0.5,
             "window_size": 7,
-            "output_step": 1,
-            "topk": 1
+            "output_step": 7,
+            "topk": 5
         }
     },
     "training": {
         "transformer_1":
             {
                 "device": "cuda",  # "cuda" or "cpu"
-                "batch_size": 2,
-                "num_epoch": 200,
+                "batch_size": 64,
+                "num_epoch": 300,
                 "learning_rate": 0.001,
                 "loss": "bce",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
-                "patient": 100,
+                "patient": 500,
                 "start": "2022-07-01",
                 "end": None,
                 "best_model": True,

@@ -29,7 +29,7 @@ class Predict_Stock_Price:
         self.criterion = nn.MSELoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=config["training"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=config["training"]["scheduler_step_size"], gamma=0.1)
-        self.scaler = dts.MinMaxScaler()
+        self.scaler = dts.MyMinMaxScaler()
         
         # define path to model, dataset
         self.data_path = './csv/'
@@ -138,7 +138,7 @@ class Predict_Stock_Price:
         
     def predict_model(self, data_x_unseen):
         self.model.eval()
-
+        #print(self.model.eval())
         x = torch.tensor(data_x_unseen).float().to(config["training"]["device"]).unsqueeze(0).unsqueeze(2) # this is the data type and shape required, [batch, sequence, feature]
         prediction = self.model(x)
         prediction = prediction.cpu().detach().numpy()

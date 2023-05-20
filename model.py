@@ -316,21 +316,29 @@ class CausalConv1d(nn.Module):
 
 
 class TransformerClassifier(nn.Module):
-    def __init__(self, num_feature,  **param):
+    def __init__(self, num_feature, **param):
         super().__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
-        self.transformer = nn.Transformer(d_model=self.num_feature, nhead=self.nhead, num_encoder_layers=self.num_encoder_layers,
-                                          dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-        self.fc = nn.Linear( self.num_feature * self.window_size, 1)
+        self.stock_transformer = nn.Transformer(d_model=39, nhead=13,
+                                                num_encoder_layers=self.num_encoder_layers,
+                                                dim_feedforward=self.dim_feedforward, dropout=self.dropout)
+        self.news_transformer = nn.Transformer(d_model=768, nhead=64,
+                                               num_encoder_layers=self.num_encoder_layers,
+                                               dim_feedforward=self.dim_feedforward, dropout=self.dropout)
+        self.fc = nn.Linear(self.num_feature * self.window_size, 1)
         self.sigmoid = nn.Sigmoid()
-    def forward(self, x):
-        batch = x.shape[0]
-        x = self.transformer(x, x)  # self-attention over the input sequence
+
+    def forward(self, x_stock, x_news):
+        batch = x_stock.shape[0]
+        x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
+        x_news = self.news_transformer(x_news, x_news)  # self-attention over the input sequence
+        x = torch.concat([x_stock, x_news], axis=2)
         x = x.reshape(batch, -1)
         x = self.fc(x)
         x = self.sigmoid(x)
         return x
+
 
 class PredictPriceLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
@@ -339,20 +347,21 @@ class PredictPriceLSTM(nn.Module):
 
         self.linear_1 = nn.Linear(input_size, hidden_layer_size)
         self.relu = nn.ReLU()
-        self.lstm = nn.LSTM(hidden_layer_size, hidden_size=self.hidden_layer_size, num_layers=num_layers, batch_first=True)
+        self.lstm = nn.LSTM(hidden_layer_size, hidden_size=self.hidden_layer_size, num_layers=num_layers,
+                            batch_first=True)
         self.dropout = nn.Dropout(dropout)
-        self.linear_2 = nn.Linear(num_layers*hidden_layer_size, output_size)
-        
+        self.linear_2 = nn.Linear(num_layers * hidden_layer_size, output_size)
+
         self.init_weights()
 
     def init_weights(self):
         for name, param in self.lstm.named_parameters():
             if 'bias' in name:
-                 nn.init.constant_(param, 0.0)
+                nn.init.constant_(param, 0.0)
             elif 'weight_ih' in name:
-                 nn.init.kaiming_normal_(param)
+                nn.init.kaiming_normal_(param)
             elif 'weight_hh' in name:
-                 nn.init.orthogonal_(param)
+                nn.init.orthogonal_(param)
 
     def forward(self, x):
         batchsize = x.shape[0]
@@ -360,14 +369,14 @@ class PredictPriceLSTM(nn.Module):
         # layer 1
         x = self.linear_1(x)
         x = self.relu(x)
-        
+
         # LSTM layer
         lstm_out, (h_n, c_n) = self.lstm(x)
 
         # reshape output from hidden cell into [batch, features] for `linear_2`
-        x = h_n.permute(1, 0, 2).reshape(batchsize, -1) 
-        
+        x = h_n.permute(1, 0, 2).reshape(batchsize, -1)
+
         # layer 2
         x = self.dropout(x)
         predictions = self.linear_2(x)
-        return predictions[:,-1]
+        return predictions[:, -1]

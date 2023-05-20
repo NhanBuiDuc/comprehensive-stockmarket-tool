@@ -18,8 +18,9 @@ class Normalizer:
 
     def inverse_transform(self, x):
         return (x * self.sd) + self.mu
-    
-class MinMaxScaler():
+
+
+class MyMinMaxScaler():
     def __init__(self):
         self.min_val = None
         self.max_val = None
@@ -35,23 +36,39 @@ class MinMaxScaler():
         x_tensor = torch.tensor(x)
         return (x_tensor * (self.max_val - self.min_val)) + self.min_val
 
+
 class MyDataset(Dataset):
-    def __init__(self, x_train, y_train):
-        self.x_train = x_train.astype(np.float32)
+    def __init__(self, x_train, y_train, slicing):
+        self.scaler = MinMaxScaler(feature_range=(-100, 100))
+
+        x_train = x_train.astype(np.float32)
+        y_train = y_train.astype(np.float32)
+
+        x_stock = x_train[:, :, :slicing]
+        self.x_news = x_train[:, :, slicing:]
+
+        x_stock = x_stock.reshape((x_stock.shape[0] * x_stock.shape[1], x_stock.shape[2]))
+        x_stock = self.scaler.fit_transform(x_stock)
+        # Reshape the scaled data back to the original shape
+        self.x_stock = x_stock.reshape((x_train.shape[0], x_train.shape[1], slicing))
+        # self.x_train = np.concatenate((x_stock, self.x_news), axis=2)
+        # self.x_train = self.x_train.astype(np.float32)
         self.y_train = y_train.astype(np.float32)
+
     def __len__(self):
-        return len(self.x_train)
+        return len(self.x_stock)
 
     def __getitem__(self, idx):
-        x = self.x_train[idx]
+        x_stock = self.x_stock[idx]
+        x_news = self.x_news[idx]
         y = self.y_train[idx]
-        return x, y
+        return x_stock, x_news, y
 
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = MinMaxScaler(feature_range=(-100, 100))
-        self.x = x.astype(np.float64)
+        self.scaler = MyMinMaxScaler(feature_range=(-100, 100))
+        self.x = x.astype(np.float32)
         # Reshape the data
         x = x.reshape((x.shape[0] * x.shape[1], x.shape[2]))
         # Apply the scaler
@@ -71,7 +88,7 @@ class TimeSeriesDataset(Dataset):
 
 class Classification_TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = MinMaxScaler(feature_range=(-10, 10))
+        self.scaler = MyMinMaxScaler(feature_range=(-10, 10))
         self.y = y.astype(np.float32)
         self.x = x.astype(np.float32)
         # Reshape the data
@@ -91,7 +108,7 @@ class Classification_TimeSeriesDataset(Dataset):
 
 class Classification_Dataset(Dataset):
     def __init__(self, x, y):
-        self.scaler = MinMaxScaler()
+        self.scaler = MyMinMaxScaler()
         self.y = y.astype(np.float32)
         x = self.scaler.fit_transform(x)
         self.x = x.astype(np.float32)
@@ -102,13 +119,15 @@ class Classification_Dataset(Dataset):
 
     def __getitem__(self, idx):
         return self.x[idx], self.y[idx]
-    
+
+
 class PredictPrice_TimeSeriesDataset(Dataset):
     def __init__(self, x, y):
-        x = np.expand_dims(x, 2) # in our case, we have only 1 feature, so we need to convert `x` into [batch, sequence, features] for LSTM
+        x = np.expand_dims(x,
+                           2)  # in our case, we have only 1 feature, so we need to convert `x` into [batch, sequence, features] for LSTM
         self.x = x.astype(np.float32)
         self.y = y.astype(np.float32)
-        
+
     def __len__(self):
         return len(self.x)
 
