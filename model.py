@@ -43,8 +43,7 @@ class Model:
             self.parameters = self.parameters["model"][self.name]
             self.structure = TransformerClassifier(self.num_feature, **self.parameters)
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[1]:
-            self.structure = SVC()
-
+            self.structure = svm_classifier()
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[2]:
             self.structure = RandomForestClassifier()
 
@@ -380,3 +379,37 @@ class PredictPriceLSTM(nn.Module):
         x = self.dropout(x)
         predictions = self.linear_2(x)
         return predictions[:, -1]
+
+
+class svm_classifier:
+    def __init__(self, num_feature, **param):
+        super().__init__()
+        self.__dict__.update(param)
+        self.sklearn_model = SVC(C=self.C, kernel=self.kernel, gamma=self.gamma, coef0=self.coef0,
+                                 class_weight=self.class_weight)
+
+    def predict(self, x):
+        self.sklearn_model.predict(x)
+
+class rf_classifier:
+    def __init__(self, num_feature, **param):
+        super().__init__()
+        self.__dict__.update(param)
+        self.sklearn_model = RandomForestClassifier(
+            n_estimators=100,  # Number of trees in the forest
+            criterion='entropy',  # Splitting criterion (can be 'gini' or 'entropy')
+            max_depth=100,  # Maximum depth of the tree
+            min_samples_split=5,  # Minimum number of samples required to split an internal node
+            min_samples_leaf=5,  # Minimum number of samples required to be at a leaf node
+            max_features='sqrt',
+            # Number of features to consider for the best split ('sqrt' or 'log2' for square root and logarithm of total features respectively)
+            bootstrap=True,  # Whether bootstrap samples are used when building trees
+            oob_score=True,  # Whether to use out-of-bag samples to estimate the generalization accuracy
+            random_state=42,  # Random seed for reproducibility
+            class_weight='balanced',  # Weights associated with classes to address class imbalance
+            verbose=0,  # Controls the verbosity of the tree building process
+            n_jobs=-1  # Number of parallel jobs to run (-1 means using all processors)
+        )
+
+    def predict(self, x):
+        self.sklearn_model.predict(x)

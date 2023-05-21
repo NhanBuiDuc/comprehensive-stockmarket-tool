@@ -41,8 +41,8 @@ class svm_trainer(Trainer):
         self.full_data = full_data
         self.num_feature = num_feature
         self.new_data = new_data
-        self.model_type = "transformer"
-        self.model_type_dict = self.cf["pytorch_timeseries_model_type_dict"]
+        self.model_type = "svm"
+        self.model_type_dict = self.cf["tensorflow_timeseries_model_type_dict"]
         self.model = model
         self.mode = mode
         self.model_full_name = self.symbol + "_" + self.model_name
