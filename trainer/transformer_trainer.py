@@ -23,10 +23,11 @@ import NLP.util as nlp_u
 from tqdm import tqdm
 from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
 
+
 class Transformer_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
-                 model=None, mode = "train"):
+                 model=None, mode="train"):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
