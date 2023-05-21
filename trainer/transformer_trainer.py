@@ -22,11 +22,12 @@ import datetime
 import NLP.util as nlp_u
 from tqdm import tqdm
 from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
+from loss import FocalLoss
 
 class Transformer_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
-                 model=None, mode = "train"):
+                 model=None, mode="train"):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
@@ -64,7 +65,8 @@ class Transformer_trainer(Trainer):
             criterion = nn.L1Loss()
         elif "bce" in self.loss:
             criterion = nn.BCELoss()
-
+        elif "focal" in self.loss:
+            criterion = FocalLoss(alpha=0.5, gamma=2)
         if "adam" in self.optimizer:
             optimizer = optim.Adam(self.model.structure.parameters(), lr=self.learning_rate,
                                    weight_decay=self.weight_decay)
@@ -90,6 +92,8 @@ class Transformer_trainer(Trainer):
                                                       is_training=True, device=self.device)
                 loss_val, lr_val = self.run_epoch(self.model, self.valid_dataloader, optimizer, criterion, scheduler,
                                                   is_training=False, device=self.device)
+                loss_test, lr_test = self.run_epoch(self.model, self.test_dataloader, optimizer, criterion, scheduler,
+                                                    is_training=False, device=self.device)
                 scheduler.step(loss_val)
                 if self.best_model:
                     if check_best_loss(best_loss=best_loss, loss=loss_val):
@@ -120,10 +124,8 @@ class Transformer_trainer(Trainer):
                                 },
                                "./models/" + self.model_full_name + ".pth")
 
-                print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
-                      .format(epoch + 1, self.num_epoch, loss_train, loss_val, lr_train))
-
-                print("patient", patient_count)
+                print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f}, test:{:.6f} | lr:{:.6f}'
+                      .format(epoch + 1, self.num_epoch, loss_train, loss_val, loss_test, lr_train))
                 if stop:
                     print("Early Stopped At Epoch: {}", epoch + 1)
                     break
@@ -204,7 +206,7 @@ class Transformer_trainer(Trainer):
             f.write("\n")
 
         model.structure.to(self.device)
-        for i in range(0, 3, 1):
+        for i in range(2, 3, 1):
             if i == 0:
                 torch.cuda.empty_cache()
                 dataloader = train_dataloader

@@ -7,7 +7,7 @@ config = {
     },
     "data": {
         "window_size": 14,
-        "train_test_split_size": 0.7,
+        "train_test_split_size": 0.5,
         "train_val_split_size": 0.5,
         "smoothing": 2,
     },

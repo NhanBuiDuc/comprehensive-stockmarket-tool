@@ -15,21 +15,21 @@ transformer_cf = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 300,
+                "num_epoch": 1000,
                 "learning_rate": 0.001,
-                "loss": "bce",
+                "loss": "focal",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
                 "optimizer": "adam",
                 "scheduler_step_size": 50,
                 "patient": 500,
                 "start": "2022-07-01",
                 "end": None,
-                "best_model": True,
+                "best_model": False,
                 "early_stop": True,
                 "train_shuffle": True,
                 "val_shuffle": True,
                 "test_shuffle": True,
-                "weight_decay": 0.0001
+                "weight_decay": 0.001
             },
     }
 }
