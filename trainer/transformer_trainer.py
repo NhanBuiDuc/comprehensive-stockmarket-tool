@@ -469,6 +469,20 @@ class Transformer_trainer(Trainer):
         print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
         print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
 
+        # Balance the test set by randomly removing instances from the majority class
+        min_class_count = min(test_class_counts)
+        test_indices_class_0 = np.where(y_test[:, 0] == 0)[0]
+        test_indices_class_1 = np.where(y_test[:, 0] == 1)[0]
+        np.random.shuffle(test_indices_class_1)
+        test_indices_class_1 = test_indices_class_1[:min_class_count]
+        test_indices_balanced = np.concatenate((test_indices_class_0, test_indices_class_1))
+        X_test = X_test[test_indices_balanced]
+        y_test = y_test[test_indices_balanced]
+
+        # Update the class counts after balancing the test set
+        test_class_counts = np.bincount(y_test[:, 0])
+        print("Balanced Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
+
         # Save train and validation data
         X_train_file = './dataset/X_train_' + self.model_full_name + '.npy'
         X_valid_file = './dataset/X_valid_' + self.model_full_name + '.npy'
