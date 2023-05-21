@@ -6,7 +6,7 @@ transformer_cf = {
             "dim_feedforward": 50,
             "dropout": 0.5,
             "window_size": 7,
-            "output_step": 7,
+            "output_step": 1,
             "topk": 5
         }
     },
@@ -15,7 +15,7 @@ transformer_cf = {
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
-                "num_epoch": 1000,
+                "num_epoch": 100,
                 "learning_rate": 0.001,
                 "loss": "focal",
                 "evaluate": ["bce", "accuracy", "precision", "f1"],
