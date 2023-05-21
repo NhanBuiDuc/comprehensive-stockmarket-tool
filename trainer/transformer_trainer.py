@@ -24,6 +24,7 @@ from tqdm import tqdm
 from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
 from loss import FocalLoss
 
+
 class Transformer_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,

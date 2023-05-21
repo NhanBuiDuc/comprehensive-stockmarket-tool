@@ -45,10 +45,6 @@ config = {
             "output_step": 1,
             "window_size": 14,
         },
-        "svm_1": {
-            "window_size": 14,
-            "output_step": 1,
-        }
     },
     "training": {
         "magnitude_1":

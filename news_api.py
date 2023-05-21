@@ -66,7 +66,11 @@ if __name__ == "__main__":
     df = pd.read_csv(news_web_file_name, encoding=file_encoding)
     # filtered_df = df[df['source'].isin(trustworthy_source)]
     df = df[~df["source"].isin(untrustworthy_source)]
-    df = df[:10]
+    # Convert the date column to datetime type
+    df['date'] = pd.to_datetime(df['date'])
+
+    # Sort the DataFrame by the date column
+    df_sorted = df.sort_values('date')
     for index, row in df.iterrows():
         # summary = row["summary"]
         # summary = u.preprocess_text(summary, tokenizer)
