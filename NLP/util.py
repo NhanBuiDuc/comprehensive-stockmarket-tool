@@ -1020,7 +1020,7 @@ def get_bing_news(symbol, from_date, to_date):
 
 def download_news(symbol, from_date, window_size, new_data=True):
     to_date = datetime.now().strftime('%Y-%m-%d')
-    save_folder = f'./NPL/news_web_url/{symbol}/'
+    save_folder = f'./NLP/news_web_url/{symbol}/'
     file_name = f'{symbol}_url.csv'
     save_path = os.path.join(save_folder, file_name)
     main_df = pd.DataFrame()
@@ -1043,6 +1043,7 @@ def download_news(symbol, from_date, window_size, new_data=True):
 
         # Save the updated dataframe to the CSV file
         main_df.to_csv(save_path, index=True)
+        return main_df.values
     else:
         # # Read the existing CSV file
         # main_df = pd.read_csv(save_path)
@@ -1062,4 +1063,4 @@ def download_news(symbol, from_date, window_size, new_data=True):
         # # Save the updated dataframe to the CSV file
         # main_df.to_csv(save_path, index=False)
         pass
-    return main_df.values
+    # return main_df.values
