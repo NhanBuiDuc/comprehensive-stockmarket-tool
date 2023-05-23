@@ -14,6 +14,9 @@ rf_cf = {
             'class_weight': 'balanced',  # Weights associated with classes to address class imbalance
             'verbose': 0,  # Controls the verbosity of the tree building process
             'n_jobs': -1,  # Number of parallel jobs to run (-1 means using all processors)
+            "topk": 5,
+            "window_size": 7,
+            "output_step": 7,
         }
     },
     "training": {

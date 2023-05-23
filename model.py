@@ -43,15 +43,18 @@ class Model:
             self.parameters = self.parameters["model"][self.name]
             self.structure = TransformerClassifier(self.num_feature, **self.parameters)
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[1]:
-            self.structure = svm_classifier()
+            self.parameters = self.parameters["model"][self.name]
+            self.structure = svm_classifier(self.num_feature, **self.parameters)
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[2]:
-            self.structure = RandomForestClassifier()
+            self.parameters = self.parameters["model"][self.name]
+            self.structure = RandomForestClassifier(self.num_feature, **self.parameters)
 
     def load_check_point(self, file_name):
         check_point = torch.load('./models/' + file_name)
         self = check_point["model"]
         # self.construct_structure()
-        self.structure.load_state_dict(check_point['state_dict'])
+        if self.model_type in self.pytorch_timeseries_model_type_dict.values():
+            self.structure.load_state_dict(check_point['state_dict'])
         return self
 
     def predict(self, x):
@@ -389,7 +392,13 @@ class svm_classifier:
                                  class_weight=self.class_weight)
 
     def predict(self, x):
-        self.sklearn_model.predict(x)
+        x = x.cpu().detach().numpy()
+        output = self.sklearn_model.predict(x)
+        output = torch.from_numpy(output)
+        return output
+    def fit(self, x, y):
+        self.sklearn_model.fit(x, y)
+
 
 class rf_classifier:
     def __init__(self, num_feature, **param):
@@ -412,4 +421,10 @@ class rf_classifier:
         )
 
     def predict(self, x):
-        self.sklearn_model.predict(x)
+        x = x.cpu().detach().numpy()
+        output = self.sklearn_model.predict(x)
+        output = torch.from_numpy(output)
+        return output
+
+    def fit(self, x, y):
+        self.sklearn_model.fit(x, y)

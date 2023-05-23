@@ -265,7 +265,7 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     top_sentences_dict = np.array(top_sentences_dict)
     data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
 
-    return data
+    return data, top_sentences_dict
 
 
 def prepare_raw_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):

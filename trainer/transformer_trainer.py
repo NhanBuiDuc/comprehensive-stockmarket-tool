@@ -10,7 +10,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 import util as u
-from dataset import Classification_TimeSeriesDataset, MyDataset
+from dataset import Classification_TimeSeriesDataset, StockAndNews_Dataset
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import json
@@ -468,7 +468,6 @@ class Transformer_trainer(Trainer):
 
         print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
         print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
-        print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
 
         # Balance the test set by randomly removing instances from the majority class
         min_class_count = min(test_class_counts)
@@ -505,8 +504,8 @@ class Transformer_trainer(Trainer):
         np.save(y_valid_file, y_valid)
 
         # Create datasets and dataloaders for train and validation sets
-        train_dataset = MyDataset(X_train, y_train, dataset_slicing)
-        valid_dataset = MyDataset(X_valid, y_valid, dataset_slicing)
+        train_dataset = StockAndNews_Dataset(X_train, y_train, dataset_slicing)
+        valid_dataset = StockAndNews_Dataset(X_valid, y_valid, dataset_slicing)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
 
@@ -523,7 +522,7 @@ class Transformer_trainer(Trainer):
         np.save(y_test_file, y_test)
 
         # Create test dataset and dataloader
-        test_dataset = MyDataset(X_test, y_test, dataset_slicing)
+        test_dataset = StockAndNews_Dataset(X_test, y_test, dataset_slicing)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
     def prepare_eval_data(self):
@@ -535,9 +534,9 @@ class Transformer_trainer(Trainer):
         X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
         y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
         dataset_slicing = 39
-        train_dataset = MyDataset(X_train, y_train, dataset_slicing)
-        valid_dataset = MyDataset(X_valid, y_valid, dataset_slicing)
-        test_dataset = MyDataset(X_test, y_test, dataset_slicing)
+        train_dataset = StockAndNews_Dataset(X_train, y_train, dataset_slicing)
+        valid_dataset = StockAndNews_Dataset(X_valid, y_valid, dataset_slicing)
+        test_dataset = StockAndNews_Dataset(X_test, y_test, dataset_slicing)
 
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
