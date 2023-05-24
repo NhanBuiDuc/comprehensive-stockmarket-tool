@@ -100,16 +100,10 @@
     </figure>
     -->
     <!-- HTML !-->
-    <div class="button-list">
-      <button class="button-65 b-apple" role="button" onclick="loadJSON('AAPL_signal.json')">APPLE</button>
-      <button class="button-65 b-microsoft" role="button" onclick="loadJSON('MSFT_signal.json')">MICROSOFT</button>
-      <button class="button-65 b-tesla" role="button" onclick="loadJSON('TSLA_signal.json')">TESLA</button>
-      <button class="button-65 b-google" role="button" onclick="loadJSON('GOOGL_signal.json')">GOOGLE</button>
-      <button class="button-65 b-amazon" role="button" onclick="loadJSON('AMZN_signal.json')">AMAZON</button>
-    </div>
+
 
     <div class="table-container">
-      <table class="styled-table">
+      <table class="styled-table" id="stockTable">
         <thead>
           <tr>
             <th>Symbol</th>
@@ -131,27 +125,33 @@
       </table>
     </div>
       
+    <div class="button-list">
+      <button class="button-65 b-apple" role="button" onclick="loadJSON('AAPL_signal.json')">APPLE</button>
+      <button class="button-65 b-microsoft" role="button" onclick="loadJSON('MSFT_signal.json')">MICROSOFT</button>
+      <button class="button-65 b-tesla" role="button" onclick="loadJSON('TSLA_signal.json')">TESLA</button>
+      <button class="button-65 b-google" role="button" onclick="loadJSON('GOOGL_signal.json')">GOOGLE</button>
+      <button class="button-65 b-amazon" role="button" onclick="loadJSON('AMZN_signal.json')">AMAZON</button>
+    </div>
 </body>
 
 <script>
 
-    function loadJSON(filename) {
+  function loadJSON(filename) {
     var symbol = filename.substring(0, filename.indexOf('_signal'));
     console.log(symbol)
     chart.getData(filename)
       .then(function(data) {
         chart.currentData = data; // Store the loaded data in the chart object
-        chart.build(); // Rebuild the chart using the new data
+        chart.build(symbol); // Rebuild the chart using the new data
+        chart.renderDataToTable(symbol);
       })
       .catch(function(error) {
         console.error('Error:', error);
       });
     }
-    window.addEventListener("DOMContentLoaded", function () {
-      chart.build();
-    });
-    
 
 </script>
+
+
 
 </html>

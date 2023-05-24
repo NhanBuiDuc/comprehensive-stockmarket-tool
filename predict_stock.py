@@ -7,18 +7,19 @@ import torch.optim as optim
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pandas as pd
-
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 
 from alpha_vantage.timeseries import TimeSeries 
-
+import json
 import util as u
 import dataset as dts
 from configs.price_config import price_cf as config
 from model import PredictPriceLSTM 
 
+
 class Predict_Stock_Price:
+    
     def __init__(self):
         self.model = PredictPriceLSTM(input_size=config["model"]["input_size"], 
                                       hidden_layer_size=config["model"]["lstm_size"], 
@@ -30,10 +31,38 @@ class Predict_Stock_Price:
         self.optimizer = optim.Adam(self.model.parameters(), lr=config["training"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=config["training"]["scheduler_step_size"], gamma=0.1)
         self.scaler = dts.MyMinMaxScaler()
-        
+        self.newsymbol = self.readjson('./configs/symbolconfig.json')
+        config['alpha_vantage']['symbol'] = self.newsymbol
         # define path to model, dataset
         self.data_path = './csv/'
         self.models_path='./models/price_predict/'
+
+    def readjson(self, path):
+        with open(path, 'r') as json_file:
+            data = json.load(json_file)
+        # match data['symbol']:
+        #     case 'APPLE':
+        #         symbol = 'AAPL'
+        #     case 'AMAZON':
+        #         symbol = 'AMZN'
+        #     case 'MICROSOFT':
+        #         symbol = 'MSFT'
+        #     case 'GOOGLE':
+        #         symbol = 'GOOGL'
+        #     case 'TESLA':
+        #         symbol = 'TSLA'
+        symbol=''
+        if data['symbol'] == 'AAPL':
+            symbol = 'AAPL'
+        elif data['symbol'] == 'AMZN':
+            symbol = 'AMZN'
+        elif data['symbol'] == 'GOOGL':
+            symbol = 'GOOGL'
+        elif data['symbol'] == 'MSFT':
+            symbol = 'MSFT'
+        elif data['symbol'] == 'TSLA':
+            symbol = 'TSLA'
+        return symbol
     
     def get_data_df(self, new_data=False):
         stock_key = config['alpha_vantage']['symbol']
@@ -164,10 +193,17 @@ class Predict_Stock_Price:
     
     
 if __name__ == "__main__":
-
+    
     pred = Predict_Stock_Price()
+
+    
+    # cho configValue = giá trị đọc file price_config và gắn giá trị symbol
+    # config = configValue
     price = pred.run_model()
     print(price)
+
+    # 'asdasdak'
+    # config[][] = ''
 
     
         
