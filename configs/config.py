@@ -7,9 +7,9 @@ config = {
         "key_adjusted_close": "5. adjusted close"
     },
     "data": {
-        "window_size": 14,
-        "train_test_split_size": 0.7,
-        "train_val_split_size": 0.8,
+        "window_size": 7,
+        "train_test_split_size": 0.5,
+        "train_val_split_size": 0.7,
         "smoothing": 2,
     },
     "plots": {
@@ -45,10 +45,6 @@ config = {
             "output_step": 1,
             "window_size": 14,
         },
-        "svm_1": {
-            "window_size": 14,
-            "output_step": 1,
-        }
     },
     "training": {
         "magnitude_1":
