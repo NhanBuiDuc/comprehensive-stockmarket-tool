@@ -69,7 +69,8 @@ def download_stock_csv_file(path, file_name, symbol, window_size):
     final_df = pd.concat([final_df, vwap], axis=1)
     final_df = pd.concat([final_df, hma], axis=1)
     final_df = pd.concat([final_df, cmf], axis=1)
-
+    if not os.path.exists(path):
+        os.makedirs(path)
     # Save the data to a CSV file
     final_df.to_csv(f"{path}{file_name}", mode='w')
     return final_df
@@ -98,7 +99,7 @@ If exist read csv file and return dataframe
 
 
 def prepare_stock_dataframe(symbol, window_size, start, end, new_data):
-    file_name = f'{symbol}_{window_size}.csv"'
+    file_name = f'{symbol}_{window_size}.csv'
     path = f'./csv/{symbol}/'
     if not file_exist(path, file_name):
         df = download_stock_csv_file(path, file_name, symbol, window_size)

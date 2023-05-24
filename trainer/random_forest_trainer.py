@@ -299,8 +299,6 @@ class random_forest_trainer(Trainer):
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
 
-
-
     def prepare_eval_data(self):
         # load train data
         X_train = np.load('./dataset/X_train_' + self.model_full_name + '.npy', allow_pickle=True)
