@@ -1,0 +1,213 @@
+/* Global font */
+@import url("https://fonts.googleapis.com/css?family=Dosis:400,600");
+@import url("./highcharts.css");
+
+:root {
+    /* Colors for data series and points. */
+    --highcharts-color-0: #7cb5ec;
+    --highcharts-color-1: #f7a35c;
+    --highcharts-color-2: #90ee7e;
+    --highcharts-color-3: #7798bf;
+    --highcharts-color-4: #aaeeee;
+    --highcharts-color-5: #ff0066;
+    --highcharts-color-6: #eeaaee;
+    --highcharts-color-7: #55bf3b;
+    --highcharts-color-8: #df5353;
+    --highcharts-color-9: #7798bf;
+    
+
+}
+
+.highcharts-container {
+    font-family: Dosis, arial, helvetica, sans-serif;
+}
+
+.highcharts-credits {
+    content: 'anhkhoanghg';
+    display: none;
+}
+
+.highcharts-title,
+.highcharts-subtitle,
+.highcharts-yaxis .highcharts-axis-title {
+    text-transform: uppercase;
+}
+
+.highcharts-title {
+    font-weight: bold;
+    font-size: 1.3em;
+}
+
+.highcharts-axis-labels {
+    font-size: 1em;
+}
+
+.highcharts-legend-item > text {
+    font-size: 1.1em;
+}
+
+.highcharts-xaxis-grid .highcharts-grid-line {
+    stroke-width: 1px;
+}
+
+.highcharts-tooltip-box {
+    stroke-width: 0;
+    fill: rgb(219, 219, 216);
+}
+
+.selectors-container {
+    background: #f2f2f2;
+    margin-bottom: 1rem;
+    font-size: 0;
+}
+
+.selectors-container .col {
+font-size: 1.2rem;
+width: calc(50% - 1em);
+padding: 0.5em;
+display: inline-block;
+}
+
+.selectors-container select {
+width: 100%;
+font-size: 16px; /* prevent page zoom in iOS */
+}
+
+@media (max-width: 768px) {
+    .selectors-container .col {
+        display: block;
+        width: calc(100% - 1em);
+    }
+}
+
+.table-container {
+    display: flex;
+    justify-content: center;
+}
+
+.styled-table {
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 600px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+
+}
+
+.styled-table thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.button-65 {
+    appearance: none;
+    backface-visibility: hidden;
+    background-color: #2f80ed;
+    border-radius: 10px;
+    border-style: none;
+    box-shadow: none;
+    box-sizing: border-box;
+    color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    font-family: Inter,-apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    height: 50px;
+    letter-spacing: normal;
+    line-height: 1.5;
+    outline: none;
+    overflow: hidden;
+    padding: 14px 30px;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    transform: translate3d(0, 0, 0);
+    transition: all .3s;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: top;
+    white-space: nowrap;
+}
+  
+.button-65:hover {
+    background-color: #1366d6;
+    box-shadow: rgba(0, 0, 0, .05) 0 5px 30px, rgba(0, 0, 0, .05) 0 1px 4px;
+    opacity: 1;
+    transform: translateY(0);
+    transition-duration: .35s;
+}
+  
+.button-65:hover:after {
+    opacity: .5;
+}
+  
+.button-65:active {
+    box-shadow: rgba(0, 0, 0, .1) 0 3px 6px 0, rgba(0, 0, 0, .1) 0 0 10px 0, rgba(0, 0, 0, .1) 0 1px 4px -1px;
+    transform: translateY(2px);
+    transition-duration: .35s;
+}
+  
+.button-65:active:after {
+    opacity: 1;
+}
+  
+@media (min-width: 768px) {
+.button-65 {
+    padding: 14px 22px;
+    width: 176px;
+    }
+}
+
+.button-list {
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background-color: #fff transparent;
+    padding: 10px;
+    /* border: 1px solid #ccc; */
+    border: none;
+    border-radius: 10px;
+}
+
+.button-list button {
+    margin: 0 30px; /* Adjust the space between buttons as needed */
+}
+
+.b-apple {
+    background-color: #7cb5ec;
+}
+
+.b-microsoft {
+    background-color: #7cb5ec;
+}
+
+.b-tesla {
+    background-color: #7cb5ec;
+}
+
+.b-google {
+    background-color: #7cb5ec;
+}
+
+.b-amazon {
+    background-color: #7cb5ec;
+}

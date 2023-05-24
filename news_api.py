@@ -70,7 +70,7 @@ if __name__ == "__main__":
     df['date'] = pd.to_datetime(df['date'])
 
     # Sort the DataFrame by the date column
-    df_sorted = df.sort_values('date')
+    df = df.sort_values('date', ascending=True)
     for index, row in df.iterrows():
         # summary = row["summary"]
         # summary = u.preprocess_text(summary, tokenizer)
