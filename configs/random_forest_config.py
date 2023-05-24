@@ -1,6 +1,6 @@
 rf_cf = {
     "model": {
-        "svm_1": {
+        "random_forest_7": {
             'n_estimators': 100,  # Number of trees in the forest
             'criterion': 'entropy',  # Splitting criterion (can be 'gini' or 'entropy')
             'max_depth': 100,  # Maximum depth of the tree
@@ -20,7 +20,7 @@ rf_cf = {
         }
     },
     "training": {
-        "svm_1":
+        "random_forest_7":
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,

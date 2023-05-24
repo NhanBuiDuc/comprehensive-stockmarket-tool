@@ -1,12 +1,12 @@
 svm_cf = {
     "model": {
         "svm_1": {
-            "C": 10,
+            "C": 1000,
             "kernel": 'poly',
-            "degree": 4,
+            "degree": 400,
             "gamma": "scale",
-            "coef0": 0.5,
-            "class_weight": {0: 0.6, 1: 0.4},
+            "coef0": 100,
+            "class_weight": {0: 0.5, 1: 0.5},
             "window_size": 7,
             "output_step": 7,
             "topk": 5

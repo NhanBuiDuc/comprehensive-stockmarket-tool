@@ -47,7 +47,7 @@ class Model:
             self.structure = svm_classifier(self.num_feature, **self.parameters)
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[2]:
             self.parameters = self.parameters["model"][self.name]
-            self.structure = RandomForestClassifier(self.num_feature, **self.parameters)
+            self.structure = rf_classifier(self.num_feature, **self.parameters)
 
     def load_check_point(self, file_name):
         check_point = torch.load('./models/' + file_name)
@@ -392,7 +392,6 @@ class svm_classifier:
                                  class_weight=self.class_weight)
 
     def predict(self, x):
-        x = x.cpu().detach().numpy()
         output = self.sklearn_model.predict(x)
         output = torch.from_numpy(output)
         return output
@@ -421,7 +420,7 @@ class rf_classifier:
         )
 
     def predict(self, x):
-        x = x.cpu().detach().numpy()
+
         output = self.sklearn_model.predict(x)
         output = torch.from_numpy(output)
         return output

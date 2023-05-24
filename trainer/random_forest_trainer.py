@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from torch.utils.data import ConcatDataset
 from model import Model
-from configs.svm_config import svm_cf as cf
+from configs.random_forest_config import rf_cf as cf
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -28,11 +28,11 @@ from loss import FocalLoss
 import joblib
 
 
-class svm_trainer(Trainer):
+class random_forest_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
                  model=None, mode="train"):
-        super(svm_trainer, self).__init__()
+        super(random_forest_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
         self.symbol = self.cf["alpha_vantage"]["symbol"]
@@ -45,7 +45,7 @@ class svm_trainer(Trainer):
         self.full_data = full_data
         self.num_feature = num_feature
         self.new_data = new_data
-        self.model_type = "svm"
+        self.model_type = "random_forest"
         self.model_type_dict = self.cf["tensorflow_timeseries_model_type_dict"]
         self.model = model
         self.mode = mode
