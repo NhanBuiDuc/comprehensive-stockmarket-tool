@@ -97,10 +97,9 @@ If exist read csv file and return dataframe
 """
 
 
-def prepare_stock_dataframe(window_size, start, end, new_data):
-    symbol = cf["alpha_vantage"]["symbol"]
-    file_name = symbol + ".csv"
-    path = "./csv/"
+def prepare_stock_dataframe(symbol, window_size, start, end, new_data):
+    file_name = f'{symbol}_{window_size}.csv"'
+    path = f'./csv/{symbol}/'
     if not file_exist(path, file_name):
         df = download_stock_csv_file(path, file_name, symbol, window_size)
 

@@ -226,7 +226,7 @@ class svm_trainer(Trainer):
                 print(f"Loss written to {save_path}.")
 
     def prepare_data(self, new_data):
-        df = u.prepare_stock_dataframe(self.window_size, self.start, self.end, new_data)
+        df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
         num_data_points = df.shape[0]
         data_date = df.index.strftime("%Y-%m-%d").tolist()
 
