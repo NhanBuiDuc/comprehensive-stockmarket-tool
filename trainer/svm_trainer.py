@@ -63,14 +63,7 @@ class svm_trainer(Trainer):
 
     def train(self):
         self.mode = "train"
-        if "mse" in self.loss:
-            criterion = nn.MSELoss()
-        elif "mae" in self.loss:
-            criterion = nn.L1Loss()
-        elif "bce" in self.loss:
-            criterion = nn.BCELoss()
-        elif "focal" in self.loss:
-            criterion = FocalLoss(alpha=0.5, gamma=2)
+
 
         if not self.full_data:
             X_train = self.train_dataloader.dataset.X
