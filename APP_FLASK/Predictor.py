@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import NLP.util as nlp_u
 from APP_FLASK import util
 import numpy as np
+import torch
 class Predictor:
     def __init__(self):
         self.data_folder = f"./csv/"
@@ -26,14 +27,28 @@ class Predictor:
 
     def predict(self,symbol, model_type, window_size, output_size):
         if model_type in self.pytorch_timeseries_model_type_dict:
-            model_name = f'{symbol}_{model_type}_{window_size}.pth'
+            model_name = f'{symbol}_{model_type}_{output_size}.pth'
         elif model_type in self.tensorflow_timeseries_model_type_dict:
-            model_name = f'{symbol}_{model_type}_{window_size}.pkl'
+            model_name = f'{symbol}_{model_type}_{output_size}.pkl'
         model = Model(name=model_name)
         model = model.load_check_point(model_name)
 
         price_data, stock_data, news_data = self.prepare_data(symbol, window_size)
+        X = np.concatenate((price_data, stock_data, news_data), axis=1)
+        tensor_data = torch.tensor(X)
+        output = model(tensor_data)
+        threshold = 0.5
+        converted_output = torch.where(output >= threshold, torch.tensor(1), torch.tensor(0))
         
+        if torch.all(converted_output == 1):
+            output_json = {
+                f'{symbol}_{model_type}_{output_size}':  "UP"
+            }
+        elif torch.all(converted_output == 0):
+            output_json = {
+                f'{symbol}_{model_type}_{output_size}':  "DOWN"
+            }     
+        return output_json
     def prepare_data(self, symbol, window_size):
         end = datetime.now().strftime("%Y-%m-%d")
         # Convert the end date string to a datetime object
