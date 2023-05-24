@@ -1,6 +1,6 @@
 svm_cf = {
     "model": {
-        "svm_1": {
+        "svm_7": {
             "C": 1000,
             "kernel": 'poly',
             "degree": 400,
@@ -13,7 +13,7 @@ svm_cf = {
         }
     },
     "training": {
-        "svm_1":
+        "svm_7":
             {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,

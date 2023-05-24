@@ -31,7 +31,8 @@ import joblib
 class svm_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
-                 model=None, mode="train"):
+                 model=None, mode="train", 
+                 data_mode=3):
         super(svm_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
@@ -49,6 +50,7 @@ class svm_trainer(Trainer):
         self.model_type_dict = self.cf["tensorflow_timeseries_model_type_dict"]
         self.model = model
         self.mode = mode
+        self.data_mode = data_mode 
         self.model_full_name = self.symbol + "_" + self.model_name
         if self.mode == "train":
             self.prepare_data(self.new_data)
@@ -72,11 +74,23 @@ class svm_trainer(Trainer):
         elif "focal" in self.loss:
             criterion = FocalLoss(alpha=0.5, gamma=2)
 
+
         if not self.full_data:
-            X_train = self.train_dataloader.dataset.X
-            y_train = self.train_dataloader.dataset.y
-            x_val = self.train_dataloader.dataset.X
-            y_val = self.train_dataloader.dataset.y
+            if self.data_mode == 0:
+                X_train = self.train_dataloader.dataset.x_price
+                y_train = self.train_dataloader.dataset.y
+                x_val = self.valid_dataloader.dataset.x_price
+                y_val = self.valid_dataloader.dataset.y
+            elif self.data_mode == 1:
+                X_train = self.train_dataloader.dataset.x_stock
+                X_val = self.valid_dataloader.dataset.x_stock
+                y_train = self.train_dataloader.dataset.y
+                y_val = self.valid_dataloader.dataset.y
+            elif self.data_mode == 2:
+                X_train = self.train_dataloader.dataset.X
+                y_train = self.train_dataloader.dataset.y
+                x_val = self.valid_dataloader.dataset.X
+                y_val = self.valid_dataloader.dataset.y
             self.model.structure.fit(X_train, y_train)
             self.model.structure.predict(x_val[:10])
             torch.save({"model": self.model,
@@ -85,10 +99,24 @@ class svm_trainer(Trainer):
             "./models/" + self.model.full_name + ".pkl")
         elif self.full_data:
             self.combined_dataset = ConcatDataset([self.train_dataloader.dataset, self.valid_dataloader.dataset])
-            X_train = self.combined_dataset.dataset.X
-            y_train = self.combined_dataset.dataset.y
-            x_val = self.train_dataloader.dataset.X
-            y_val = self.train_dataloader.dataset.y
+
+            if self.data_mode == 0:
+                X_train = self.combined_dataset.dataset.x_price
+                y_train = self.combined_dataset.dataset.y
+                x_val = self.valid_dataloader.dataset.x_price
+                y_val = self.valid_dataloader.dataset.y
+            elif self.data_mode == 1:
+                X_train = self.combined_dataset.dataset.x_stock
+                X_val = self.combined_dataset.dataset.x_stock
+                y_train = self.train_dataloader.dataset.y
+                y_val = self.valid_dataloader.dataset.y
+            elif self.data_mode == 2:
+                X_train = self.combined_dataset.dataset.X
+                y_train = self.combined_dataset.dataset.y
+                x_val = self.valid_dataloader.dataset.X
+                y_val = self.valid_dataloader.dataset.y
+
+
             self.model.structure.fit(X_train, y_train)
             torch.save({"model": self.model,
             "state_dict": []
