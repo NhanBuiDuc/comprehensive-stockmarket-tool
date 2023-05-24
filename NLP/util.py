@@ -1026,13 +1026,21 @@ def download_news(symbol, from_date, window_size, new_data=True):
     main_df = pd.DataFrame()
     if not os.path.exists(save_folder + file_name):
         # Download news from all sources with the specified date range
-        google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
-        main_df = pd.concat([main_df, google_df])
-        finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
-        main_df = pd.concat([main_df, finhub_df])
-        benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
-        main_df = pd.concat([main_df, benzema_df])
-
+        try:
+            google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
+            main_df = pd.concat([main_df, google_df])
+        except:
+            pass
+        try:
+            finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
+            main_df = pd.concat([main_df, finhub_df])
+        except:
+            pass
+        try:
+            benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
+            main_df = pd.concat([main_df, benzema_df])
+        except:
+            pass
         # alphavantage_df = download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_data)
         # bing_df = download_bing_news(symbol, from_date, to_date, save_folder, new_data = True)
         # main_df = pd.concat([main_df, bing_df])
