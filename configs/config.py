@@ -95,7 +95,7 @@ config = {
             "scheduler_step_size": 50,
             "patient": 1000,
             "start": "2015-01-01",
-            "end": None,
+            "end": "2023-05-15",
             "best_model": True,
             "early_stop": True,
             "train_shuffle": True,
