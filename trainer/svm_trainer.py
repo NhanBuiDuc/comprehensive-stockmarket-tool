@@ -32,7 +32,7 @@ class svm_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
                  model=None, mode="train", 
-                 data_mode=3):
+                 data_mode=2):
         super(svm_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
@@ -331,9 +331,6 @@ class svm_trainer(Trainer):
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
-
-
-
 
     def prepare_eval_data(self):
         # load train data

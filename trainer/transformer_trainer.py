@@ -326,7 +326,7 @@ class Transformer_trainer(Trainer):
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
         dataset_slicing = X.shape[2]
-        news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
+        news_X, _  = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
                                          self.topk, new_data)
         X = np.concatenate((X, news_X), axis=2)
         self.num_feature = X.shape[2]
