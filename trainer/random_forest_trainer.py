@@ -31,7 +31,7 @@ import joblib
 class random_forest_trainer(Trainer):
     def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
                  model_full_name=None,
-                 model=None, mode="train"):
+                 model=None, mode="train", data_mode=2):
         super(random_forest_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
@@ -49,6 +49,7 @@ class random_forest_trainer(Trainer):
         self.model_type_dict = self.cf["tensorflow_timeseries_model_type_dict"]
         self.model = model
         self.mode = mode
+        self.data_mode = data_mode
         self.model_full_name = self.symbol + "_" + self.model_name
         if self.mode == "train":
             self.prepare_data(self.new_data)
@@ -63,32 +64,39 @@ class random_forest_trainer(Trainer):
 
     def train(self):
         self.mode = "train"
-        if "mse" in self.loss:
-            criterion = nn.MSELoss()
-        elif "mae" in self.loss:
-            criterion = nn.L1Loss()
-        elif "bce" in self.loss:
-            criterion = nn.BCELoss()
-        elif "focal" in self.loss:
-            criterion = FocalLoss(alpha=0.5, gamma=2)
 
         if not self.full_data:
-            X_train = self.train_dataloader.dataset.X
-            y_train = self.train_dataloader.dataset.y
-            x_val = self.train_dataloader.dataset.X
-            y_val = self.train_dataloader.dataset.y
+            if self.data_mode == 0:
+                X_train = self.train_dataloader.dataset.x_price
+                y_train = self.train_dataloader.dataset.Y
+                self.num_feature = X_train.shape[-1]
+            elif self.data_mode == 1:
+                X_train = self.train_dataloader.dataset.x_stock
+                y_train = self.train_dataloader.dataset.Y
+                self.num_feature = X_train.shape[-1]
+            elif self.data_mode == 2:
+                X_train = self.train_dataloader.dataset.X
+                y_train = self.train_dataloader.dataset.Y
+                self.num_feature = X_train.shape[-1]
             self.model.structure.fit(X_train, y_train)
-            self.model.structure.predict(x_val[:10])
+
             torch.save({"model": self.model,
             "state_dict": []
             },
             "./models/" + self.model.full_name + ".pkl")
         elif self.full_data:
             self.combined_dataset = ConcatDataset([self.train_dataloader.dataset, self.valid_dataloader.dataset])
-            X_train = self.combined_dataset.dataset.X
-            y_train = self.combined_dataset.dataset.y
-            x_val = self.train_dataloader.dataset.X
-            y_val = self.train_dataloader.dataset.y
+
+            if self.data_mode == 0:
+                X_train = self.combined_dataset.dataset.x_price
+                y_train = self.combined_dataset.dataset.Y
+            elif self.data_mode == 1:
+                X_train = self.combined_dataset.dataset.x_stock
+                y_train = self.train_dataloader.dataset.Y
+            elif self.data_mode == 2:
+                X_train = self.combined_dataset.dataset.X
+                y_train = self.combined_dataset.dataset.Y
+
             self.model.structure.fit(X_train, y_train)
             torch.save({"model": self.model,
             "state_dict": []
@@ -98,6 +106,16 @@ class random_forest_trainer(Trainer):
     def eval(self, model):
 
         train_dataloader, valid_dataloader, test_dataloader = self.prepare_eval_data()
+        if self.data_mode == 0:
+            train_dataloader.dataset.X = train_dataloader.dataset.x_price
+            valid_dataloader.dataset.X = valid_dataloader.dataset.x_price
+            test_dataloader.dataset.X = test_dataloader.dataset.x_price
+            self.num_feature = train_dataloader.dataset.X.shape[-1]
+        elif self.data_mode == 1:
+            train_dataloader.dataset.X = train_dataloader.dataset.x_stock
+            valid_dataloader.dataset.X = valid_dataloader.dataset.x_stock
+            test_dataloader.dataset.X = test_dataloader.dataset.x_stock
+            self.num_feature = train_dataloader.dataset.X.shape[-1]
         # Get the current date and time
         current_datetime = datetime.datetime.now()
 
@@ -308,6 +326,7 @@ class random_forest_trainer(Trainer):
         X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
         y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
         dataset_slicing = 39
+        self.num_feature = X_train.shape[-1]
         train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, dataset_slicing)
         valid_dataset = PriceAndIndicatorsAndNews_Dataset(X_valid, y_valid, dataset_slicing)
         test_dataset = PriceAndIndicatorsAndNews_Dataset(X_test, y_test, dataset_slicing)

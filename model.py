@@ -13,7 +13,6 @@ class Model:
         self.model_type = model_type
         self.structure = None
         self.name = name
-        self.full_name = full_name
         self.parameters = parameters
         self.train_stop_lr = None
         self.train_stop_epoch = None
@@ -26,7 +25,7 @@ class Model:
     def construct_structure(self):
 
         if self.model_type == self.pytorch_timeseries_model_type_dict[1]:
-            parameters = self.parameters["model"][self.name]
+            parameters = self.parameters["model"]
             self.structure = Movement(self.num_feature, **parameters)
 
         elif self.model_type == self.pytorch_timeseries_model_type_dict[2]:
@@ -34,27 +33,31 @@ class Model:
         elif self.model_type == self.pytorch_timeseries_model_type_dict[3]:
             pass
         elif self.model_type == self.pytorch_timeseries_model_type_dict[4]:
-            self.parameters = self.parameters["model"][self.name]
+            self.parameters = self.parameters["model"]
             self.structure = bm.LSTM_bench_mark(self.num_feature, **self.parameters)
         elif self.model_type == self.pytorch_timeseries_model_type_dict[5]:
-            self.parameters = self.parameters["model"][self.name]
+            self.parameters = self.parameters["model"]
             self.structure = bm.GRU_bench_mark(self.num_feature, **self.parameters)
         elif self.model_type == self.pytorch_timeseries_model_type_dict[6]:
-            self.parameters = self.parameters["model"][self.name]
+            self.parameters = self.parameters["model"]
             self.structure = TransformerClassifier(self.num_feature, **self.parameters)
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[1]:
-            self.parameters = self.parameters["model"][self.name]
+            self.parameters = self.parameters["model"]
             self.structure = svm_classifier(self.num_feature, **self.parameters)
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[2]:
-            self.parameters = self.parameters["model"][self.name]
+            self.parameters = self.parameters["model"]
             self.structure = rf_classifier(self.num_feature, **self.parameters)
 
-    def load_check_point(self, file_name):
-        check_point = torch.load('./models/' + file_name)
-        self = check_point["model"]
+    def load_check_point(self, model_name):
+
         # self.construct_structure()
         if self.model_type in self.pytorch_timeseries_model_type_dict.values():
+            check_point = torch.load('./models/' + model_name + ".pth")
+            self = check_point["model"]
             self.structure.load_state_dict(check_point['state_dict'])
+        else:
+            check_point = torch.load('./models/' + model_name + ".pkl")
+            self = check_point["model"]
         return self
 
     def predict(self, x):
@@ -328,16 +331,24 @@ class TransformerClassifier(nn.Module):
         self.news_transformer = nn.Transformer(d_model=768, nhead=64,
                                                num_encoder_layers=self.num_encoder_layers,
                                                dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-        self.fc = nn.Linear(self.num_feature * self.window_size, 1)
+        self.fc1 = nn.Linear(self.num_feature * self.window_size, 1)
+        self.fc2 = nn.Linear(100, 1)
+        self.relu = nn.ReLU()
+        self.tanh = nn.Tanh()
+        self.drop_out = nn.Dropout(self.dropout)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x_stock, x_news):
-        batch = x_stock.shape[0]
+        batch = x_news.shape[0]
         x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
         x_news = self.news_transformer(x_news, x_news)  # self-attention over the input sequence
         x = torch.concat([x_stock, x_news], axis=2)
         x = x.reshape(batch, -1)
-        x = self.fc(x)
+
+        x = self.fc1(x)
+        x = self.tanh(x)
+        # x = self.relu(x)
+        # x = self.fc2(x)
         x = self.sigmoid(x)
         return x
 
