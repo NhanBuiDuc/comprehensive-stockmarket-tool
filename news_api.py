@@ -46,7 +46,7 @@ if __name__ == "__main__":
     topK = 5
     window_size = cf["data"]["window_size"]
     max_summary_lenght = 60
-    symbol = "TSLA"
+    symbol = "AMZN"
     news_web_url_folder = "./NLP/news_web_url"
     news_web_file_name = news_web_url_folder + f'/{symbol}/{symbol}_url.csv'
     news_data_path = "./NLP/news_data/" + symbol + "/" + symbol + "_" + "data.csv"
