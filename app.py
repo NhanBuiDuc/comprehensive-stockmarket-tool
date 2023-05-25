@@ -137,7 +137,7 @@ def stop():
 	model_type = args.get('model_type')
 	window_size = args.get('window_size')
 	output_size = args.get('output_size')
-	output_dict = predictor.predict(symbol, model_type, window_size, output_size, output_dict)
+	output_dict = predictor.predict(symbol, model_type, window_size, output_size)
 	response = app.response_class(
 		response=json.dumps(output_dict),
 		status=200,

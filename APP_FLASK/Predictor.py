@@ -64,5 +64,5 @@ class Predictor:
         price_data = stock_data[:, :6]
         news_data = util.prepare_news_data(stock_df, symbol, window_size, 5, False)
         return price_data, stock_data, news_data
-    def fetch_prediction():
+    def fetch_prediction(self):
         pass

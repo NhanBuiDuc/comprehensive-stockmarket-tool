@@ -383,10 +383,10 @@ chart = {
         });
     },
 
-    getDataTable: function(value, callback) {
+    getDataTable: function(value, window, output, callback) {
         let object = this;
         // let url = `http://127.0.0.1:5000/execute/${value}`
-        let url = `/execute/${value}`
+        let url = `/execute?symbol=${value}&windowsize=${window}&outputsize=${output}`
         fetch(url, {
             method: 'GET',
             headers: {
@@ -402,3 +402,4 @@ chart = {
         });
     },
 };
+

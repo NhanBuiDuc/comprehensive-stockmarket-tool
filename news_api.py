@@ -21,7 +21,7 @@ from NLP import util as u
 from newsplease import NewsPlease
 from sentence_transformers import SentenceTransformer
 from configs.config import config as cf
-untrustworthy_url = ["https://www.zac.com",
+untrustworthy_url = ["https://www.zacks.com",
                      "https://www.thefly.com",
                      "https://www.investing.com",
                      'https://investorplace.com',
@@ -33,7 +33,7 @@ trustworthy_url = ["zac.com",
                    ]
 trustworthy_source = ["CNBC", "GuruFocus"
                       ]
-untrustworthy_source = ["Nasdaq", "Thefly.com", "Yahoo"]
+untrustworthy_source = ["Nasdaq", "Thefly.com", "Yahoo", "zacks.com"]
 
 if __name__ == "__main__":
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     topK = 5
     window_size = cf["data"]["window_size"]
     max_summary_lenght = 60
-    symbol = "AMZN"
+    symbol = "GOOGL"
     news_web_url_folder = "./NLP/news_web_url"
     news_web_file_name = news_web_url_folder + f'/{symbol}/{symbol}_url.csv'
     news_data_path = "./NLP/news_data/" + symbol + "/" + symbol + "_" + "data.csv"
