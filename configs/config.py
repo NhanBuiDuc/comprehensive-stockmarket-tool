@@ -7,7 +7,6 @@ config = {
         "key_adjusted_close": "5. adjusted close"
     },
     "data": {
-        "window_size": 7,
         "train_test_split_size": 0.7,
         "train_val_split_size": 0.7,
         "smoothing": 2,
@@ -52,7 +51,7 @@ config = {
                 "device": "cuda",  # "cuda" or "cpu"
                 "batch_size": 64,
                 "num_epoch": 1,
-                "learning_rate": 0.01,
+                "learning_rate": 0.001,
                 "loss": "mse",
                 "evaluate": ["mse", "mae"],
                 "optimizer": "adam",
