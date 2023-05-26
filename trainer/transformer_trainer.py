@@ -323,7 +323,15 @@ class Transformer_trainer(Trainer):
         dataset_slicing = X.shape[2]
         news_X, _  = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
                                          self.topk, new_data)
-        X = np.concatenate((X, news_X), axis=2)
+
+
+        if self.data_mode == 2:
+            _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
+                                                self.topk, new_data)
+            news_X = news_X[:-self.output_step]
+            # Concatenate X_stocks and news_X
+            X = np.concatenate((X, news_X), axis=1)
+
         self.num_feature = X.shape[2]
 
         # Split train-val and test sets

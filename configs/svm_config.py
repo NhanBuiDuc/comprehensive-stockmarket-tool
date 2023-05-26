@@ -6,8 +6,9 @@ svm_cf = {
         "gamma": "scale",
         "coef0": 100,
         "class_weight": {0: 0.5, 1: 0.5},
-        "window_size": 7,
+        "window_size": 3,
         "output_step": 7,
+        "data_mode": 1,
         "topk": 5
     },
     "training": {
