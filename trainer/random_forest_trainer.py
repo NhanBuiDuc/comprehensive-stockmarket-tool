@@ -1,16 +1,10 @@
-from sklearn.utils import shuffle
+from trainer.trainer import Trainer
 
-from trainer.trainer import Trainer, run_epoch, check_best_loss, is_early_stop
-
-import pandas as pd
 import torch
 from torch.utils.data import ConcatDataset
 from model import Model
 from configs.random_forest_config import rf_cf as cf
 import torch.nn as nn
-import torch.optim as optim
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-import sys
 import util as u
 from dataset import PriceAndIndicatorsAndNews_Dataset
 from sklearn.metrics import classification_report
@@ -18,14 +12,11 @@ from sklearn.metrics import confusion_matrix
 import json
 import numpy as np
 import os
-from torch.utils.data import DataLoader, Dataset
-from sklearn.model_selection import StratifiedShuffleSplit
+from torch.utils.data import DataLoader
 import datetime
 import NLP.util as nlp_u
 from tqdm import tqdm
-from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
-from loss import FocalLoss
-import joblib
+from sklearn.model_selection import StratifiedShuffleSplit
 
 
 class random_forest_trainer(Trainer):

@@ -5,15 +5,15 @@ transformer_cf = {
         "dim_feedforward": 50,
         "dropout": 0.3,
         "window_size": 7,
-        "output_step": 3,
-        "data_mode":1,
+        "output_step": 7,
+        "data_mode":2,
         "topk": 5
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
         "batch_size": 64,
         "num_epoch": 200,
-        "learning_rate": 0.001,
+        "learning_rate": 0.0001,
         "loss": "focal",
         "evaluate": ["bce", "accuracy", "precision", "f1"],
         "optimizer": "adam",

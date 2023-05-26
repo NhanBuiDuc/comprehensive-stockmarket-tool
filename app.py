@@ -7,7 +7,7 @@ import base64
 import shutil
 from pathlib import Path
 import requests
-from APP_FLASK.Predictor import Predictor
+from APP_FLASK.TrendPrediction import Predictor
 
 app = Flask(__name__)
 predictor = Predictor()
@@ -18,7 +18,7 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 curr_path = os.getcwd()
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = ROOT_DIR.replace('\\', '/')
-#os.chdir(ROOT_DIR.split("APP_WEB")[0])
+os.chdir(ROOT_DIR.split("APP_WEB")[0])
 print(os.getcwd())
 #CODE_DIR = ROOT_DIR + '/APPWEB'
 

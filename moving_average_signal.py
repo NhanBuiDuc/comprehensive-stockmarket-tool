@@ -25,7 +25,7 @@ class Signal:
         api_key = cf["alpha_vantage"]["key"]
         filename = symbol + '.csv'
         
-        src_path = '../csv/'
+        src_path = 'csv/'
         if not file_exist(src_path, filename):
             df = download_stock_csv_file(src_path, filename, api_key, 14)
         df = pd.read_csv(src_path + filename)
@@ -356,5 +356,5 @@ class Signal:
 if __name__ == "__main__":
     print(os.getcwd())
     signal = Signal()
-    df = signal.define_signal(path='../technical_signal/')
+    df = signal.define_signal(path='technical_signal/')
     

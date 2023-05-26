@@ -1,4 +1,4 @@
-from trainer.trainer import Trainer, run_epoch, check_best_loss, is_early_stop
+from trainer.trainer import Trainer, check_best_loss, is_early_stop
 
 import pandas as pd
 import torch
@@ -16,8 +16,7 @@ from sklearn.metrics import confusion_matrix
 import json
 import numpy as np
 import os
-from torch.utils.data import DataLoader, Dataset
-from sklearn.model_selection import StratifiedShuffleSplit
+from torch.utils.data import DataLoader
 import datetime
 import NLP.util as nlp_u
 from tqdm import tqdm
