@@ -13,9 +13,9 @@
 
 from trainer.svm_trainer import svm_trainer
 from model import Model
-model_name = "svm_1"
-file_name = "AAPL_svm_1.pkl"
-trainer = svm_trainer(model_name=model_name, new_data=False, full_data=False, mode = "eval")
+model_name = "svm_7"
+file_name = "AAPL_svm_7.pkl"
+trainer = svm_trainer(model_name=model_name, new_data=False, full_data=False, mode = "eval", data_mode=0)
 
 model = Model(name=model_name)
 model = model.load_check_point(file_name)

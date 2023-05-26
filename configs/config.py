@@ -7,7 +7,7 @@ config = {
         "key_adjusted_close": "5. adjusted close"
     },
     "data": {
-        "window_size": 7,
+        "window_size": 1,
         "train_test_split_size": 0.7,
         "train_val_split_size": 0.7,
         "smoothing": 2,
@@ -95,7 +95,7 @@ config = {
             "scheduler_step_size": 50,
             "patient": 1000,
             "start": "2015-01-01",
-            "end": None,
+            "end": "2023-05-15",
             "best_model": True,
             "early_stop": True,
             "train_shuffle": True,

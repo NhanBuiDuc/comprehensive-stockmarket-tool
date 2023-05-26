@@ -5,7 +5,7 @@ transformer_cf = {
             "num_encoder_layers": 50,
             "dim_feedforward": 50,
             "dropout": 0.5,
-            "window_size": 7,
+            "window_size": 1,
             "output_step": 1,
             "topk": 5
         }

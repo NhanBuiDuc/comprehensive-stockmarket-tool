@@ -71,8 +71,6 @@ class PriceAndIndicatorsAndNews_Dataset(Dataset):
 
         x = x.astype(np.float32)
         y = y.astype(np.float32)
-        self.x = x
-        self.y = y
         x_stock = x[:, :slicing]
         self.x_news = x[:, slicing:]
         self.x_stock = self.scaler.fit_transform(x_stock)
@@ -81,13 +79,9 @@ class PriceAndIndicatorsAndNews_Dataset(Dataset):
         self.x_indicators = self.x_stock[:, 5:slicing]
         self.X = np.concatenate((self.x_stock, self.x_news), axis=1)
         self.X = self.X.astype(np.float32)
-        self.y = y.astype(np.float32)
-
-
-
-
+        self.Y = y.astype(np.float32)
     def __len__(self):
-        return len(self.y)
+        return len(self.Y)
 
     def __getitem__(self, idx):
         # x_price = self.x_price[idx]
@@ -96,9 +90,9 @@ class PriceAndIndicatorsAndNews_Dataset(Dataset):
         # x_news = self.x_news[idx]
         # y = self.y[idx]
         # return x_price, x_indicators, x_stock, x_news, y
-        X = self.x[idx]
-        y = self.y[idx]
-        return X, y
+        X = self.X[idx]
+        Y = self.Y[idx]
+        return X, Y
 
 
 

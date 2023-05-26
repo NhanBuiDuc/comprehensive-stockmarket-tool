@@ -22,7 +22,6 @@ def predict_LSTM(file):
     os.chdir(ROOT_DIR.split("APP_WEB")[0])
     print('asdasd: '+ ROOT_DIR.split("APP_WEB")[0])
     try:
-        print(os.getcwd())
         # Execute your Python file using subprocess module
         # subprocess.run(['python', './predict_stock.py'], check=True)
         # returnValue = subprocess.check_output(
@@ -55,7 +54,25 @@ def createFile(content):
     with open(path, 'w') as fp:
         fp.write('{"symbol":"' + content + '"}')
 
+@app.route('/chart', methods=['GET','POST'])
+def my_route():
+    symbol = request.args.get('symbol', default = '*', type = str)
+    windowsize = request.args.get('windowsize', default = 7, type = int) 
+    outputsize = request.args.get('outputsize', default = 7, type = int)
+
+    
+    print(symbol,windowsize,outputsize) 
+    response = app.response_class(
+		response=json.dumps({'symbol': symbol, 'windowsize': windowsize, 'outputsize': outputsize}),
+		status=200,
+		mimetype='application/json'
+	)
+    return response
+
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 
+
+
+#asdasd

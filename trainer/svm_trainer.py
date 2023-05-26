@@ -71,21 +71,24 @@ class svm_trainer(Trainer):
         if not self.full_data:
             if self.data_mode == 0:
                 X_train = self.train_dataloader.dataset.x_price
-                y_train = self.train_dataloader.dataset.y
+                y_train = self.train_dataloader.dataset.Y
                 x_val = self.valid_dataloader.dataset.x_price
-                y_val = self.valid_dataloader.dataset.y
+                y_val = self.valid_dataloader.dataset.Y
+                self.num_feature = X_train.shape[-1]
             elif self.data_mode == 1:
                 X_train = self.train_dataloader.dataset.x_stock
                 X_val = self.valid_dataloader.dataset.x_stock
-                y_train = self.train_dataloader.dataset.y
-                y_val = self.valid_dataloader.dataset.y
+                y_train = self.train_dataloader.dataset.Y
+                y_val = self.valid_dataloader.dataset.Y
+                self.num_feature = X_train.shape[-1]
             elif self.data_mode == 2:
                 X_train = self.train_dataloader.dataset.X
-                y_train = self.train_dataloader.dataset.y
+                y_train = self.train_dataloader.dataset.Y
                 x_val = self.valid_dataloader.dataset.X
-                y_val = self.valid_dataloader.dataset.y
+                y_val = self.valid_dataloader.dataset.Y
+                self.num_feature = X_train.shape[-1]
             self.model.structure.fit(X_train, y_train)
-            self.model.structure.predict(x_val[:10])
+
             torch.save({"model": self.model,
             "state_dict": []
             },
@@ -95,19 +98,19 @@ class svm_trainer(Trainer):
 
             if self.data_mode == 0:
                 X_train = self.combined_dataset.dataset.x_price
-                y_train = self.combined_dataset.dataset.y
+                y_train = self.combined_dataset.dataset.Y
                 x_val = self.valid_dataloader.dataset.x_price
-                y_val = self.valid_dataloader.dataset.y
+                y_val = self.valid_dataloader.dataset.Y
             elif self.data_mode == 1:
                 X_train = self.combined_dataset.dataset.x_stock
                 X_val = self.combined_dataset.dataset.x_stock
-                y_train = self.train_dataloader.dataset.y
-                y_val = self.valid_dataloader.dataset.y
+                y_train = self.train_dataloader.dataset.Y
+                y_val = self.valid_dataloader.dataset.Y
             elif self.data_mode == 2:
                 X_train = self.combined_dataset.dataset.X
-                y_train = self.combined_dataset.dataset.y
+                y_train = self.combined_dataset.dataset.Y
                 x_val = self.valid_dataloader.dataset.X
-                y_val = self.valid_dataloader.dataset.y
+                y_val = self.valid_dataloader.dataset.Y
 
 
             self.model.structure.fit(X_train, y_train)
@@ -119,6 +122,16 @@ class svm_trainer(Trainer):
     def eval(self, model):
 
         train_dataloader, valid_dataloader, test_dataloader = self.prepare_eval_data()
+        if self.data_mode == 0:
+            train_dataloader.dataset.X = train_dataloader.dataset.x_price
+            valid_dataloader.dataset.X = valid_dataloader.dataset.x_price
+            test_dataloader.dataset.X = test_dataloader.dataset.x_price
+            self.num_feature = train_dataloader.dataset.X.shape[-1]
+        elif self.data_mode == 1:
+            train_dataloader.dataset.X = train_dataloader.dataset.x_stock
+            valid_dataloader.dataset.X = valid_dataloader.dataset.x_stock
+            test_dataloader.dataset.X = test_dataloader.dataset.x_stock
+            self.num_feature = train_dataloader.dataset.X.shape[-1]
         # Get the current date and time
         current_datetime = datetime.datetime.now()
 
@@ -330,6 +343,8 @@ class svm_trainer(Trainer):
         y_valid = np.load('./dataset/y_valid_' + self.model_full_name + '.npy', allow_pickle=True)
         X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
         y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
+
+        self.num_feature = X_train.shape[-1]
         dataset_slicing = 39
         train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, dataset_slicing)
         valid_dataset = PriceAndIndicatorsAndNews_Dataset(X_valid, y_valid, dataset_slicing)
