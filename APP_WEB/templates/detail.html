@@ -10,9 +10,7 @@
         <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
     </head>
     <body>
-        <div class="container">
-            <div class="name inblock option">Apple Inc</div>
-        </div>
+
 
         <div class="container">
             <div class="speedometer-container firsttable behind">
@@ -92,23 +90,20 @@
         </div>
 
         <div class="slidecontainer">
-            <p class="option">Select date</p>
             <select id="sel" class="option">
             </select>
         </div>
 
-        <div class="container bottom">
-            <table id="table1" class="styled-table firsttable">
+        <div class="container">
+            <table id="table1" class="firsttable">
                 <tr>
                     <th>Name</th>
                     <th>Value</th>
                     <th>Action</th>
                 </tr>
             </table>
-        </div>
 
-        <div class="container bottom">
-            <table id="table2" class="styled-table secondtable">
+            <table id="table2" class="secondtable">
                 <tr>
                     <th>Name</th>
                     <th>Value</th>
@@ -121,6 +116,7 @@
     <script>
         $(document).ready(function () {
             $.getJSON("../static/file/AAPL_signal.json", function (data) {
+                data = data.reverse();
                 $.each(data, function(i, option) {
                     $('#sel').append($('<option/>').text(option.date));
                 });      
