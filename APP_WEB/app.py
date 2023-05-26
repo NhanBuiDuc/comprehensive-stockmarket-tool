@@ -7,8 +7,10 @@ import base64
 import shutil
 from pathlib import Path
 import requests
+from APP_FLASK.Predictor import Predictor
 
 app = Flask(__name__)
+predictor = Predictor()
 CORS(app)
 
 curr_path = os.getcwd()
@@ -60,7 +62,7 @@ def my_route():
     windowsize = request.args.get('windowsize', default = 7, type = int) 
     outputsize = request.args.get('outputsize', default = 7, type = int)
 
-    
+
     print(symbol,windowsize,outputsize) 
     response = app.response_class(
 		response=json.dumps({'symbol': symbol, 'windowsize': windowsize, 'outputsize': outputsize}),
@@ -69,10 +71,21 @@ def my_route():
 	)
     return response
 
+### 
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.json
+    symbol = data['symbol']
+    model_type = data['model_type']
+    window_size = data['window_size']
+    output_size = data['output_size']
+    
+    prediction = predictor.predict(symbol, model_type, window_size, output_size)
+    
+    return jsonify(prediction)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
 
 
-
-#asdasd

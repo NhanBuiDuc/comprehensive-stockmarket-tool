@@ -401,5 +401,6 @@ chart = {
               console.log('API went wrong.', err);
         });
     },
+    
 };
 
