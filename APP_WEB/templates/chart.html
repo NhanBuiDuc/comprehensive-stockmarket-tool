@@ -100,13 +100,13 @@
     </figure>
     -->
     <!-- HTML !-->
-    <select id="button-select window">
+    <select id="button-select" class="window">
       <option value="">Window Size</option>
       <option value=3>3</option>
       <option value=7>7</option>
       <option value=14>14</option>
     </select>
-    <select id="button-select output">
+    <select id="button-select" class="output">
       <option value="">Output Size</option>
       <option value=3>3</option>
       <option value=7>7</option>
@@ -146,7 +146,14 @@
 </body>
 
 <script>
-
+  function getValue() {
+      var windowElement = document.getElementsByClassName("window");
+      var windowsize = windowElement.value;
+      console.log(windowsize);
+      var outputElement = document.getElementsByClassName("output");
+      var outputsize = outputElement.value;
+      console.log(outputsize);
+  }
   function loadJSON(filename) {
     var symbol = filename.substring(0, filename.indexOf('_signal'));
     console.log(symbol)
