@@ -10,7 +10,7 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 import util as u
-from dataset import Classification_TimeSeriesDataset, StockAndNews_Dataset
+from dataset import PriceAndIndicatorsAndNews_TimeseriesDataset
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import json
@@ -26,7 +26,7 @@ from loss import FocalLoss
 
 
 class Transformer_trainer(Trainer):
-    def __init__(self, new_data=True, full_data=False, mode="train", data_mode = 0):
+    def __init__(self, new_data=True, full_data=False, mode="train"):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
@@ -40,7 +40,6 @@ class Transformer_trainer(Trainer):
         self.full_data = full_data
         self.num_feature = None
         self.new_data = new_data
-        self.data_mode = data_mode
         self.model_name = f'{self.model_type}_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(self.data_mode)}'
         self.model_type_dict = self.cf["pytorch_timeseries_model_type_dict"]
         self.model = None
@@ -408,8 +407,8 @@ class Transformer_trainer(Trainer):
         np.save(y_valid_file, y_valid)
 
         # Create datasets and dataloaders for train and validation sets
-        train_dataset = StockAndNews_Dataset(X_train, y_train, dataset_slicing)
-        valid_dataset = StockAndNews_Dataset(X_valid, y_valid, dataset_slicing)
+        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, dataset_slicing)
+        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, dataset_slicing)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
 
@@ -426,7 +425,7 @@ class Transformer_trainer(Trainer):
         np.save(y_test_file, y_test)
 
         # Create test dataset and dataloader
-        test_dataset = StockAndNews_Dataset(X_test, y_test, dataset_slicing)
+        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, dataset_slicing)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
     def prepare_eval_data(self):
@@ -438,9 +437,9 @@ class Transformer_trainer(Trainer):
         X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
         y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
         dataset_slicing = 39
-        train_dataset = StockAndNews_Dataset(X_train, y_train, dataset_slicing)
-        valid_dataset = StockAndNews_Dataset(X_valid, y_valid, dataset_slicing)
-        test_dataset = StockAndNews_Dataset(X_test, y_test, dataset_slicing)
+        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, dataset_slicing)
+        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, dataset_slicing)
+        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, dataset_slicing)
 
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)

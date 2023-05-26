@@ -6,6 +6,7 @@ transformer_cf = {
         "dropout": 0.3,
         "window_size": 3,
         "output_step": 3,
+        "data_mode":1,
         "topk": 5
     },
     "training": {
