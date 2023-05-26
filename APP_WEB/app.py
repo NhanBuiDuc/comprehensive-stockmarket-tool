@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, render_template, request, json
+from flask_cors import CORS
 import subprocess
 import os
 import pandas as pd
@@ -8,21 +9,27 @@ from pathlib import Path
 import requests
 
 app = Flask(__name__)
+CORS(app)
 
 curr_path = os.getcwd()
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = ROOT_DIR.replace('\\', '/')
-#CODE_DIR = ROOT_DIR + '/comprehensive-stockmarket-tool'
+#CODE_DIR = ROOT_DIR + '/APPWEB'
 
-@app.route('/execute')
-def predict_LSTM():
-    os.chdir(ROOT_DIR)
+@app.route('/execute/<file>', methods=['GET'])
+def predict_LSTM(file):
+    symbol = file
+    os.chdir(ROOT_DIR.split("APP_WEB")[0])
+    print('asdasd: '+ ROOT_DIR.split("APP_WEB")[0])
     try:
-        print(os.getcwd())
         # Execute your Python file using subprocess module
         # subprocess.run(['python', './predict_stock.py'], check=True)
+        # returnValue = subprocess.check_output(
+        # ['python', './predict_stock.py'])
+
+        createFile(symbol)
         returnValue = subprocess.check_output(
-        ['python', './predict_stock.py'])
+                "python predict_stock.py")
 
         json_str = json.dumps(
             {'price': returnValue.decode('utf-8').replace("\\", "").replace("\r", "").replace("\n", "").split("tensor")[1].split("(")[1].split(")")[0]})
@@ -32,6 +39,40 @@ def predict_LSTM():
     except Exception as e:
         return f'Error executing Python file: {str(e)}'
 
-if __name__ == '__main__':
-    app.run()
 
+@app.route('/', methods=['GET'])
+def index1():
+    return render_template('chart.html')
+
+
+def createFile(content):
+    #symbolconfig.json {'symbol': 'GOOGLE'}
+    FILE = 'symbolconfig.json'
+    path = './configs/' + FILE
+    
+    # Create and write data to text file
+    with open(path, 'w') as fp:
+        fp.write('{"symbol":"' + content + '"}')
+
+@app.route('/chart', methods=['GET','POST'])
+def my_route():
+    symbol = request.args.get('symbol', default = '*', type = str)
+    windowsize = request.args.get('windowsize', default = 7, type = int) 
+    outputsize = request.args.get('outputsize', default = 7, type = int)
+
+    
+    print(symbol,windowsize,outputsize) 
+    response = app.response_class(
+		response=json.dumps({'symbol': symbol, 'windowsize': windowsize, 'outputsize': outputsize}),
+		status=200,
+		mimetype='application/json'
+	)
+    return response
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+#asdasd

@@ -37,23 +37,23 @@ class MyMinMaxScaler():
         return (x_tensor * (self.max_val - self.min_val)) + self.min_val
 
 
-class MyDataset(Dataset):
-    def __init__(self, x_train, y_train, slicing):
+class StockAndNews_Dataset(Dataset):
+    def __init__(self, x, y, slicing):
         self.scaler = MinMaxScaler(feature_range=(-100, 100))
 
-        x_train = x_train.astype(np.float32)
-        y_train = y_train.astype(np.float32)
+        x = x.astype(np.float32)
+        y = y.astype(np.float32)
 
-        x_stock = x_train[:, :, :slicing]
-        self.x_news = x_train[:, :, slicing:]
+        x_stock = x[:, :, :slicing]
+        self.x_news = x[:, :, slicing:]
 
         x_stock = x_stock.reshape((x_stock.shape[0] * x_stock.shape[1], x_stock.shape[2]))
         x_stock = self.scaler.fit_transform(x_stock)
         # Reshape the scaled data back to the original shape
-        self.x_stock = x_stock.reshape((x_train.shape[0], x_train.shape[1], slicing))
-        # self.x_train = np.concatenate((x_stock, self.x_news), axis=2)
-        # self.x_train = self.x_train.astype(np.float32)
-        self.y_train = y_train.astype(np.float32)
+        self.x_stock = x_stock.reshape((x.shape[0], x.shape[1], slicing))
+        self.X = np.concatenate((self.x_stock, self.x_news), axis=2)
+        self.X = self.X.astype(np.float32)
+        self.y = y.astype(np.float32)
 
     def __len__(self):
         return len(self.x_stock)
@@ -61,8 +61,57 @@ class MyDataset(Dataset):
     def __getitem__(self, idx):
         x_stock = self.x_stock[idx]
         x_news = self.x_news[idx]
-        y = self.y_train[idx]
+        y = self.y[idx]
         return x_stock, x_news, y
+
+
+class PriceAndIndicatorsAndNews_Dataset(Dataset):
+    def __init__(self, x, y, slicing):
+        self.scaler = MinMaxScaler(feature_range=(-100, 100))
+
+        x = x.astype(np.float32)
+        y = y.astype(np.float32)
+        x_stock = x[:, :slicing]
+        self.x_news = x[:, slicing:]
+        self.x_stock = self.scaler.fit_transform(x_stock)
+        # Reshape the scaled data back to the original shape
+        self.x_price = self.x_stock[:, :5]
+        self.x_indicators = self.x_stock[:, 5:slicing]
+        self.X = np.concatenate((self.x_stock, self.x_news), axis=1)
+        self.X = self.X.astype(np.float32)
+        self.Y = y.astype(np.float32)
+    def __len__(self):
+        return len(self.Y)
+
+    def __getitem__(self, idx):
+        X = self.X[idx]
+        Y = self.Y[idx]
+        return X, Y
+
+class PriceAndIndicatorsAndNews_TimeseriesDataset(Dataset):
+    def __init__(self, x, y, slicing):
+        self.scaler = MinMaxScaler(feature_range=(-100, 100))
+
+        x = x.astype(np.float32)
+        y = y.astype(np.float32)
+        x_stock = x[:, :, :slicing]
+        self.x_news = x[:, :, slicing:]
+        self.x_stock = self.scaler.fit_transform(x_stock)
+        # Reshape the scaled data back to the original shape
+        self.x_price = self.x_stock[:, :, :5]
+        self.x_indicators = self.x_stock[:, :, 5:slicing]
+        self.X = np.concatenate((self.x_stock, self.x_news), axis=1)
+        self.X = self.X.astype(np.float32)
+        self.Y = y.astype(np.float32)
+    def __len__(self):
+        return len(self.Y)
+
+    def __getitem__(self, idx):
+        X = self.X[idx]
+        Y = self.Y[idx]
+        return X, Y
+
+
 
 
 class TimeSeriesDataset(Dataset):

@@ -18,6 +18,14 @@
 
 }
 
+*{
+user-select: none;
+}
+  
+*:focus {
+outline: none;
+}
+
 .highcharts-container {
     font-family: Dosis, arial, helvetica, sans-serif;
 }
@@ -180,7 +188,7 @@ font-size: 16px; /* prevent page zoom in iOS */
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 9999;
+    /* z-index: 9999; */
     background-color: #fff transparent;
     padding: 10px;
     /* border: 1px solid #ccc; */
@@ -190,24 +198,5 @@ font-size: 16px; /* prevent page zoom in iOS */
 
 .button-list button {
     margin: 0 30px; /* Adjust the space between buttons as needed */
-}
-
-.b-apple {
-    background-color: #7cb5ec;
-}
-
-.b-microsoft {
-    background-color: #7cb5ec;
-}
-
-.b-tesla {
-    background-color: #7cb5ec;
-}
-
-.b-google {
-    background-color: #7cb5ec;
-}
-
-.b-amazon {
     background-color: #7cb5ec;
 }

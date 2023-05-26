@@ -347,6 +347,8 @@ class Signal:
         # Save the data to a JSON file with the specified path
         with open(file_path, 'w') as file:
             file.write(json.dumps(df, indent=2))
+
+
         return df
 
 

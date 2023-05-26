@@ -296,8 +296,7 @@ class Movement_trainer(Trainer):
 
     def prepare_data(self, new_data):
         training_param = self.config["training"][self.model_name]
-
-        df = u.prepare_stock_dataframe(self.window_size, self.start, self.end, new_data)
+        df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
         num_data_points = df.shape[0]
         num_feature = df.shape[1]
         self.num_feature = num_feature
