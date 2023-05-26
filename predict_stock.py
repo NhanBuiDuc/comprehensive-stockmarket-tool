@@ -31,11 +31,11 @@ class Predict_Stock_Price:
         self.optimizer = optim.Adam(self.model.parameters(), lr=config["training"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=config["training"]["scheduler_step_size"], gamma=0.1)
         self.scaler = dts.MyMinMaxScaler()
-        self.newsymbol = self.readjson('./configs/symbolconfig.json')
+        self.newsymbol = self.readjson('../configs/symbolconfig.json')
         config['alpha_vantage']['symbol'] = self.newsymbol
         # define path to model, dataset
-        self.data_path = './csv/'
-        self.models_path='./models/price_predict/'
+        self.data_path = '../csv/'
+        self.models_path= '../models/price_predict/'
 
     def readjson(self, path):
         with open(path, 'r') as json_file:
