@@ -8,8 +8,6 @@ from torch.utils.data import ConcatDataset
 from model import Model
 from configs.random_forest_config import rf_cf as cf
 import torch.nn as nn
-import torch.optim as optim
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 import util as u
 from dataset import PriceAndIndicatorsAndNews_Dataset
@@ -36,21 +34,19 @@ class random_forest_trainer(Trainer):
         self.__dict__.update(self.cf)
         self.config = cf
         self.symbol = self.cf["alpha_vantage"]["symbol"]
-        self.model_name = model_name
+        self.model_type = "svm"
         self.__dict__.update(self.config["model"][self.model_name])
         self.__dict__.update(self.config["training"][self.model_name])
         self.test_dataloader = None
         self.valid_dataloader = None
         self.train_dataloader = None
         self.full_data = full_data
-        self.num_feature = num_feature
+        self.num_feature = None
         self.new_data = new_data
-        self.model_type = "random_forest"
+        self.model_name = f'{self.model_type}_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(self.data_mode)}'
         self.model_type_dict = self.cf["tensorflow_timeseries_model_type_dict"]
-        self.model = model
+        self.model = None
         self.mode = mode
-        self.data_mode = data_mode
-        self.model_full_name = self.symbol + "_" + self.model_name
         if self.mode == "train":
             self.prepare_data(self.new_data)
         else:
@@ -60,7 +56,7 @@ class random_forest_trainer(Trainer):
     def indentify(self):
         self.model = Model(name=self.model_name, num_feature=self.num_feature, parameters=self.config,
                            model_type=self.model_type,
-                           full_name=self.model_full_name)
+                           full_name=self.model_name)
 
     def train(self):
         self.mode = "train"
@@ -127,7 +123,7 @@ class random_forest_trainer(Trainer):
         datetime_str = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
         # Open the file in write mode
-        save_path = os.path.join(save_folder, self.model_full_name + "_eval")
+        save_path = os.path.join(save_folder, self.model_name + "_eval")
         # Open the file in write mode
         with open(save_path, "a") as f:
             f.write(datetime_str)
@@ -145,15 +141,15 @@ class random_forest_trainer(Trainer):
             if i == 0:
                 torch.cuda.empty_cache()
                 dataloader = train_dataloader
-                print_string = "Train evaluate " + self.model_full_name
+                print_string = "Train evaluate " + self.model_name
             if i == 1:
                 torch.cuda.empty_cache()
                 dataloader = valid_dataloader
-                print_string = "Valid evaluate " + self.model_full_name
+                print_string = "Valid evaluate " + self.model_name
             elif i == 2:
                 torch.cuda.empty_cache()
                 dataloader = test_dataloader
-                print_string = "Test evaluate " + self.model_full_name
+                print_string = "Test evaluate " + self.model_name
             if "accuracy" or "precision" or "f1" in self.evaluate:
                 # Create empty lists to store the true and predicted labels
                 true_labels = []
@@ -189,7 +185,7 @@ class random_forest_trainer(Trainer):
                     os.makedirs(save_folder)
 
                 # Open the file in write mode
-                save_path = os.path.join(save_folder, self.model_full_name + "_eval")
+                save_path = os.path.join(save_folder, self.model_name + "_eval")
                 # Open the file in write mode
                 with open(save_path, "a") as f:
                     # Write the classification report to the file
@@ -204,7 +200,7 @@ class random_forest_trainer(Trainer):
                     f.write("-" * 100)
                     f.write("\n")
                 # Print a message to confirm that the file was written successfully
-                print("Results written to " + self.model_full_name + "_eval.txt")
+                print("Results written to " + self.model_name + "_eval.txt")
 
             temp_evaluate = np.array(self.evaluate)
 
@@ -233,7 +229,7 @@ class random_forest_trainer(Trainer):
                     os.makedirs(save_folder)
 
                 # Open the file in append mode
-                save_path = os.path.join(save_folder, self.model_full_name + "_eval")
+                save_path = os.path.join(save_folder, self.model_name + "_eval")
                 with open(save_path, "a") as f:
                     # Write the loss to the file
                     f.write(print_string + " " + loss_str + "\n")
@@ -259,13 +255,17 @@ class random_forest_trainer(Trainer):
 
         # Prepare X
         X_stocks = np.array(df.values)[:-self.output_step]
-        _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
-                                            self.topk, new_data)
-        news_X = news_X[:-self.output_step]
+        if self.data_mode == 2:
+            _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
+                                                self.topk, new_data)
+            news_X = news_X[:-self.output_step]
+            # Concatenate X_stocks and news_X
+            X = np.concatenate((X_stocks, news_X), axis=1)
+        else:
+            X = X_stocks
         self.num_feature = 807
 
-        # Concatenate X_stocks and news_X
-        X = np.concatenate((X_stocks, news_X), axis=1)
+
 
         # Split X and y into train, valid, and test datasets
         trainval_test_split_index = int(X.shape[0] * self.cf["data"]["train_test_split_size"])
@@ -284,7 +284,12 @@ class random_forest_trainer(Trainer):
             X_valid = X_train_valid[valid_index]
             y_train = y_train_valid[train_index]
             y_valid = y_train_valid[valid_index]
-
+        # Balance the test set
+        class_0_indices = np.where(y_test == 0)[0]
+        class_1_indices = np.where(y_test == 1)[0]
+        balanced_indices = np.concatenate([class_0_indices[:19], class_1_indices[:19]])
+        X_test = X_test[balanced_indices]
+        y_test = y_test[balanced_indices]
         # Print class distribution in train, valid, and test sets
         train_class_counts = np.bincount(y_train)
         valid_class_counts = np.bincount(y_valid)
@@ -294,12 +299,12 @@ class random_forest_trainer(Trainer):
         print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
 
         # Save train, valid, and test datasets
-        X_train_file = './dataset/X_train_' + self.model_full_name + '.npy'
-        X_valid_file = './dataset/X_valid_' + self.model_full_name + '.npy'
-        X_test_file = './dataset/X_test_' + self.model_full_name + '.npy'
-        y_train_file = './dataset/y_train_' + self.model_full_name + '.npy'
-        y_valid_file = './dataset/y_valid_' + self.model_full_name + '.npy'
-        y_test_file = './dataset/y_test_' + self.model_full_name + '.npy'
+        X_train_file = './dataset/X_train_' + self.model_name + '.npy'
+        X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
+        X_test_file = './dataset/X_test_' + self.model_name + '.npy'
+        y_train_file = './dataset/y_train_' + self.model_name + '.npy'
+        y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
+        y_test_file = './dataset/y_test_' + self.model_name + '.npy'
 
         np.save(X_train_file, X_train)
         np.save(X_valid_file, X_valid)
@@ -319,12 +324,12 @@ class random_forest_trainer(Trainer):
 
     def prepare_eval_data(self):
         # load train data
-        X_train = np.load('./dataset/X_train_' + self.model_full_name + '.npy', allow_pickle=True)
-        y_train = np.load('./dataset/y_train_' + self.model_full_name + '.npy', allow_pickle=True)
-        X_valid = np.load('./dataset/X_valid_' + self.model_full_name + '.npy', allow_pickle=True)
-        y_valid = np.load('./dataset/y_valid_' + self.model_full_name + '.npy', allow_pickle=True)
-        X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
-        y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
+        X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
+        y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
+        X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
+        y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
+        X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
+        y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
         dataset_slicing = 39
         self.num_feature = X_train.shape[-1]
         train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, dataset_slicing)

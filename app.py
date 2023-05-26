@@ -155,7 +155,7 @@ def stop():
 	window_size = args.get('window_size')
 	output_size = args.get('output_size')
 	model_type_list = args.get('output_size')
-	output_dict = predictor.batch_predict(symbol, model_type_list, window_size, output_size, output_dict)
+	output_dict = predictor.batch_predict(symbol, model_type_list, window_size, output_size)
 	response = app.response_class(
 		response=json.dumps(output_dict),
 		status=200,
