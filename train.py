@@ -2,7 +2,7 @@ import trainer.transformer_trainer as ttn
 from model import Model
 from configs.config import config
 
-trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "train", data_mode = 0)
+trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "train")
 
 trainer.train()
 model = trainer.model

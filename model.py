@@ -331,27 +331,45 @@ class TransformerClassifier(nn.Module):
         self.news_transformer = nn.Transformer(d_model=768, nhead=64,
                                                num_encoder_layers=self.num_encoder_layers,
                                                dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-        self.fc1 = nn.Linear(self.num_feature * self.window_size, 1)
-        self.fc2 = nn.Linear(100, 1)
+        if self.data_mode == 0:
+            self.fc1 = nn.Linear(39 * self.window_size, 1)
+        elif self.data_mode == 1:
+            self.fc1 = nn.Linear(768 * self.window_size, 1)
+        elif self.data_mode == 2:
+            self.fc1 = nn.Linear(self.num_feature * self.window_size, 1)
+
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(self.dropout)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x_stock, x_news):
-        batch = x_news.shape[0]
-        x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
-        x_news = self.news_transformer(x_news, x_news)  # self-attention over the input sequence
-        x = torch.concat([x_stock, x_news], axis=2)
-        x = x.reshape(batch, -1)
-
-        x = self.fc1(x)
-        x = self.tanh(x)
-        # x = self.relu(x)
-        # x = self.fc2(x)
-        x = self.sigmoid(x)
-        return x
-
+        if self.data_mode == 0:
+            batch = x_stock.shape[0]
+            x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
+            x = x_stock.reshape(batch, -1)
+            x = self.fc1(x)
+            x = self.tanh(x)
+            x = self.sigmoid(x)
+            return x
+        elif self.data_mode == 1:
+            batch = x_news.shape[0]
+            x_news = self.news_transformer(x_news, x_news)  # self-attention over the input sequence
+            x = x_news.reshape(batch, -1)
+            x = self.fc1(x)
+            x = self.tanh(x)
+            x = self.sigmoid(x)
+            return x
+        elif self.data_mode == 2:
+            batch = x_stock.shape[0]
+            x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
+            x_news = self.news_transformer(x_news, x_news)  # self-attention over the input sequence
+            x = torch.concat([x_stock, x_news], axis=2)
+            x = x.reshape(batch, -1)
+            x = self.fc1(x)
+            x = self.tanh(x)
+            x = self.sigmoid(x)
+            return x
 
 class PredictPriceLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):

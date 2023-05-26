@@ -24,7 +24,13 @@ class Predictor:
             1: "svm",
             2: "random_forest"
         }
-
+    
+    def batch_predict(self, symbol, model_type_list, window_size, output_size):
+        result = []
+        for model_type in model_type_list:
+            result.append(self.predict(symbol, model_type, window_size, output_size))
+        return result
+    
     def predict(self,symbol, model_type, window_size, output_size):
         if model_type in self.pytorch_timeseries_model_type_dict:
             model_name = f'{symbol}_{model_type}_{output_size}.pth'

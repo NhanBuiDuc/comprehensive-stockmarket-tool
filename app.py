@@ -144,6 +144,24 @@ def stop():
 		mimetype='application/json'
 	)
 	return response
+
+@cross_origin(supports_credentials=True)
+@app.route("/batch_trend_prediction", methods = ['GET', 'POST'])
+def stop():
+	global instances
+
+	args = 	request.args
+	symbol = args.get('symbol')
+	window_size = args.get('window_size')
+	output_size = args.get('output_size')
+	model_type_list = args.get('output_size')
+	output_dict = predictor.batch_predict(symbol, model_type_list, window_size, output_size, output_dict)
+	response = app.response_class(
+		response=json.dumps(output_dict),
+		status=200,
+		mimetype='application/json'
+	)
+	return response
 # @app.route("/quit")
 # def quit():
 # 	quit()

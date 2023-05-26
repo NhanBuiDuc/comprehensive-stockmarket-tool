@@ -66,8 +66,6 @@ class svm_trainer(Trainer):
     def train(self):
         self.mode = "train"
 
-
-
         if not self.full_data:
             if self.data_mode == 0:
                 X_train = self.train_dataloader.dataset.x_price
