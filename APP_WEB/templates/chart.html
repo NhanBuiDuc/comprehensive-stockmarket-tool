@@ -100,17 +100,23 @@
     </figure>
     -->
     <!-- HTML !-->
-    <select id="button-select window">
+    <select id="windowsize" class="button-select">
       <option value="">Window Size</option>
       <option value=3>3</option>
       <option value=7>7</option>
       <option value=14>14</option>
     </select>
-    <select id="button-select output">
+    <select id="outputsize" class="button-select">
       <option value="">Output Size</option>
       <option value=3>3</option>
       <option value=7>7</option>
       <option value=14>14</option>
+    </select>
+    <select id="model" class="button-select">
+      <option value="">Type of Model</option>
+      <option value='random_forest'>cc</option>
+      <option value='transformer'>db</option>
+      <option value='dk'>dk</option>
     </select>
 
     <div class="table-container">
@@ -146,7 +152,19 @@
 </body>
 
 <script>
+  function getValue() {
+      var windowElement = document.getElementById("windowsize");
+      var windowsize = windowElement.value;
 
+      var outputElement = document.getElementById("outputsize");
+      var outputsize = outputElement.value;
+
+      var modelElement = document.getElementById("model");
+      var model = modelElement.value;
+      return {windowsize:windowsize, 
+              outputsize:outputsize, 
+              model:model}
+  }
   function loadJSON(filename) {
     var symbol = filename.substring(0, filename.indexOf('_signal'));
     console.log(symbol)

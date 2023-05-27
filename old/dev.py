@@ -2,7 +2,6 @@ from old import utils
 from config import config as cf
 import numpy as np
 import pandas as pd
-import old_train
 from dataset import TimeSeriesDataset, Classification_TimeSeriesDataset
 import infer
 from plot import to_plot

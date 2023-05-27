@@ -1,173 +1,88 @@
-import numpy as np
-from flask import Flask, request, render_template, json, jsonify
-from flask import Response
-import threading
-from multiprocessing import Manager
-from flask import current_app
-from waitress import serve
-import requests
+import os
+from flask import Flask, jsonify, render_template, request, json
 from flask_cors import CORS, cross_origin
-from APP_FLASK.Predictor import Predictor
-def create_app():
-    app = Flask(__name__)
+import subprocess
+import pandas as pd
+import base64
+import shutil
+from pathlib import Path
+import requests
+from APP_FLASK.TrendPrediction import Predictor
 
-    return app
-# app = Flask('app')
-
-app = create_app()
-# with app.app_context():
-# 	current_app.config["ENV"]
-app.app_context().push()
-cors = CORS(app)
+app = Flask(__name__)
+predictor = Predictor()
+CORS(app)
 CORS(app, support_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-predictor = Predictor()
+curr_path = os.getcwd()
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = ROOT_DIR.replace('\\', '/')
+os.chdir(ROOT_DIR.split("APP_WEB")[0])
+print(os.getcwd())
+#CODE_DIR = ROOT_DIR + '/APPWEB'
 
 
-		
-# @cross_origin(supports_credentials=True)
-# @app.route('/start', methods = ['GET', 'POST'])
-# def start():
-# 	args = 	request.args
-# 	id = args.get('connection_string')
-# 	id = 1
-# 	stream = StreamingInstance(app, id = id, )
-# 	instances.update( {str(stream.id):stream} )
-# 	stream.start()
-# 	response = app.response_class(
-#         response=json.dumps("TRUE"),
-#         status=200,
-#         mimetype='application/json'
-#     )
-# 	return response
+@app.route('/execute/<file>', methods=['GET'])
+def predict_LSTM(file):
+    symbol = file
+    print('asdasd: '+ ROOT_DIR.split("APP_WEB")[0])
+    try:
+        # Execute your Python file using subprocess module
+        # subprocess.run(['python', './predict_stock.py'], check=True)
+        # returnValue = subprocess.check_output(
+        # ['python', './predict_stock.py'])
 
-# @cross_origin(supports_credentials=True)
-# @app.route('/', methods = ['GET', 'POST'])
-# def get_camera():
-# 	return render_template('index.html')
+        createFile(symbol)
+        returnValue = subprocess.check_output(
+                "python predict_stock.py")
 
-# @cross_origin(supports_credentials=True)
-# @app.route("/send_event", methods = ['GET', 'POST'])
-# def send_event():
-# 	global instances
+        json_str = json.dumps(
+            {'price': returnValue.decode('utf-8').replace("\\", "").replace("\r", "").replace("\n", "").split("tensor")[1].split("(")[1].split(")")[0]})
+        formated = json.loads(json_str)
+        # return jsonify(json_str)
+        return formated
+    except Exception as e:
+        return f'Error executing Python file: {str(e)}'
 
-# 	args = 	request.args
-# 	id = args.get('id')
-# 	id = 1
 
-# 	stream = instances.get(str(id))
-# 	prediction = stream.get_prediction()
-# 	if(prediction.prediction != None):
-# 		return jsonify(
-# 				start = str(prediction.start_datetime()),
-# 				end = str(prediction.end_datetime()),
-# 				score = str(prediction.score),
-# 				prediction = str(prediction.prediction),
-# 				thresh_hold = prediction.thresh_hold
-# 		)
-# 	else:
-# 		response = app.response_class(
-#         response=json.dumps("NO PREDICTION"),
-#         status=200,
-#         mimetype='application/json'
-#     )
-# 	return response
+@app.route('/', methods=['GET'])
+def index1():
+    return render_template('chart.html')
 
-# @cross_origin(supports_credentials=True)
-# @app.route("/xd", methods = ['GET', 'POST'])
-# def xd():
-# 	try:
-# 		global instances
 
-# 		args = 	request.args
-# 		id = args.get('id')
-# 		id = 1
-
-# 		stream = instances.get(str(id))
-# 		prediction = stream.prediction
-# 		if(prediction.prediction != None):
-# 			return jsonify(
-# 					start = str(prediction.start_datetime()),
-# 					end = str(prediction.end_datetime()),
-# 					score = str(prediction.score),
-# 					prediction = str(prediction.prediction),
-# 					connection_string = str(id)
-# 			)
-# 		else:
-# 			response = app.response_class(
-# 			response=json.dumps("NO PREDICTION"),
-# 			status=200,
-# 			mimetype='application/json')
-# 		return response
-# 	except:
-# 		response = app.response_class(
-# 			response=json.dumps("NO PREDICTION"),
-# 			status=200,
-# 			mimetype='application/json')
-# 		return response
-# @cross_origin(supports_credentials=True)
-# @app.route("/video_feed", methods = ['GET', 'POST'])
-# def video_feed():
-# 	global instances
-
-# 	args = 	request.args
-# 	id = args.get('id')
-# 	id = 1
-
-# 	stream = instances.get(str(id))
-# 	try:
-# 		return Response(stream.generate(),
-# 			mimetype = "multipart/x-mixed-replace; boundary=frame")
-# 		# return StreamingHttpResponse(stream.generate(),content_type="multipart/x-mixed-replace;boundary=frame")
-# 	except:
-# 		response = app.response_class(
-#         response=json.dumps("Not Ready Yet"),
-#         status=200,
-#         mimetype='application/json')
-# 		return response
+def createFile(content):
+    #symbolconfig.json {'symbol': 'GOOGLE'}
+    FILE = 'symbolconfig.json'
+    path = './configs/' + FILE
+    
+    # Create and write data to text file
+    with open(path, 'w') as fp:
+        fp.write('{"symbol":"' + content + '"}')
 
 @cross_origin(supports_credentials=True)
 @app.route("/trend_prediction", methods = ['GET', 'POST'])
-def stop():
-	global instances
+def Predict_trend():
+    try:
+        args = 	request.args
+        symbol = args.get('symbol')
+        window_size = args.get('window_size')
+        output_size = args.get('output_size')
+        model_type_list = args.get('output_size')
+        output_dict = predictor.batch_predict(symbol, model_type_list, window_size, output_size)
+        response = app.response_class(
+            response=json.dumps(output_dict),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    except Exception as e:
+        return f'Error executing Python file: {str(e)}'
+	
 
-	args = 	request.args
-	symbol = args.get('symbol')
-	model_type = args.get('model_type')
-	window_size = args.get('window_size')
-	output_size = args.get('output_size')
-	output_dict = predictor.predict(symbol, model_type, window_size, output_size)
-	response = app.response_class(
-		response=json.dumps(output_dict),
-		status=200,
-		mimetype='application/json'
-	)
-	return response
 
-@cross_origin(supports_credentials=True)
-@app.route("/batch_trend_prediction", methods = ['GET', 'POST'])
-def stop():
-	global instances
 
-	args = 	request.args
-	symbol = args.get('symbol')
-	window_size = args.get('window_size')
-	output_size = args.get('output_size')
-	model_type_list = args.get('output_size')
-	output_dict = predictor.batch_predict(symbol, model_type_list, window_size, output_size)
-	response = app.response_class(
-		response=json.dumps(output_dict),
-		status=200,
-		mimetype='application/json'
-	)
-	return response
-# @app.route("/quit")
-# def quit():
-# 	quit()
+if __name__ == '__main__':
+    app.run(debug=True)
 
-if __name__ == "__main__":
-	host_ip = "127.0.0.1"
-	port = 8000
-	serve(app, host=host_ip, port=8000, threads= 10)
-	# app.run(host = '0.0.0.0', port = 5000)
+

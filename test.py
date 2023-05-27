@@ -1,4 +1,4 @@
-from APP_FLASK.Predictor import Predictor as Predictor
+from APP_FLASK.TrendPrediction import Predictor as Predictor
 symbol = "AAPL"
 window_size = 14
 output_size = 14

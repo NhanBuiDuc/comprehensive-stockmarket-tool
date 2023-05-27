@@ -349,7 +349,6 @@ class TransformerClassifier(nn.Module):
             x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
             x = x_stock.reshape(batch, -1)
             x = self.fc1(x)
-            x = self.tanh(x)
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 1:
@@ -357,7 +356,6 @@ class TransformerClassifier(nn.Module):
             x_news = self.news_transformer(x_news, x_news)  # self-attention over the input sequence
             x = x_news.reshape(batch, -1)
             x = self.fc1(x)
-            x = self.tanh(x)
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 2:
@@ -367,7 +365,6 @@ class TransformerClassifier(nn.Module):
             x = torch.concat([x_stock, x_news], axis=2)
             x = x.reshape(batch, -1)
             x = self.fc1(x)
-            x = self.tanh(x)
             x = self.sigmoid(x)
             return x
 
