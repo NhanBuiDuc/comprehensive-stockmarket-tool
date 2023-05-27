@@ -1027,12 +1027,13 @@ def download_news(symbol, from_date, to_date, new_data=True):
     main_df = pd.DataFrame()
     if os.path.exists(save_path):
         if new_data:
-            main_df = pd.read_csv(save_path, index_col=0)
+            main_df = pd.read_csv(save_path)
             try:
                 google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
                 if isinstance(google_df.index, pd.DatetimeIndex):
                     google_df.reset_index(inplace=True)
                     google_df.rename(columns={'index': 'date'}, inplace=True)
+                    google_df.reset_index(drop=True, inplace=True)
                 main_df = pd.concat([main_df, google_df])
             except:
                 pass
@@ -1041,6 +1042,7 @@ def download_news(symbol, from_date, to_date, new_data=True):
                 if isinstance(finhub_df.index, pd.DatetimeIndex):
                     finhub_df.reset_index(inplace=True)
                     finhub_df.rename(columns={'index': 'date'}, inplace=True)
+                    finhub_df.reset_index(drop=True, inplace=True)
                 main_df = pd.concat([main_df, finhub_df])
             except:
                 pass
@@ -1049,16 +1051,17 @@ def download_news(symbol, from_date, to_date, new_data=True):
                 if isinstance(benzema_df.index, pd.DatetimeIndex):
                     benzema_df.reset_index(inplace=True)
                     benzema_df.rename(columns={'index': 'date'}, inplace=True)
+                    benzema_df.reset_index(drop=True, inplace=True)
                 main_df = pd.concat([main_df, benzema_df])
             except:
                 pass
 
             main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
             main_df.reset_index(drop=True, inplace=True)
-            main_df.to_csv(save_path, index=True)
+            main_df.to_csv(save_path, index=False)
             return main_df.values
         else:
-            main_df = pd.read_csv(save_path, index_col=0)
+            main_df = pd.read_csv(save_path)
             return main_df.values
     else:
         try:
@@ -1066,6 +1069,7 @@ def download_news(symbol, from_date, to_date, new_data=True):
             if isinstance(google_df.index, pd.DatetimeIndex):
                 google_df.reset_index(inplace=True)
                 google_df.rename(columns={'index': 'date'}, inplace=True)
+                google_df.reset_index(drop=True, inplace=True)
             main_df = pd.concat([main_df, google_df])
         except:
             pass
@@ -1074,6 +1078,7 @@ def download_news(symbol, from_date, to_date, new_data=True):
             if isinstance(finhub_df.index, pd.DatetimeIndex):
                 finhub_df.reset_index(inplace=True)
                 finhub_df.rename(columns={'index': 'date'}, inplace=True)
+                finhub_df.reset_index(drop=True, inplace=True)
             main_df = pd.concat([main_df, finhub_df])
         except:
             pass
@@ -1082,12 +1087,14 @@ def download_news(symbol, from_date, to_date, new_data=True):
             if isinstance(benzema_df.index, pd.DatetimeIndex):
                 benzema_df.reset_index(inplace=True)
                 benzema_df.rename(columns={'index': 'date'}, inplace=True)
+                benzema_df.reset_index(drop=True, inplace=True)
             main_df = pd.concat([main_df, benzema_df])
         except:
             pass
 
         main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
         main_df.reset_index(drop=True, inplace=True)
-        main_df.to_csv(save_path, index=True)
+        main_df.to_csv(save_path, index=False)
         return main_df.values
+
 
