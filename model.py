@@ -48,10 +48,10 @@ class Model:
             self.parameters = self.parameters["model"]
             self.structure = rf_classifier(self.num_feature, **self.parameters)
 
-    def load_check_point(self, model_name):
+    def load_check_point(self, model_type, model_name):
 
         # self.construct_structure()
-        if self.model_type in self.pytorch_timeseries_model_type_dict.values():
+        if model_type in self.pytorch_timeseries_model_type_dict.values():
             check_point = torch.load('./models/' + model_name + ".pth")
             self = check_point["model"]
             self.structure.load_state_dict(check_point['state_dict'])
