@@ -1,10 +1,10 @@
 transformer_cf = {
     "model": {
         "nhead": 3,
-        "num_encoder_layers": 10,
-        "dim_feedforward": 10,
+        "num_encoder_layers": 40,
+        "dim_feedforward": 40,
         "dropout": 0.3,
-        "window_size": 3,
+        "window_size": 14,
         "output_step": 3,
         "data_mode":1,
         "topk": 5
@@ -12,7 +12,7 @@ transformer_cf = {
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
         "batch_size": 64,
-        "num_epoch": 1,
+        "num_epoch": 200,
         "learning_rate": 0.001,
         "loss": "focal",
         "evaluate": ["bce", "accuracy", "precision", "f1"],

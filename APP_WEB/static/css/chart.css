@@ -18,6 +18,14 @@
 
 }
 
+*{
+user-select: none;
+}
+  
+*:focus {
+outline: none;
+}
+
 .highcharts-container {
     font-family: Dosis, arial, helvetica, sans-serif;
 }
@@ -190,24 +198,5 @@ font-size: 16px; /* prevent page zoom in iOS */
 
 .button-list button {
     margin: 0 30px; /* Adjust the space between buttons as needed */
-}
-
-.b-apple {
-    background-color: #7cb5ec;
-}
-
-.b-microsoft {
-    background-color: #7cb5ec;
-}
-
-.b-tesla {
-    background-color: #7cb5ec;
-}
-
-.b-google {
-    background-color: #7cb5ec;
-}
-
-.b-amazon {
     background-color: #7cb5ec;
 }
