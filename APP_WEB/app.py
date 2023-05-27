@@ -82,25 +82,30 @@ def createFile(content):
 #     return response
 
 @cross_origin(supports_credentials=True)
-@app.route("/execute", methods = ['GET', 'POST'])
+@app.route("/execute", methods = ['POST'])
 def Predict_trend():
+    data = json.loads(request.data)
+    print(data)
+    
+    # try: 
+    # args = 	request.args
+    # symbol = args.get('symbol', default='AAPL', type=str)
+    # window_size = args.get('window_size', default = 7, type = int)
+    # output_size = args.get('output_size', default = 7, type = int)
+    # model_type_list = args.get('model_type_list', type=list)
+    # print('model tpe', args.get('model_type_list'))
 
-    args = 	request.args
-    symbol = args.get('symbol', default='AAPL', type=str)
-    window_size = args.get('window_size', default = 7, type = int)
-    output_size = args.get('output_size', default = 7, type = int)
-    model_type_list = args.get('model_type_list', default='random_forest', type=str)
-    print('adsasdasdasdasdadasdasdasdasdasdasdasda')
-
-    output_dict = predictor.batch_predict(symbol, model_type_list, window_size, output_size)
+    output_dict = predictor.batch_predict(data['symbol'], data['model_type_list'], data['window_size'], data['output_size'])
     print('kkkkkkkkkkkkkkkkkkk', output_dict)
     response = app.response_class(
         response=json.dumps(output_dict),
         status=200,
         mimetype='application/json'
     )
-    print('ccjday: ',response)
     return response
+    # except Exception as e:
+    #     return f'Error executing Python file: {str(e)}'
+    
 
 
 

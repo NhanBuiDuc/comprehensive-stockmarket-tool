@@ -30,11 +30,12 @@ class Predictor:
             result.append(self.predict(symbol, model_type, window_size, output_size))
         return result
     
-    def predict(self,symbol, model_type, window_size, output_size):
+    def predict(self,symbol, model_type, window_size, output_step):
         if model_type in self.pytorch_timeseries_model_type_dict:
-            model_name = f'{self.model_type}_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(self.data_mode)}.pth'
+            model_name = f'{model_type}_{symbol}_w{window_size}_o{output_step}_d{0}.pth'
         elif model_type in self.tensorflow_timeseries_model_type_dict:
-            model_name = f'{self.model_type}_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(self.data_mode)}.pkl'
+            model_name = f'{model_type}_{symbol}_w{window_size}_o{output_step}_d{0}.pkl'
+        print('name model: ', model_name)
         model = Model(name=model_name)
         model = model.load_check_point(model_name)
 
@@ -47,11 +48,11 @@ class Predictor:
         
         if torch.all(converted_output == 1):
             output_json = {
-                f'{symbol}_{model_type}_{output_size}':  "UP"
+                f'{symbol}_{model_type}_{output_step}':  "UP"
             }
         elif torch.all(converted_output == 0):
             output_json = {
-                f'{symbol}_{model_type}_{output_size}':  "DOWN"
+                f'{symbol}_{model_type}_{output_step}':  "DOWN"
             }     
         return output_json
     def prepare_data(self, symbol, window_size):

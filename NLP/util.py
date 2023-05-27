@@ -182,8 +182,9 @@ def filter_news_by_stock_dates(news_df, stock_df, max_rows):
                 rows_remaining = max_rows - news_counts[date]
                 days_skipped = 1
                 previous_date = date
-                while news_counts[date] < rows_remaining and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
-                    previous_date  -= pd.DateOffset(days=days_skipped)
+                while news_counts[date] < rows_remaining and previous_date - pd.DateOffset(days=days_skipped) in \
+                        news_df["date"]:
+                    previous_date -= pd.DateOffset(days=days_skipped)
                     rows = news_df[news_df['date'] == previous_date]
                     if len(rows) < 0:
                         days_skipped += 1
@@ -205,23 +206,24 @@ def filter_news_by_stock_dates(news_df, stock_df, max_rows):
 
             days_skipped = 1
             previous_date = date
-            while news_counts[date] < rows_remaining: #and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
+            while news_counts[
+                date] < rows_remaining:  # and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
                 previous_date -= pd.DateOffset(days=days_skipped)
                 rows = news_df[news_df['date'] == previous_date]
                 if len(rows) == 0:
                     days_skipped += 1
                 # Check if the next date has enough rows
                 elif news_counts[previous_date] > 5:
-                        rows_to_include = news_counts[previous_date] - max_rows
-                        if rows[:rows_to_include].values.tolist() not in filtered_rows:
-                            rows = rows.copy()
-                            rows['date'] = date
-                            filtered_rows.extend(rows[:rows_to_include].values.tolist())
-                            news_counts[previous_date] -= rows_to_include
-                            news_counts[date] += rows_to_include
-                            rows_remaining -= rows_to_include
+                    rows_to_include = news_counts[previous_date] - max_rows
+                    if rows[:rows_to_include].values.tolist() not in filtered_rows:
+                        rows = rows.copy()
+                        rows['date'] = date
+                        filtered_rows.extend(rows[:rows_to_include].values.tolist())
+                        news_counts[previous_date] -= rows_to_include
+                        news_counts[date] += rows_to_include
+                        rows_remaining -= rows_to_include
 
-                        days_skipped += 1
+                    days_skipped += 1
 
     # Create a dataframe from the filtered_rows list
     filtered_news_df = pd.DataFrame(filtered_rows, columns=news_df.columns)
@@ -1018,57 +1020,74 @@ def get_bing_news(symbol, from_date, to_date):
     return news_list
 
 
-def download_news(symbol, from_date, window_size, new_data=True):
-    to_date = datetime.now().strftime('%Y-%m-%d')
+def download_news(symbol, from_date, to_date, new_data=True):
     save_folder = f'./NLP/news_web_url/{symbol}/'
     file_name = f'{symbol}_url.csv'
     save_path = os.path.join(save_folder, file_name)
     main_df = pd.DataFrame()
-    if not os.path.exists(save_folder + file_name):
-        # Download news from all sources with the specified date range
+    if os.path.exists(save_path):
+        if new_data:
+            main_df = pd.read_csv(save_path, index_col=0)
+            try:
+                google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
+                if isinstance(google_df.index, pd.DatetimeIndex):
+                    google_df.reset_index(inplace=True)
+                    google_df.rename(columns={'index': 'date'}, inplace=True)
+                main_df = pd.concat([main_df, google_df])
+            except:
+                pass
+            try:
+                finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
+                if isinstance(finhub_df.index, pd.DatetimeIndex):
+                    finhub_df.reset_index(inplace=True)
+                    finhub_df.rename(columns={'index': 'date'}, inplace=True)
+                main_df = pd.concat([main_df, finhub_df])
+            except:
+                pass
+            try:
+                benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
+                if isinstance(benzema_df.index, pd.DatetimeIndex):
+                    benzema_df.reset_index(inplace=True)
+                    benzema_df.rename(columns={'index': 'date'}, inplace=True)
+                main_df = pd.concat([main_df, benzema_df])
+            except:
+                pass
+
+            main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
+            main_df.reset_index(drop=True, inplace=True)
+            main_df.to_csv(save_path, index=True)
+            return main_df.values
+        else:
+            main_df = pd.read_csv(save_path, index_col=0)
+            return main_df.values
+    else:
         try:
             google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
+            if isinstance(google_df.index, pd.DatetimeIndex):
+                google_df.reset_index(inplace=True)
+                google_df.rename(columns={'index': 'date'}, inplace=True)
             main_df = pd.concat([main_df, google_df])
         except:
             pass
         try:
             finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
+            if isinstance(finhub_df.index, pd.DatetimeIndex):
+                finhub_df.reset_index(inplace=True)
+                finhub_df.rename(columns={'index': 'date'}, inplace=True)
             main_df = pd.concat([main_df, finhub_df])
         except:
             pass
         try:
             benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
+            if isinstance(benzema_df.index, pd.DatetimeIndex):
+                benzema_df.reset_index(inplace=True)
+                benzema_df.rename(columns={'index': 'date'}, inplace=True)
             main_df = pd.concat([main_df, benzema_df])
         except:
             pass
-        # alphavantage_df = download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_data)
-        # bing_df = download_bing_news(symbol, from_date, to_date, save_folder, new_data = True)
-        # main_df = pd.concat([main_df, bing_df])
 
-        main_df.to_csv(save_path, index=True)
-        # Filter the dataframe by URL
-        window_df = main_df[main_df['url'].isin(main_df['url'].unique())]
-
-        # Save the updated dataframe to the CSV file
+        main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
+        main_df.reset_index(drop=True, inplace=True)
         main_df.to_csv(save_path, index=True)
         return main_df.values
-    else:
-        # # Read the existing CSV file
-        # main_df = pd.read_csv(save_path)
 
-        # # Set the new date range
-        # from_date = (datetime.strptime(to_date, '%Y-%m-%d') - timedelta(days=window_size)).strftime('%Y-%m-%d')
-
-        # # Download news from additional sources
-        # additional_df = download_additional_sources_news(from_date, to_date)
-
-        # # Concatenate the dataframes
-        # main_df = pd.concat([main_df, additional_df])
-
-        # # Filter the dataframe by URL
-        # window_df = main_df[main_df['URL'].isin(main_df['URL'].unique())]
-
-        # # Save the updated dataframe to the CSV file
-        # main_df.to_csv(save_path, index=False)
-        pass
-    # return main_df.values

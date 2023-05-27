@@ -104,7 +104,7 @@ class Transformer_trainer(Trainer):
                         torch.save({"model": self.model,
                                     "state_dict": self.model.structure.state_dict()
                                     },
-                                   "./models/" + self.model.full_name + ".pth")
+                                   "./models/" + self.model.name + ".pth")
                     else:
                         if self.early_stop:
                             stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss,
@@ -326,11 +326,10 @@ class Transformer_trainer(Trainer):
 
 
         if self.data_mode == 2:
-            _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
+            news_X, _ = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
                                                 self.topk, new_data)
-            news_X = news_X[:-self.output_step]
             # Concatenate X_stocks and news_X
-            X = np.concatenate((X, news_X), axis=1)
+            X = np.concatenate((X, news_X), axis=2)
 
         self.num_feature = X.shape[2]
 
