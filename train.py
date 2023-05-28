@@ -6,7 +6,7 @@ trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "train
 
 trainer.train()
 model = trainer.model
-model = model.load_check_point(trainer.model.name)
+model = model.load_check_point(model.model_type, trainer.model.name)
 trainer.eval(model)
 
 # from trainer.svm_trainer import svm_trainer

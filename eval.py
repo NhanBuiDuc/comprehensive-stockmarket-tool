@@ -5,7 +5,7 @@ from model import Model
 trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "eval")
 
 model = trainer.model
-model = model.load_check_point(trainer.model.name)
+model = model.load_check_point(model.model_type, trainer.model.name)
 trainer.eval(model)
 
 #
