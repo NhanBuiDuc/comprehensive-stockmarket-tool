@@ -242,7 +242,7 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     # convert into (batch, 14, n) data
     max_string_lenght = 50
     model_name = "bert-base-uncased"
-    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
+    sentence_model = SentenceTransformer("ProsusAI/finbert")
     file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
     news_query_folder = "./NLP/news_query"
     news_query_file_name = symbol + "_" + "query.json"
@@ -268,7 +268,48 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
 
     return data, top_sentences_dict
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from sentence_transformers import SentenceTransformer
+def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
+    max_string_length = 50
+    model_name = "ProsusAI/finbert"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    sentence_model = SentenceTransformer(model_name)
+    file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
+    news_query_folder = "./NLP/news_query"
+    news_query_file_name = symbol + "_" + "query.json"
+    news_query_path = news_query_folder + "/" + news_query_file_name
 
+    with open(news_query_path, "r") as f:
+        queries = json.load(f)
+    keyword_query = list(queries.values())
+
+    news_df = pd.read_csv(file_path)
+    news_df['date'] = pd.to_datetime(news_df['date'])
+    news_df = filter_news_by_stock_dates(news_df, stock_df, max_rows=5)
+    top_sentences_dict = []
+
+    for date in news_df["date"].unique():
+        summary_columns = news_df[news_df["date"] == date]["summary"]
+        top_summary = get_similar_summary(summary_columns.values, keyword_query, sentence_model, topK, 0.5)
+        flattened_array = np.ravel(np.array(top_summary))
+        merged_summary = ' '.join(flattened_array)
+        encoded_summary = tokenizer.encode_plus(
+            merged_summary,
+            max_length=max_string_length,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt"
+        )
+        input_ids = encoded_summary["input_ids"]
+        embeddings = sentence_model.encode(merged_summary)
+
+        top_sentences_dict.append(embeddings)
+
+    top_sentences_dict = np.array(top_sentences_dict)
+    data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
+
+    return data, top_sentences_dict
 
 def prepare_raw_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
     # Read the csv file
@@ -305,11 +346,6 @@ def prepare_raw_news_data(stock_df, symbol, window_size, from_date, to_date, out
     # Split the strings into a third dimension
     array_3d = np.array([s.split("_") for s in data.flat]).reshape((data.shape[0], data.shape[1], -1))
     return array_3d
-
-
-# define function to load csv file with given index
-
-import numpy as np
 
 
 def load_data_with_index(csv_file, index):

@@ -15,7 +15,8 @@ lstm_cf = {
             "sub_small_kernel_size": 3,
             "sub_big_kernel_size": 30,
             "output_size": 20
-        }
+        },
+        "symbol": "AAPL"
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

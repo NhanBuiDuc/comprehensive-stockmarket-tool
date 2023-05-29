@@ -16,6 +16,7 @@ rf_cf = {
         "topk": 5,
         "window_size": 7,
         "output_step": 7,
+        "symbol": "AAPL"
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
