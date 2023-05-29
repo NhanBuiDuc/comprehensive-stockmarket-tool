@@ -10,7 +10,7 @@ trainer.eval(model)
 
 from trainer.random_forest_trainer import random_forest_trainer
 
-trainer = svm_trainer(new_data=False, full_data=False, mode = "train")
+trainer = random_forest_trainer(new_data=False, full_data=False, mode = "train")
 
 model = trainer.train()
 model = trainer.model
