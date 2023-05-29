@@ -11,8 +11,8 @@ def prepare_stock_data(data, window_size):
     for i in range(n_samples):
         for j in range(window_size):
             X[i][j] = (data[i + (j)])
-    timeseries_price = X[:, :6]
-    timeseries_stock = X[:, 6:]
+    timeseries_price = X[:, :5]
+    timeseries_stock = X[:, 5:]
     return timeseries_price, timeseries_stock
 
 def prepare_news_data(stock_df, symbol, window_size, topK, new_data=False):

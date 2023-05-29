@@ -1,7 +1,6 @@
 config = {
     "alpha_vantage": {
         "api_key": "XOLA7URKCZHU7C9X",  # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "AAPL",
         "output_size": "full",
         "url": "https://www.alphavantage.co",
         "key_adjusted_close": "5. adjusted close"

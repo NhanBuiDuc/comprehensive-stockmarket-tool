@@ -27,16 +27,13 @@ import joblib
 
 
 class random_forest_trainer(Trainer):
-    def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
-                 model_full_name=None,
-                 model=None, mode="train", data_mode=2):
+    def __init__(self, new_data=True, full_data=False, mode="train"):
         super(random_forest_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
-        self.symbol = self.cf["alpha_vantage"]["symbol"]
-        self.model_type = "svm"
-        self.__dict__.update(self.config["model"][self.model_name])
-        self.__dict__.update(self.config["training"][self.model_name])
+        self.model_type = "random_forest"
+        self.__dict__.update(self.config["model"])
+        self.__dict__.update(self.config["training"])
         self.test_dataloader = None
         self.valid_dataloader = None
         self.train_dataloader = None
@@ -79,7 +76,7 @@ class random_forest_trainer(Trainer):
             torch.save({"model": self.model,
             "state_dict": []
             },
-            "./models/" + self.model.full_name + ".pkl")
+            "./models/" + self.model.name + ".pkl")
         elif self.full_data:
             self.combined_dataset = ConcatDataset([self.train_dataloader.dataset, self.valid_dataloader.dataset])
 
@@ -97,7 +94,7 @@ class random_forest_trainer(Trainer):
             torch.save({"model": self.model,
             "state_dict": []
             },
-            "./models/" + self.model.full_name + ".pkl")
+            "./models/" + self.model.name + ".pkl")
 
     def eval(self, model):
 

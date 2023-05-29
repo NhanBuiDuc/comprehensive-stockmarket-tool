@@ -29,7 +29,7 @@ class Transformer_trainer(Trainer):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
-        self.symbol = self.cf["alpha_vantage"]["symbol"]
+        # self.symbol = self.cf["alpha_vantage"]["symbol"]
         self.model_type = "transformer"
         self.__dict__.update(self.config["model"])
         self.__dict__.update(self.config["training"])
@@ -321,11 +321,10 @@ class Transformer_trainer(Trainer):
         X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
                                             dilation=1)
         dataset_slicing = X.shape[2]
-        news_X, _  = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
-                                         self.topk, new_data)
-
-
-        if self.data_mode == 2:
+        if self.data_mode == 1:
+            X, _ = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
+                                    self.topk, new_data)
+        elif self.data_mode == 2:
             news_X, _ = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
                                                 self.topk, new_data)
             # Concatenate X_stocks and news_X
@@ -475,7 +474,7 @@ class Transformer_trainer(Trainer):
             y = y.to(device)
             out = model.structure(x_stock, x_news)
             # Compute accuracy
-            predictions = torch.argmax(out, dim=1)
+            predictions = torch.argmax(out, dim=1).unsqueeze(1)
             correct = (predictions == y).sum().item()
             accuracy = correct / batch_size  # Multiply by 100 to get percentage
 

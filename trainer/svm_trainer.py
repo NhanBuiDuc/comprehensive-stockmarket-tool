@@ -24,7 +24,6 @@ class svm_trainer(Trainer):
         super(svm_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
-        self.symbol = self.cf["alpha_vantage"]["symbol"]
         self.model_type = "svm"
         self.__dict__.update(self.config["model"])
         self.__dict__.update(self.config["training"])
