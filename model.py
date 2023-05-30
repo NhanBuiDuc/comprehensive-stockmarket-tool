@@ -342,12 +342,14 @@ class TransformerClassifier(nn.Module):
             self.fc1 = nn.Linear(729 * self.window_size, 1)
         elif self.data_mode == 2:
             svm = Model()
+            rfc = Model()
             model_name = f'svm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(1)}'
             self.svm = svm.load_check_point("svm", model_name)
+            self.rfc = svm.load_check_point("svm", model_name)
             # self.fc1 = nn.Linear(11008, 1)
             self.fc1 = nn.Linear(256, 1)
-            self.fc2 = nn.Linear(5376, 1)
-            self.fc3 = nn.Linear(2, 1)
+            self.fc2 = nn.Linear(768 * self.window_size, 1)
+            self.fc3 = nn.Linear(3, 1)
 
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
