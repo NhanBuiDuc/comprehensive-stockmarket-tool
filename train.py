@@ -16,29 +16,31 @@
 # model = trainer.model
 # model = model.load_check_point(model.model_type, trainer.model.name)
 # trainer.eval(model)
-import trainer.xgboost_trainer as xgboost_tn
-trainer = xgboost_tn.xgboost_trainer(new_data=False, full_data=False, mode = "train")
+
+# import trainer.xgboost_trainer as xgboost_tn
+# trainer = xgboost_tn.xgboost_trainer(new_data=False, full_data=False, mode = "train")
+
+# trainer.train()
+# model = trainer.model
+# model = model.load_check_point(model.model_type, trainer.model.name)
+# trainer.eval(model)
+
+import trainer.lstm_trainer as lstm_tn
+trainer = lstm_tn.lstm_trainer(new_data=False, full_data=False, mode = "train")
 
 trainer.train()
 model = trainer.model
 model = model.load_check_point(model.model_type, trainer.model.name)
 trainer.eval(model)
-# import trainer.lstm_trainer as lstm_tn
-# trainer = lstm_tn.lstm_trainer(new_data=False, full_data=False, mode = "train")
-#
-# trainer.train()
-# model = trainer.model
-# model = model.load_check_point(model.model_type, trainer.model.name)
-# trainer.eval(model)
 
 
-# import trainer.transformer_trainer as ttn
-# from model import Model
-# from configs.config import config
+import trainer.transformer_trainer as ttn
+from model import Model
+from configs.config import config
 
-# trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "train")
+trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "train")
 
-# trainer.train()
-# model = trainer.model
-# model = model.load_check_point(model.model_type, trainer.model.name)
-# trainer.eval(model)
+trainer.train()
+model = trainer.model
+model = model.load_check_point(model.model_type, trainer.model.name)
+trainer.eval(model)

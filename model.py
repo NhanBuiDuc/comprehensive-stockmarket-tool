@@ -101,7 +101,7 @@ class LSTM(nn.Module):
 
     def forward(self, x_stock, x_news):
         if self.data_mode == 0:
-
+            x_stock = x_stock[:, :, :5]
             batch = x_stock.shape[0]
             lstm_out, (h_n, c_n) = self.lstm(x_stock)  # self-attention over the input sequence
             x = h_n.reshape(batch, -1)
@@ -109,28 +109,18 @@ class LSTM(nn.Module):
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 1:
-            batch = x_news.shape[0]
-            lstm_out, (h_n, c_n) = self.lstm(x_news)  # self-attention over the input sequence
+            batch = x_stock.shape[0]
+            lstm_out, (h_n, c_n) = self.lstm(x_stock)  # self-attention over the input sequence
             x = h_n.reshape(batch, -1)
             x = self.fc1(x)
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 2:
             batch = x_stock.shape[0]
-            svm_pred = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
-                "cuda").unsqueeze(1)
-            rfc_pred = self.rfc.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
-                "cuda").unsqueeze(1)
-            svm_pred = self.drop_out(svm_pred)
-            rfc_pred = self.drop_out(rfc_pred)
-            lstm_out, (h_n, c_n) = self.lstm(x_stock)  # self-attention over the input sequence
+            x = torch.concat([x_stock, x_news], dim=2)
+            lstm_out, (h_n, c_n) = self.lstm(x)  # self-attention over the input sequence
             x = h_n.reshape(batch, -1)
-            x_news = self.fc2(x_news)
-            x_news = self.drop_out(x_news)
-            # x_news = self.relu(x_news)
-            # x_news = self.drop_out(x_news)
-            x = torch.cat([rfc_pred, svm_pred, x_news], dim=1)
-            x = self.fc3(x)
+            x = self.fc1(x)
             x = self.sigmoid(x)
             return x
 
@@ -407,12 +397,27 @@ class TransformerClassifier(nn.Module):
         elif self.data_mode == 1:
             self.fc1 = nn.Linear(729 * self.window_size, 1)
         elif self.data_mode == 2:
-            svm = Model()
-            rfc = Model()
-            model_name = f'svm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(1)}'
-            self.svm = svm.load_check_point("svm", model_name)
-            self.rfc = svm.load_check_point("svm", model_name)
-            # self.fc1 = nn.Linear(11008, 1)
+            model_list = self.ensembled_model
+            if model_list["svm"] != -1:
+                svm = Model()
+                data_mode = model_list["svm"]
+                model_name = f'svm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+                self.svm = svm.load_check_point("svm", model_name)
+            if model_list["random_forest"] != -1:
+                rfc = Model()
+                data_mode = model_list["random_forest"]
+                model_name = f'random_forest_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+                self.rfc = rfc.load_check_point("random_forest", model_name)
+            if model_list["xgboost"] != -1:
+                xgboost = Model()
+                data_mode = model_list["xgboost"]
+                model_name = f'xgboost_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+                self.xgboost = xgboost.load_check_point("xgboost", model_name)
+            if "lstm" in model_list:
+                lstm = Model()
+                data_mode = model_list["lstm"]
+                model_name = f'lstm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+                self.lstm = lstm.load_check_point("lstm", model_name)
             self.fc1 = nn.Linear(256, 10)
             self.fc2 = nn.Linear(768 * self.window_size, 1)
             self.fc3 = nn.Linear(3, 1)
@@ -439,23 +444,48 @@ class TransformerClassifier(nn.Module):
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 2:
-            batch = x_stock.shape[0]
-            svm_pred = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
-                "cuda").unsqueeze(1)
-            rfc_pred = self.rfc.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
-                "cuda").unsqueeze(1)
-            svm_pred = self.drop_out(svm_pred)
-            rfc_pred = self.drop_out(rfc_pred)
+            if "svm" in self.ensembled_model:
+                svm_pred = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+
+            if "random_forest" in self.ensembled_model:
+                rfc_pred = self.rfc.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+
+            if "xgboost" in self.ensembled_model:
+                self.xgboost = self.xgboost.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+
+            if "lstm" in self.ensembled_model:
+                self.lstm = self.lstm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+
+            outputs = []
+            if "svm" in self.ensembled_model:
+                svm_pred = self.drop_out(svm_pred)
+                outputs.append(svm_pred)
+
+            if "random_forest" in self.ensembled_model:
+                rfc_pred = self.drop_out(rfc_pred)
+                outputs.append(rfc_pred)
+
+            if "xgboost" in self.ensembled_model:
+                xgboost_pred = self.xgboost(x_stock)
+                outputs.append(xgboost_pred)
+
+            if "lstm" in self.ensembled_model:
+                lstm_pred = self.lstm(x_stock)
+                outputs.append(lstm_pred)
+
             x_news = x_news.view(batch, -1)
             x_news = self.fc2(x_news)
             x_news = self.drop_out(x_news)
-            # x_news = self.relu(x_news)
-            # x_news = self.drop_out(x_news)
-            x = torch.cat([rfc_pred, svm_pred, x_news], dim=1)
+
+            if outputs:
+                concatenated_outputs = torch.cat(outputs, dim=1)
+                x = torch.cat([concatenated_outputs, x_news], dim=1)
+            else:
+                x = x_news
+
             x = self.fc3(x)
             x = self.sigmoid(x)
             return x
-
 
 class PredictPriceLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
