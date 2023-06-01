@@ -35,12 +35,20 @@ trainer.eval(model)
 # model = model.load_check_point(model.model_type, trainer.model.name)
 # trainer.eval(model)
 
+import trainer.lstm_trainer as lstm_tn
+trainer = lstm_tn.lstm_trainer(new_data=False, full_data=False, mode = "train")
+
+trainer.train()
+model = trainer.model
+model = model.load_check_point(model.model_type, trainer.model.name)
+trainer.eval(model)
 
 
 
-# trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "train")
 
-# trainer.train()
-# model = trainer.model
-# model = model.load_check_point(model.model_type, trainer.model.name)
-# trainer.eval(model)
+trainer = ttn.Transformer_trainer(new_data=False, full_data=False, mode = "train")
+
+trainer.train()
+model = trainer.model
+model = model.load_check_point(model.model_type, trainer.model.name)
+trainer.eval(model)

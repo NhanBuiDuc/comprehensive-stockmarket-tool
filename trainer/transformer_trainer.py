@@ -324,10 +324,10 @@ class Transformer_trainer(Trainer):
         X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=self.window_size,
                                                             output_step=self.output_step, dilation=1)
         dataset_slicing = X_trainval.shape[2]
-        if self.data_mode == 1:
-            X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
-                                                    self.output_step, self.topk, new_data)
-        elif self.data_mode == 2:
+        # if self.data_mode == 1:
+            # X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+            #                                         self.output_step, self.topk, new_data)
+        if self.data_mode == 2:
             news_X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
                                                         self.output_step, self.topk, new_data)
             # Concatenate X_stocks and news_X
@@ -336,10 +336,11 @@ class Transformer_trainer(Trainer):
         # Prepare X data for test dataframe
         X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
                                                     output_step=self.output_step, dilation=1)
-        if self.data_mode == 1:
-            X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
-                                                self.output_step, self.topk, new_data)
-        elif self.data_mode == 2:
+        # if self.data_mode == 1:
+            
+        #     X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+        #                                         self.output_step, self.topk, new_data)
+        if self.data_mode == 2:
             news_X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
                                                     self.output_step, self.topk, new_data)
             # Concatenate X_stocks and news_X
