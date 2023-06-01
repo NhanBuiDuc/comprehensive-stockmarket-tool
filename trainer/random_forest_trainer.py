@@ -98,16 +98,18 @@ class random_forest_trainer(Trainer):
 
     def eval(self, model):
 
-        train_dataloader, valid_dataloader, test_dataloader = self.prepare_eval_data()
+        train_dataloader, valid_dataloader, test_dataloader, balancedtest_datataloader = self.prepare_eval_data()
         if self.data_mode == 0:
             train_dataloader.dataset.X = train_dataloader.dataset.x_price
             valid_dataloader.dataset.X = valid_dataloader.dataset.x_price
             test_dataloader.dataset.X = test_dataloader.dataset.x_price
+            balancedtest_datataloader.dataset.X = balancedtest_datataloader.dataset.x_price
             self.num_feature = train_dataloader.dataset.X.shape[-1]
         elif self.data_mode == 1:
             train_dataloader.dataset.X = train_dataloader.dataset.x_stock
             valid_dataloader.dataset.X = valid_dataloader.dataset.x_stock
             test_dataloader.dataset.X = test_dataloader.dataset.x_stock
+            balancedtest_datataloader.dataset.X = balancedtest_datataloader.dataset.x_stock
             self.num_feature = train_dataloader.dataset.X.shape[-1]
         # Get the current date and time
         current_datetime = datetime.datetime.now()
@@ -134,7 +136,7 @@ class random_forest_trainer(Trainer):
             f.write("\n")
             f.write(json.dumps(self.config, indent=4))
             f.write("\n")
-        for i in range(0, 3, 1):
+        for i in range(0, 4, 1):
             if i == 0:
                 torch.cuda.empty_cache()
                 dataloader = train_dataloader
@@ -147,6 +149,10 @@ class random_forest_trainer(Trainer):
                 torch.cuda.empty_cache()
                 dataloader = test_dataloader
                 print_string = "Test evaluate " + self.model_name
+            elif i == 3:
+                torch.cuda.empty_cache()
+                dataloader = balancedtest_datataloader
+                print_string = "Balanced Test evaluate " + self.model_name
             if "accuracy" or "precision" or "f1" in self.evaluate:
                 # Create empty lists to store the true and predicted labels
                 true_labels = []
@@ -241,10 +247,10 @@ class random_forest_trainer(Trainer):
         num_data_points = df.shape[0]
         data_date = df.index.strftime("%Y-%m-%d").tolist()
 
-        # Split train-val and test sets
-        trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
-        train_valid_date = data_date[:trainval_test_split_index]
-        test_date = data_date[trainval_test_split_index:]
+        # Split train and test sets based on date
+        train_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])  # 70% of data points
+        train_valid_date = data_date[:train_split_index]
+        test_date = data_date[train_split_index:]
 
         # Prepare y
         y = u.prepare_data_y_trend(df.to_numpy(), output_step=self.output_step)
@@ -260,33 +266,26 @@ class random_forest_trainer(Trainer):
             X = np.concatenate((X_stocks, news_X), axis=1)
         else:
             X = X_stocks
-        self.num_feature = 807
-
-
+        self.num_feature = X.shape[1]
 
         # Split X and y into train, valid, and test datasets
-        trainval_test_split_index = int(X.shape[0] * self.cf["data"]["train_test_split_size"])
-        train_valid_indices = np.arange(trainval_test_split_index)
-        test_indices = np.arange(trainval_test_split_index, X.shape[0])
-
-        X_train_valid = X[train_valid_indices]
+        train_indices = np.where(df.index.isin(train_valid_date))[0]
+        test_indices = np.where(df.index.isin(test_date))[0][:-self.output_step]
+        print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
+        print("Test from: " + test_date[0] + " to " + test_date[-1])
+        X_train_valid = X[train_indices]
         X_test = X[test_indices]
-        y_train_valid = y[train_valid_indices]
+        y_train_valid = y[train_indices]
         y_test = y[test_indices]
 
         # Perform stratified splitting on train and valid datasets
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"], random_state=42)
-        for train_index, valid_index in sss.split(X_train_valid, y_train_valid):
+        sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"], random_state=42)
+        for train_index, valid_index in sss_train.split(X_train_valid, y_train_valid):
             X_train = X_train_valid[train_index]
             X_valid = X_train_valid[valid_index]
             y_train = y_train_valid[train_index]
             y_valid = y_train_valid[valid_index]
-        # Balance the test set
-        class_0_indices = np.where(y_test == 0)[0]
-        class_1_indices = np.where(y_test == 1)[0]
-        balanced_indices = np.concatenate([class_0_indices[:19], class_1_indices[:19]])
-        X_test = X_test[balanced_indices]
-        y_test = y_test[balanced_indices]
+
         # Print class distribution in train, valid, and test sets
         train_class_counts = np.bincount(y_train)
         valid_class_counts = np.bincount(y_valid)
@@ -303,6 +302,15 @@ class random_forest_trainer(Trainer):
         y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
         y_test_file = './dataset/y_test_' + self.model_name + '.npy'
 
+        if os.path.exists(X_train_file):
+            os.remove(X_train_file)
+        if os.path.exists(X_valid_file):
+            os.remove(X_valid_file)
+        if os.path.exists(y_train_file):
+            os.remove(y_train_file)
+        if os.path.exists(y_valid_file):
+            os.remove(y_valid_file)
+
         np.save(X_train_file, X_train)
         np.save(X_valid_file, X_valid)
         np.save(X_test_file, X_test)
@@ -316,30 +324,50 @@ class random_forest_trainer(Trainer):
         test_dataset = PriceAndIndicatorsAndNews_Dataset(X_test, y_test, 39)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
-        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
-
-
+        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)   
     def prepare_eval_data(self):
-        # load train data
+        # Load train and validation data
         X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
         y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
         X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
         y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
-        X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
-        y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
-        dataset_slicing = 39
-        self.num_feature = X_train.shape[-1]
-        train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, dataset_slicing)
-        valid_dataset = PriceAndIndicatorsAndNews_Dataset(X_valid, y_valid, dataset_slicing)
-        test_dataset = PriceAndIndicatorsAndNews_Dataset(X_test, y_test, dataset_slicing)
 
-        self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
-        self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
-        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        # Load full test data
+        X_test_full = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
+        y_test_full = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
 
-        return self.train_dataloader, self.valid_dataloader, self.test_dataloader
-        # train_date, valid_date, test_date
+        # Balance the test set
+        class_0_indices = np.where(y_test_full == 0)[0]
+        class_1_indices = np.where(y_test_full == 1)[0]
+        min_class_count = min(len(class_0_indices), len(class_1_indices))
+        balanced_indices = np.concatenate([class_0_indices[:min_class_count], class_1_indices[:min_class_count]])
+        X_test_balanced = X_test_full[balanced_indices]
+        y_test_balanced = y_test_full[balanced_indices]
 
+        # Create datasets for train, validation, full test, and balanced test
+        train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, 39)
+        valid_dataset = PriceAndIndicatorsAndNews_Dataset(X_valid, y_valid, 39)
+        test_full_dataset = PriceAndIndicatorsAndNews_Dataset(X_test_full, y_test_full, 39)
+        test_balanced_dataset = PriceAndIndicatorsAndNews_Dataset(X_test_balanced, y_test_balanced, 39)
+
+        # Create dataloaders for train, validation, full test, and balanced test
+        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
+        valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
+        test_full_dataloader = DataLoader(test_full_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        test_balanced_dataloader = DataLoader(test_balanced_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+
+        # Print class distribution for all datasets
+        train_class_counts = np.bincount(y_train)
+        valid_class_counts = np.bincount(y_valid)
+        test_full_class_counts = np.bincount(y_test_full)
+        test_balanced_class_counts = np.bincount(y_test_balanced)
+
+        print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+        print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+        print("Full Test set - Class 0 count:", test_full_class_counts[0], ", Class 1 count:", test_full_class_counts[1])
+        print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:", test_balanced_class_counts[1])
+
+        return train_dataloader, valid_dataloader, test_full_dataloader, test_balanced_dataloader
     def run_epoch(self, model, dataloader, optimizer, criterion, scheduler, is_training, device):
         epoch_loss = 0
 

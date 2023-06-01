@@ -1,63 +1,68 @@
-from trainer.trainer import Trainer, run_epoch, check_best_loss, is_early_stop
+from trainer.trainer import Trainer, check_best_loss, is_early_stop
 
 import pandas as pd
 import torch
 from torch.utils.data import ConcatDataset
 from model import Model
-from configs.config import config as mv_cf
+from configs.lstm_config import lstm_cf as cf
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import sys
 import util as u
-from dataset import Classification_TimeSeriesDataset
+from dataset import PriceAndIndicatorsAndNews_TimeseriesDataset
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import json
 import numpy as np
 import os
 from torch.utils.data import DataLoader
-from sklearn.model_selection import StratifiedShuffleSplit
 import datetime
+import NLP.util as nlp_u
+from tqdm import tqdm
+from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
+from loss import FocalLoss
+from sklearn.model_selection import train_test_split
 
-
-class Movement_trainer(Trainer):
-    def __init__(self, model_name, new_data=True, full_data=False, num_feature=None, config=None, model_type=None,
-                 model_full_name=None,
-                 model=None):
-        super(Movement_trainer, self).__init__()
+class lstm_trainer(Trainer):
+    def __init__(self, new_data=True, full_data=False, mode="train"):
+        super(lstm_trainer, self).__init__()
         self.__dict__.update(self.cf)
-        self.config = mv_cf
-        self.model_name = model_name
-        self.__dict__.update(self.config["model"][self.model_name])
-        self.__dict__.update(self.config["training"][self.model_name])
+        self.config = cf
+        # self.symbol = self.cf["alpha_vantage"]["symbol"]
+        self.model_type = "lstm"
+        self.__dict__.update(self.config["model"])
+        self.__dict__.update(self.config["training"])
         self.test_dataloader = None
         self.valid_dataloader = None
         self.train_dataloader = None
         self.full_data = full_data
-        self.num_feature = num_feature
+        self.num_feature = None
         self.new_data = new_data
-        self.model_type = "movement"
+        self.model_name = f'{self.model_type}_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(self.data_mode)}'
         self.model_type_dict = self.cf["pytorch_timeseries_model_type_dict"]
-        self.model = model
-        self.model_full_name = self.cf["alpha_vantage"]["symbol"] + "_" + self.model_name
-        self.prepare_data(self.new_data)
+        self.model = None
+        self.mode = mode
+        if self.mode == "train":
+            self.prepare_data(self.new_data)
+        else:
+            self.num_feature = 807
         self.indentify()
 
     def indentify(self):
         self.model = Model(name=self.model_name, num_feature=self.num_feature, parameters=self.config,
-                           model_type=self.model_type,
-                           full_name=self.model_full_name)
+                           model_type=self.model_type)
 
     def train(self):
-
+        self.mode = "train"
         if "mse" in self.loss:
             criterion = nn.MSELoss()
         elif "mae" in self.loss:
             criterion = nn.L1Loss()
         elif "bce" in self.loss:
             criterion = nn.BCELoss()
-
+        elif "focal" in self.loss:
+            criterion = FocalLoss(alpha=0.5, gamma=2)
         if "adam" in self.optimizer:
             optimizer = optim.Adam(self.model.structure.parameters(), lr=self.learning_rate,
                                    weight_decay=self.weight_decay)
@@ -78,10 +83,13 @@ class Movement_trainer(Trainer):
         # Run train valid
         if not self.full_data:
             for epoch in range(self.num_epoch):
-                loss_train, lr_train = run_epoch(self.model, self.train_dataloader, optimizer, criterion, scheduler,
-                                                 is_training=True, device=self.device)
-                loss_val, lr_val = run_epoch(self.model, self.valid_dataloader, optimizer, criterion, scheduler,
-                                             is_training=False, device=self.device)
+                loss_train, lr_train = self.run_epoch(self.model, self.train_dataloader, optimizer, criterion,
+                                                      scheduler,
+                                                      is_training=True, device=self.device)
+                loss_val, lr_val = self.run_epoch(self.model, self.valid_dataloader, optimizer, criterion, scheduler,
+                                                  is_training=False, device=self.device)
+                loss_test, lr_test = self.run_epoch(self.model, self.test_dataloader, optimizer, criterion, scheduler,
+                                                    is_training=False, device=self.device)
                 scheduler.step(loss_val)
                 if self.best_model:
                     if check_best_loss(best_loss=best_loss, loss=loss_val):
@@ -96,7 +104,7 @@ class Movement_trainer(Trainer):
                         torch.save({"model": self.model,
                                     "state_dict": self.model.structure.state_dict()
                                     },
-                                   "./models/" + self.model.full_name + ".pth")
+                                   "./models/" + self.model.name + ".pth")
                     else:
                         if self.early_stop:
                             stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss,
@@ -110,12 +118,10 @@ class Movement_trainer(Trainer):
                     torch.save({"model": self.model,
                                 "state_dict": self.model.structure.state_dict()
                                 },
-                               "./models/" + self.model_full_name + ".pth")
+                               "./models/" + self.model_name + ".pth")
 
-                print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f} | lr:{:.6f}'
-                      .format(epoch + 1, self.num_epoch, loss_train, loss_val, lr_train))
-
-                print("patient", patient_count)
+                print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f}, test:{:.6f} | lr:{:.6f}'
+                      .format(epoch + 1, self.num_epoch, loss_train, loss_val, loss_test, lr_train))
                 if stop:
                     print("Early Stopped At Epoch: {}", epoch + 1)
                     break
@@ -125,8 +131,8 @@ class Movement_trainer(Trainer):
             # Create a new data loader using the combined dataset
             combined_dataset = DataLoader(combined_dataset, batch_size=32, shuffle=True)
             for epoch in range(self.num_epoch):
-                loss_train, lr_train = run_epoch(self.model, combined_dataset, optimizer, criterion, scheduler,
-                                                 is_training=True, device=self.device)
+                loss_train, lr_train = self.run_epoch(self.model, combined_dataset, optimizer, criterion, scheduler,
+                                                      is_training=True, device=self.device)
                 scheduler.step(loss_train)
                 if self.best_model:
                     if check_best_loss(best_loss=best_loss, loss=loss_train):
@@ -141,7 +147,7 @@ class Movement_trainer(Trainer):
                         torch.save({"model": self.model,
                                     "state_dict": self.model.structure.state_dict()
                                     },
-                                   "./models/" + self.model_full_name + ".pth")
+                                   "./models/" + self.model_name + ".pth")
                     else:
                         if self.early_stop:
                             stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss,
@@ -155,7 +161,7 @@ class Movement_trainer(Trainer):
                     torch.save({"model": self.model,
                                 "state_dict": self.model.structure.state_dict()
                                 },
-                               "./models/" + self.model.full_name + ".pth")
+                               "./models/" + self.model_name + ".pth")
 
                 print('Epoch[{}/{}] | loss train:{:.6f}| lr:{:.6f}'
                       .format(epoch + 1, self.num_epoch, loss_train, lr_train))
@@ -167,7 +173,8 @@ class Movement_trainer(Trainer):
         return self.model
 
     def eval(self, model):
-        train_dataloader, valid_dataloader, test_dataloader = self.prepare_eval_data()
+
+        train_dataloader, valid_dataloader, test_dataloader, balancedtest_datataloader = self.prepare_eval_data()
         # Get the current date and time
         current_datetime = datetime.datetime.now()
 
@@ -179,7 +186,7 @@ class Movement_trainer(Trainer):
         datetime_str = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
         # Open the file in write mode
-        save_path = os.path.join(save_folder, self.model_full_name + "_eval")
+        save_path = os.path.join(save_folder, self.model_name + "_eval")
         # Open the file in write mode
         with open(save_path, "a") as f:
             f.write(datetime_str)
@@ -195,16 +202,23 @@ class Movement_trainer(Trainer):
             f.write("\n")
 
         model.structure.to(self.device)
-        for i in range(0, 3, 1):
+        for i in range(0, 4, 1):
             if i == 0:
+                torch.cuda.empty_cache()
                 dataloader = train_dataloader
-                print_string = "Train evaluate " + self.model_full_name
+                print_string = "Train evaluate " + self.model_name
             if i == 1:
+                torch.cuda.empty_cache()
                 dataloader = valid_dataloader
-                print_string = "Valid evaluate " + self.model_full_name
+                print_string = "Valid evaluate " + self.model_name
             elif i == 2:
+                torch.cuda.empty_cache()
                 dataloader = test_dataloader
-                print_string = "Test evaluate " + self.model_full_name
+                print_string = "Test evaluate " + self.model_name
+            elif i == 3:
+                torch.cuda.empty_cache()
+                dataloader = balancedtest_datataloader
+                print_string = "Balanced Test evaluate " + self.model_name
             if "accuracy" or "precision" or "f1" in self.evaluate:
                 # Create empty lists to store the true and predicted labels
                 true_labels = []
@@ -214,14 +228,13 @@ class Movement_trainer(Trainer):
             target_list = torch.empty(0).to(self.device)
             output_list = torch.empty(0).to(self.device)
             # Iterate over the dataloader
-            for inputs, labels in dataloader:
+            for x_stock, x_news, labels in dataloader:
                 # Move inputs and labels to device
-                inputs = inputs.to(self.device)
+                x_stock = x_stock.to(self.device)
+                x_news = x_news.to(self.device)
                 labels = labels.to(self.device)
-
                 # Forward pass
-                outputs = model.predict(inputs)
-
+                outputs = model.structure(x_stock, x_news)
                 target_list = torch.cat([target_list, labels], dim=0)
                 output_list = torch.cat([output_list, outputs], dim=0)
                 if "accuracy" or "precision" or "f1" in self.evaluate:
@@ -240,7 +253,7 @@ class Movement_trainer(Trainer):
                     os.makedirs(save_folder)
 
                 # Open the file in write mode
-                save_path = os.path.join(save_folder, self.model_full_name + "_eval")
+                save_path = os.path.join(save_folder, self.model_name + "_eval")
                 # Open the file in write mode
                 with open(save_path, "a") as f:
                     # Write the classification report to the file
@@ -255,7 +268,7 @@ class Movement_trainer(Trainer):
                     f.write("-" * 100)
                     f.write("\n")
                 # Print a message to confirm that the file was written successfully
-                print("Results written to " + self.model_full_name + "_eval.txt")
+                print("Results written to " + self.model_name + "_eval.txt")
 
             temp_evaluate = np.array(self.evaluate)
 
@@ -284,7 +297,7 @@ class Movement_trainer(Trainer):
                     os.makedirs(save_folder)
 
                 # Open the file in append mode
-                save_path = os.path.join(save_folder, self.model_full_name + "_eval")
+                save_path = os.path.join(save_folder, self.model_name + "_eval")
                 with open(save_path, "a") as f:
                     # Write the loss to the file
                     f.write(print_string + " " + loss_str + "\n")
@@ -295,103 +308,181 @@ class Movement_trainer(Trainer):
                 print(f"Loss written to {save_path}.")
 
     def prepare_data(self, new_data):
-        training_param = self.config["training"][self.model_name]
         df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
         num_data_points = df.shape[0]
-        num_feature = df.shape[1]
-        self.num_feature = num_feature
         data_date = df.index.strftime("%Y-%m-%d").tolist()
 
-        # Split train val 80%
+        # Split train-val and test dataframes
         trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
-        # 0 - 80
-        # train with val dates
-        train_valid_date = data_date[:trainval_test_split_index]
-        # test dates splitted
-        test_date = data_date[trainval_test_split_index:]
-        # New index for train and valid only
-        train_valid_split_index = int(len(train_valid_date) * self.cf["data"]["train_val_split_size"])
-        # Train and valid df split up
-        # 80 - 100%
-        # Train and valid dates df split up
-        train_date = train_valid_date[:train_valid_split_index]
-        valid_date = train_valid_date[train_valid_split_index:]
+        trainval_df = df.iloc[:trainval_test_split_index]
+        test_df = df.iloc[trainval_test_split_index:]
+        print("Train date from: " + trainval_df.index[0].strftime("%Y-%m-%d") + " to " + trainval_df.index[-1].strftime("%Y-%m-%d"))
+        print("Test from: " + test_df.index[0].strftime("%Y-%m-%d") + " to " + test_df.index[-1].strftime("%Y-%m-%d"))
 
-        # prepare y df
-        close_df = pd.DataFrame({'close': df['close']})
 
-        # prepare X data
-        X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
-                                            dilation=1)
+        # Prepare X data for train-val dataframe
+        X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=self.window_size,
+                                                            output_step=self.output_step, dilation=1)
+        dataset_slicing = X_trainval.shape[2]
+        if self.data_mode == 1:
+            X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+                                                    self.output_step, self.topk, new_data)
+        elif self.data_mode == 2:
+            news_X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+                                                        self.output_step, self.topk, new_data)
+            # Concatenate X_stocks and news_X
+            X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
 
-        # Split train, validation, and test sets
-        trainval_test_split_index = int(len(X) * self.cf["data"]["train_test_split_size"])
-        X_trainval, X_test, y_trainval, y_test = X[:trainval_test_split_index], X[trainval_test_split_index:], y[
-                                                                                                               :trainval_test_split_index], y[
-                                                                                                                                            trainval_test_split_index:]
+        # Prepare X data for test dataframe
+        X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
+                                                    output_step=self.output_step, dilation=1)
+        if self.data_mode == 1:
+            X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+                                                self.output_step, self.topk, new_data)
+        elif self.data_mode == 2:
+            news_X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+                                                    self.output_step, self.topk, new_data)
+            # Concatenate X_stocks and news_X
+            X_test = np.concatenate((X_test, news_X_test), axis=2)
 
-        train_valid_split_index = int(len(X_trainval) * self.cf["data"]["train_val_split_size"])
-        X_train, X_valid, y_train, y_valid = X_trainval[:train_valid_split_index], X_trainval[
-                                                                                   train_valid_split_index:], y_trainval[
-                                                                                                              :train_valid_split_index], y_trainval[
-                                                                                                                                         train_valid_split_index:]
+        self.num_feature = X_trainval.shape[2]
+        # Split X and y into train and validation datasets
+        train_indices, valid_indices = train_test_split(range(X_trainval.shape[0]), test_size=1 - self.cf["data"]["train_val_split_size"], shuffle=True, random_state=42)
+        X_train = X_trainval[train_indices]
+        X_valid = X_trainval[valid_indices]
+        y_train = y_trainval[train_indices]
+        y_valid = y_trainval[valid_indices]
 
-        # Create StratifiedShuffleSplit object
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"], random_state=42)
+        # Count the class distribution for each set
+        train_class_counts = np.bincount(y_train[:, 0])
+        valid_class_counts = np.bincount(y_valid[:, 0])
+        test_class_counts = np.bincount(y_test[:, 0])
 
-        # Use StratifiedShuffleSplit to split train and validation sets
-        for train_index, valid_index in sss.split(X_trainval, y_trainval):
-            X_train, X_valid = X_trainval[train_index], X_trainval[valid_index]
-            y_trainval = y_trainval.astype(int)
-            y_train, y_valid = y_trainval[train_index], y_trainval[valid_index]
+        print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+        print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+        print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
 
-        # print("Number of 0s and 1s in y_train:", np.bincount(y_train))
-        # print("Number of 0s and 1s in y_valid:", np.bincount(y_valid))
-        # save train data
+        # Save train and validation data
+        X_train_file = './dataset/X_train_' + self.model_name + '.npy'
+        X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
+        X_test_file = './dataset/X_test_' + self.model_name + '.npy'
+        y_train_file = './dataset/y_train_' + self.model_name + '.npy'
+        y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
+        y_test_file = './dataset/y_test_' + self.model_name + '.npy'
 
-        # set the file paths
-        train_file = './dataset/X_train_' + self.model_full_name + '.npy'
-        valid_file = './dataset/X_valid_' + self.model_full_name + '.npy'
-        test_file = './dataset/X_test_' + self.model_full_name + '.npy'
+        if os.path.exists(X_train_file):
+            os.remove(X_train_file)
+        if os.path.exists(X_valid_file):
+            os.remove(X_valid_file)
+        if os.path.exists(y_train_file):
+            os.remove(y_train_file)
+        if os.path.exists(y_valid_file):
+            os.remove(y_valid_file)
 
-        # check if the files already exist, and delete them if they do
-        if os.path.exists(train_file):
-            os.remove(train_file)
-        if os.path.exists(valid_file):
-            os.remove(valid_file)
-        if os.path.exists(test_file):
-            os.remove(test_file)
+        np.save(X_train_file, X_train)
+        np.save(X_valid_file, X_valid)
+        np.save(X_test_file, X_test)
+        np.save(y_train_file, y_train)
+        np.save(y_valid_file, y_valid)
+        np.save(y_test_file, y_test)
 
-        # save the data
-        np.save(train_file, X_train)
-        np.save(valid_file, X_valid)
-        np.save(test_file, X_test)
-
-        # create datasets and dataloaders
-        train_dataset = Classification_TimeSeriesDataset(X_train, y_train)
-        valid_dataset = Classification_TimeSeriesDataset(X_valid, y_valid)
-        test_dataset = Classification_TimeSeriesDataset(X_test, y_test)
-
+        # Create datasets and dataloaders for train and validation sets
+        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, dataset_slicing)
+        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, dataset_slicing)
+        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, dataset_slicing)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
+
     def prepare_eval_data(self):
-        # load train data
-        X_train = np.load('./dataset/X_train_' + self.model_full_name + '.npy', allow_pickle=True)
-        y_train = np.load('./dataset/y_train_' + self.model_full_name + '.npy', allow_pickle=True)
-        X_valid = np.load('./dataset/X_valid_' + self.model_full_name + '.npy', allow_pickle=True)
-        y_valid = np.load('./dataset/y_valid_' + self.model_full_name + '.npy', allow_pickle=True)
-        X_test = np.load('./dataset/X_test_' + self.model_full_name + '.npy', allow_pickle=True)
-        y_test = np.load('./dataset/y_test_' + self.model_full_name + '.npy', allow_pickle=True)
+        # Load train and validation data
+        X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
+        y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
+        X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
+        y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
 
-        train_dataset = Classification_TimeSeriesDataset(X_train, y_train)
-        valid_dataset = Classification_TimeSeriesDataset(X_valid, y_valid)
-        test_dataset = Classification_TimeSeriesDataset(X_test, y_test)
+        # Load full test data
+        X_test_full = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
+        y_test_full = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
+        
+        # Balance the test set
+        class_0_indices = np.where(y_test_full == 0)[0]
+        class_1_indices = np.where(y_test_full == 1)[0]
+        min_class_count = min(len(class_0_indices), len(class_1_indices))
+        balanced_indices = np.concatenate([class_0_indices[:min_class_count], class_1_indices[:min_class_count]])
+        X_test_balanced = X_test_full[balanced_indices]
+        y_test_balanced = y_test_full[balanced_indices]
 
+
+        dataset_slicing = 39
+
+        # Create datasets for train, validation, full test, and balanced test
+        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, dataset_slicing)
+        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, dataset_slicing)
+        test_full_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test_full, y_test_full, dataset_slicing)
+        test_balanced_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test_balanced, y_test_balanced, dataset_slicing)
+
+        # Print class distribution for all datasets
+        train_class_counts = np.bincount(np.squeeze(y_train))
+        valid_class_counts = np.bincount(np.squeeze(y_valid))
+        test_full_class_counts = np.bincount(np.squeeze(y_test_full))
+        test_balanced_class_counts = np.bincount(np.squeeze(y_test_balanced))
+
+        print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+        print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+        print("Full Test set - Class 0 count:", test_full_class_counts[0], ", Class 1 count:", test_full_class_counts[1])
+        print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:", test_balanced_class_counts[1])
+        # Create dataloaders for train, validation, full test, and balanced test
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
-        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        test_full_dataloader = DataLoader(test_full_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        test_balanced_dataloader = DataLoader(test_balanced_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
-        return train_dataloader, valid_dataloader, test_dataloader
-        # train_date, valid_date, test_date
+        return train_dataloader, valid_dataloader, test_full_dataloader,  test_balanced_dataloader
+    def run_epoch(self, model, dataloader, optimizer, criterion, scheduler, is_training, device):
+        epoch_loss = 0
+
+        weight_decay = 0.001
+        if is_training:
+            model.structure.train()
+        else:
+            model.structure.eval()
+
+        # create a tqdm progress bar
+        dataloader = tqdm(dataloader)
+        for idx, (x_stock, x_news, y) in enumerate(dataloader):
+            if is_training:
+                optimizer.zero_grad()
+            batch_size = x_stock.shape[0]
+            # print(x.shape)
+            x_stock = x_stock.to(device)
+            x_news = x_news.to(device)
+            y = y.to(device)
+            out = model.structure(x_stock, x_news)
+            # Compute accuracy
+            predictions = torch.argmax(out, dim=1).unsqueeze(1)
+            correct = (predictions == y).sum().item()
+            accuracy = correct / batch_size  # Multiply by 100 to get percentage
+
+            # Print loss and accuracy
+            print("Accuracy: {:.2f}%".format(accuracy))
+            loss = criterion(out, y)
+            if is_training:
+                if loss != torch.nan:
+                    torch.autograd.set_detect_anomaly(True)
+                    loss.backward()
+                    optimizer.step()
+                else:
+                    print("loss = nan")
+            batch_loss = (loss.detach().item())
+            epoch_loss += batch_loss
+            # update the progress bar
+            dataloader.set_description(f"At index {idx:.4f}")
+
+        try:
+            lr = scheduler.get_last_lr()[0]
+
+        except:
+            lr = optimizer.param_groups[0]['lr']
+        return epoch_loss, lr

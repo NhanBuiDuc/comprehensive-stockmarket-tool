@@ -1,10 +1,10 @@
 lstm_cf = {
     "model": {
-        "lstm_num_layer": 2,
-        "lstm_hidden_layer_size": 14,
+        "num_layers": 2,
+        "hidden_size": 14,
         "drop_out": 0.5,
-        "output_step": 1,
-        "window_size": 14,
+        "output_step": 3,
+        "window_size": 3,
         "conv1D_param": {
             "type": 1,
             "kernel_size": 4,
@@ -16,20 +16,22 @@ lstm_cf = {
             "sub_big_kernel_size": 30,
             "output_size": 20
         },
-        "symbol": "AAPL"
+        "symbol": "AAPL",
+        "topk": 20,
+        "data_mode": 2,
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
         "batch_size": 64,
-        "num_epoch": 10,
-        "learning_rate": 0.01,
+        "num_epoch": 100,
+        "learning_rate": 0.001,
         "loss": "bce",
         "evaluate": ["bce", "accuracy", "precision", "f1"],
         "optimizer": "adam",
         "scheduler_step_size": 50,
         "patient": 100,
-        "start": "2020-01-01",
-        "end": None,
+        "start": "2022-07-01",
+        "end": "2023-05-01",
         "best_model": True,
         "early_stop": True,
         "train_shuffle": True,
