@@ -40,13 +40,12 @@ if __name__ == "__main__":
     # Set the search parameters
     # Define the from_date as the current date and time
     from_date = "2022-07-01"
-    to_date = None
+    to_date = "2023-05-01"
     page_size = 100
     total_results = 1000
     topK = 5
-    window_size = cf["data"]["window_size"]
     max_summary_lenght = 60
-    symbol = "GOOGL"
+    symbol = "AMZN"
     news_web_url_folder = "./NLP/news_web_url"
     news_web_file_name = news_web_url_folder + f'/{symbol}/{symbol}_url.csv'
     news_data_path = "./NLP/news_data/" + symbol + "/" + symbol + "_" + "data.csv"
@@ -59,7 +58,7 @@ if __name__ == "__main__":
     model_name = 'philschmid/bart-large-cnn-samsum'
     summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
     sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
-    u.download_news(symbol, from_date=from_date, window_size=window_size)
+    u.download_news(symbol, from_date=from_date, to_date=to_date)
 
     dataframes_to_concat = []
     file_encoding = 'ISO-8859-1'

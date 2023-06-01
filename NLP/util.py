@@ -182,8 +182,9 @@ def filter_news_by_stock_dates(news_df, stock_df, max_rows):
                 rows_remaining = max_rows - news_counts[date]
                 days_skipped = 1
                 previous_date = date
-                while news_counts[date] < rows_remaining and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
-                    previous_date  -= pd.DateOffset(days=days_skipped)
+                while news_counts[date] < rows_remaining and previous_date - pd.DateOffset(days=days_skipped) in \
+                        news_df["date"]:
+                    previous_date -= pd.DateOffset(days=days_skipped)
                     rows = news_df[news_df['date'] == previous_date]
                     if len(rows) < 0:
                         days_skipped += 1
@@ -205,23 +206,24 @@ def filter_news_by_stock_dates(news_df, stock_df, max_rows):
 
             days_skipped = 1
             previous_date = date
-            while news_counts[date] < rows_remaining: #and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
+            while news_counts[
+                date] < rows_remaining:  # and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
                 previous_date -= pd.DateOffset(days=days_skipped)
                 rows = news_df[news_df['date'] == previous_date]
                 if len(rows) == 0:
                     days_skipped += 1
                 # Check if the next date has enough rows
                 elif news_counts[previous_date] > 5:
-                        rows_to_include = news_counts[previous_date] - max_rows
-                        if rows[:rows_to_include].values.tolist() not in filtered_rows:
-                            rows = rows.copy()
-                            rows['date'] = date
-                            filtered_rows.extend(rows[:rows_to_include].values.tolist())
-                            news_counts[previous_date] -= rows_to_include
-                            news_counts[date] += rows_to_include
-                            rows_remaining -= rows_to_include
+                    rows_to_include = news_counts[previous_date] - max_rows
+                    if rows[:rows_to_include].values.tolist() not in filtered_rows:
+                        rows = rows.copy()
+                        rows['date'] = date
+                        filtered_rows.extend(rows[:rows_to_include].values.tolist())
+                        news_counts[previous_date] -= rows_to_include
+                        news_counts[date] += rows_to_include
+                        rows_remaining -= rows_to_include
 
-                        days_skipped += 1
+                    days_skipped += 1
 
     # Create a dataframe from the filtered_rows list
     filtered_news_df = pd.DataFrame(filtered_rows, columns=news_df.columns)
@@ -240,7 +242,7 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     # convert into (batch, 14, n) data
     max_string_lenght = 50
     model_name = "bert-base-uncased"
-    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
+    sentence_model = SentenceTransformer("ProsusAI/finbert")
     file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
     news_query_folder = "./NLP/news_query"
     news_query_file_name = symbol + "_" + "query.json"
@@ -266,7 +268,48 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
 
     return data, top_sentences_dict
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from sentence_transformers import SentenceTransformer
+def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
+    max_string_length = 50
+    model_name = "ProsusAI/finbert"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    sentence_model = SentenceTransformer(model_name)
+    file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
+    news_query_folder = "./NLP/news_query"
+    news_query_file_name = symbol + "_" + "query.json"
+    news_query_path = news_query_folder + "/" + news_query_file_name
 
+    with open(news_query_path, "r") as f:
+        queries = json.load(f)
+    keyword_query = list(queries.values())
+
+    news_df = pd.read_csv(file_path)
+    news_df['date'] = pd.to_datetime(news_df['date'])
+    news_df = filter_news_by_stock_dates(news_df, stock_df, max_rows=5)
+    top_sentences_dict = []
+
+    for date in news_df["date"].unique():
+        summary_columns = news_df[news_df["date"] == date]["summary"]
+        top_summary = get_similar_summary(summary_columns.values, keyword_query, sentence_model, topK, 0.5)
+        flattened_array = np.ravel(np.array(top_summary))
+        merged_summary = ' '.join(flattened_array)
+        encoded_summary = tokenizer.encode_plus(
+            merged_summary,
+            max_length=max_string_length,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt"
+        )
+        input_ids = encoded_summary["input_ids"]
+        embeddings = sentence_model.encode(merged_summary)
+
+        top_sentences_dict.append(embeddings)
+
+    top_sentences_dict = np.array(top_sentences_dict)
+    data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
+
+    return data, top_sentences_dict
 
 def prepare_raw_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
     # Read the csv file
@@ -303,11 +346,6 @@ def prepare_raw_news_data(stock_df, symbol, window_size, from_date, to_date, out
     # Split the strings into a third dimension
     array_3d = np.array([s.split("_") for s in data.flat]).reshape((data.shape[0], data.shape[1], -1))
     return array_3d
-
-
-# define function to load csv file with given index
-
-import numpy as np
 
 
 def load_data_with_index(csv_file, index):
@@ -1018,57 +1056,81 @@ def get_bing_news(symbol, from_date, to_date):
     return news_list
 
 
-def download_news(symbol, from_date, window_size, new_data=True):
-    to_date = datetime.now().strftime('%Y-%m-%d')
+def download_news(symbol, from_date, to_date, new_data=True):
     save_folder = f'./NLP/news_web_url/{symbol}/'
     file_name = f'{symbol}_url.csv'
     save_path = os.path.join(save_folder, file_name)
     main_df = pd.DataFrame()
-    if not os.path.exists(save_folder + file_name):
-        # Download news from all sources with the specified date range
+    if os.path.exists(save_path):
+        if new_data:
+            main_df = pd.read_csv(save_path)
+            try:
+                google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
+                if isinstance(google_df.index, pd.DatetimeIndex):
+                    google_df.reset_index(inplace=True)
+                    google_df.rename(columns={'index': 'date'}, inplace=True)
+                    google_df.reset_index(drop=True, inplace=True)
+                main_df = pd.concat([main_df, google_df])
+            except:
+                pass
+            try:
+                finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
+                if isinstance(finhub_df.index, pd.DatetimeIndex):
+                    finhub_df.reset_index(inplace=True)
+                    finhub_df.rename(columns={'index': 'date'}, inplace=True)
+                    finhub_df.reset_index(drop=True, inplace=True)
+                main_df = pd.concat([main_df, finhub_df])
+            except:
+                pass
+            try:
+                benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
+                if isinstance(benzema_df.index, pd.DatetimeIndex):
+                    benzema_df.reset_index(inplace=True)
+                    benzema_df.rename(columns={'index': 'date'}, inplace=True)
+                    benzema_df.reset_index(drop=True, inplace=True)
+                main_df = pd.concat([main_df, benzema_df])
+            except:
+                pass
+
+            main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
+            main_df.reset_index(drop=True, inplace=True)
+            main_df.to_csv(save_path, index=False)
+            return main_df.values
+        else:
+            main_df = pd.read_csv(save_path)
+            return main_df.values
+    else:
         try:
             google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
+            if isinstance(google_df.index, pd.DatetimeIndex):
+                google_df.reset_index(inplace=True)
+                google_df.rename(columns={'index': 'date'}, inplace=True)
+                google_df.reset_index(drop=True, inplace=True)
             main_df = pd.concat([main_df, google_df])
         except:
             pass
         try:
             finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
+            if isinstance(finhub_df.index, pd.DatetimeIndex):
+                finhub_df.reset_index(inplace=True)
+                finhub_df.rename(columns={'index': 'date'}, inplace=True)
+                finhub_df.reset_index(drop=True, inplace=True)
             main_df = pd.concat([main_df, finhub_df])
         except:
             pass
         try:
             benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
+            if isinstance(benzema_df.index, pd.DatetimeIndex):
+                benzema_df.reset_index(inplace=True)
+                benzema_df.rename(columns={'index': 'date'}, inplace=True)
+                benzema_df.reset_index(drop=True, inplace=True)
             main_df = pd.concat([main_df, benzema_df])
         except:
             pass
-        # alphavantage_df = download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_data)
-        # bing_df = download_bing_news(symbol, from_date, to_date, save_folder, new_data = True)
-        # main_df = pd.concat([main_df, bing_df])
 
-        main_df.to_csv(save_path, index=True)
-        # Filter the dataframe by URL
-        window_df = main_df[main_df['url'].isin(main_df['url'].unique())]
-
-        # Save the updated dataframe to the CSV file
-        main_df.to_csv(save_path, index=True)
+        main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
+        main_df.reset_index(drop=True, inplace=True)
+        main_df.to_csv(save_path, index=False)
         return main_df.values
-    else:
-        # # Read the existing CSV file
-        # main_df = pd.read_csv(save_path)
 
-        # # Set the new date range
-        # from_date = (datetime.strptime(to_date, '%Y-%m-%d') - timedelta(days=window_size)).strftime('%Y-%m-%d')
 
-        # # Download news from additional sources
-        # additional_df = download_additional_sources_news(from_date, to_date)
-
-        # # Concatenate the dataframes
-        # main_df = pd.concat([main_df, additional_df])
-
-        # # Filter the dataframe by URL
-        # window_df = main_df[main_df['URL'].isin(main_df['URL'].unique())]
-
-        # # Save the updated dataframe to the CSV file
-        # main_df.to_csv(save_path, index=False)
-        pass
-    # return main_df.values

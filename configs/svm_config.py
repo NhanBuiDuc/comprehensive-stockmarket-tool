@@ -6,9 +6,11 @@ svm_cf = {
         "gamma": "scale",
         "coef0": 100,
         "class_weight": {0: 0.5, 1: 0.5},
-        "window_size": 7,
-        "output_step": 7,
-        "topk": 5
+        "window_size": 3,
+        "output_step": 3,
+        "data_mode": 2,
+        "topk": 10,
+        "symbol": "AAPL"
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
@@ -21,7 +23,7 @@ svm_cf = {
         "scheduler_step_size": 50,
         "patient": 500,
         "start": "2022-07-01",
-        "end": None,
+        "end": "2023-05-01",
         "best_model": True,
         "early_stop": True,
         "train_shuffle": True,

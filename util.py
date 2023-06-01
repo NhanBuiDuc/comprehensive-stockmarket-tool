@@ -170,7 +170,7 @@ def prepare_data_y_trend(data, output_step):
     n_samples = len(data) - output_step
     y = []
     for i in range(n_samples):
-        if data[i][0] < data[i+1][0]:
+        if data[i][0] < data[i+output_step][0]:
             y.append(1)
         else:
             y.append(0)

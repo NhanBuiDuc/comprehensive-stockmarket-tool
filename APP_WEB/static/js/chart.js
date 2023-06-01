@@ -383,23 +383,68 @@ chart = {
         });
     },
 
-    getDataTable: function(value, window, output, callback) {
+    // getDataTable: function(value, callback) {
+    //     let object = this;
+    //     // let url = `http://127.0.0.1:5000/execute/${value}`
+        
+    //     oob = getValue()
+    //     console.log(oob)
+    //     //let url = `/execute/${value}`
+    //     list = ['transformer','svm']
+
+    //     let url = `/execute?symbol=${value}&window_size=${oob.windowsize}&output_size=${oob.outputsize}&model_type_list=${list}`
+    //     fetch(url, {
+    //         method: 'GET',
+    //         headers: {
+    //           'Content-Type': 'application/json'
+    //         },
+    //     })
+    //         .then(response => {
+    //             console.log('aaaa', response)
+    //             return response.json()})
+    //         .then(data => {
+    //           console.log("Respone API", data);
+    //           callback(data);
+    //         }).catch(err => {
+    //           console.log('API went wrong.', err);
+    //     });
+    // },
+
+    getDataTable: function(value, callback) {
         let object = this;
-        // let url = `http://127.0.0.1:5000/execute/${value}`
-        let url = `/execute?symbol=${value}&windowsize=${window}&outputsize=${output}`
+        const oob = getValue();
+        console.log(oob);
+    
+        const list = ['svm'];
+    
+        const payload = {
+            symbol: value,
+            window_size: oob.windowsize,
+            output_size: oob.outputsize,
+            model_type_list: list
+        };
+        console.log('pay_load: ', JSON.stringify(payload))
+        const url = '/execute';
         fetch(url, {
-            method: 'GET',
+            method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+                'Content-Type': 'application/json'
             },
+            body: JSON.stringify(payload)
+            
         })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response', response);
+                return response.json();
+            })
             .then(data => {
-              console.log("Respone API", data);
-              callback(data);
-            }).catch(err => {
-              console.log('API went wrong.', err);
-        });
+                console.log('API Response', data);
+                callback(data);
+            })
+            .catch(err => {
+                console.log('API Error', err);
+            });
     },
+    
 };
 

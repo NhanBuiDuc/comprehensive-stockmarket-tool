@@ -13,3 +13,10 @@ tqdm==4.65.0
 requests~=2.28.1
 transformers~=4.28.1
 beautifulsoup4~=4.11.1
+nltk~=3.7
+xmltodict~=0.13.0
+googlenews~=1.6.8
+flask~=1.1.2
+pathlib~=1.0.1
+xgboost~=1.7.4
+bs4~=0.0.1

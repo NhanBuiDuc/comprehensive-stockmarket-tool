@@ -1,16 +1,10 @@
-import os
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import pandas as pd
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import figure
 
-from alpha_vantage.timeseries import TimeSeries 
 import json
 import util as u
 import dataset as dts
@@ -31,11 +25,11 @@ class Predict_Stock_Price:
         self.optimizer = optim.Adam(self.model.parameters(), lr=config["training"]["learning_rate"], betas=(0.9, 0.98), eps=1e-9)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=config["training"]["scheduler_step_size"], gamma=0.1)
         self.scaler = dts.MyMinMaxScaler()
-        self.newsymbol = self.readjson('./configs/symbolconfig.json')
+        self.newsymbol = self.readjson('configs/symbolconfig.json')
         config['alpha_vantage']['symbol'] = self.newsymbol
         # define path to model, dataset
-        self.data_path = './csv/'
-        self.models_path='./models/price_predict/'
+        self.data_path = 'csv/'
+        self.models_path= 'models/price_predict/'
 
     def readjson(self, path):
         with open(path, 'r') as json_file:

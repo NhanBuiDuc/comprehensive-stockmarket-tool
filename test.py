@@ -1,4 +1,7 @@
-from APP_FLASK.Predictor import Predictor as Predictor
+from APP_FLASK.TrendPrediction import Predictor as Predictor
 symbol = "AAPL"
+window_size = 7
+output_size = 7
+model_type_list = ['svm', 'transformer']
 predictor = Predictor()
-predictor.prepare_data(symbol, 14)
+predictor.batch_predict(symbol, model_type_list, window_size, output_size)

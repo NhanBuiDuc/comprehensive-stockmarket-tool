@@ -96,20 +96,23 @@ class PriceAndIndicatorsAndNews_TimeseriesDataset(Dataset):
         y = y.astype(np.float32)
         x_stock = x[:, :, :slicing]
         self.x_news = x[:, :, slicing:]
-        self.x_stock = self.scaler.fit_transform(x_stock)
+        x_stock = x_stock.reshape((x_stock.shape[0] * x_stock.shape[1], x_stock.shape[2]))
+        x_stock = self.scaler.fit_transform(x_stock)
+        self.x_stock = x_stock.reshape((x.shape[0], x.shape[1], slicing))
         # Reshape the scaled data back to the original shape
         self.x_price = self.x_stock[:, :, :5]
         self.x_indicators = self.x_stock[:, :, 5:slicing]
-        self.X = np.concatenate((self.x_stock, self.x_news), axis=1)
+        self.X = np.concatenate((self.x_stock, self.x_news), axis=2)
         self.X = self.X.astype(np.float32)
         self.Y = y.astype(np.float32)
     def __len__(self):
         return len(self.Y)
 
     def __getitem__(self, idx):
-        X = self.X[idx]
-        Y = self.Y[idx]
-        return X, Y
+        x_stock = self.x_stock[idx]
+        x_news = self.x_news[idx]
+        y = self.Y[idx]
+        return x_stock, x_news, y
 
 
 

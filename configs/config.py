@@ -1,7 +1,6 @@
 config = {
     "alpha_vantage": {
         "api_key": "XOLA7URKCZHU7C9X",  # Claim your free API key here: https://www.alphavantage.co/support/#api-key
-        "symbol": "AAPL",
         "output_size": "full",
         "url": "https://www.alphavantage.co",
         "key_adjusted_close": "5. adjusted close"
@@ -93,8 +92,8 @@ config = {
             "optimizer": "adam",
             "scheduler_step_size": 50,
             "patient": 1000,
-            "start": "2015-01-01",
-            "end": "2023-05-15",
+            "start": "2022-07-01",
+            "end": "2023-05-01",
             "best_model": True,
             "early_stop": True,
             "train_shuffle": True,
@@ -111,11 +110,12 @@ config = {
             4: "lstm",
             5: "gru",
             6: "transformer",
-            7: "pred_price_LSTM"
+            7: "pred_price_LSTM",
     },
     "tensorflow_timeseries_model_type_dict": {
         1: "svm",
-        2: "random_forest"
+        2: "random_forest",
+        3: "xgboost"
     }
 }
 
