@@ -91,9 +91,9 @@ class LSTM(nn.Module):
                                 batch_first=True)
             self.fc1 = nn.Linear(28, 1)
         elif self.data_mode == 2:
-            self.lstm = nn.LSTM(input_size=729, hidden_size=self.hidden_size, num_layers=self.num_layers,
+            self.lstm = nn.LSTM(input_size=807, hidden_size=self.hidden_size, num_layers=self.num_layers,
                                 batch_first=True)
-            self.fc1 = nn.Linear(256, 10)
+            self.fc1 = nn.Linear(28, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(self.drop_out)
@@ -413,7 +413,7 @@ class TransformerClassifier(nn.Module):
                 data_mode = model_list["xgboost"]
                 model_name = f'xgboost_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
                 self.xgboost = xgboost.load_check_point("xgboost", model_name)
-            if "lstm" in model_list:
+            if model_list["lstm"] != -1:
                 lstm = Model()
                 data_mode = model_list["lstm"]
                 model_name = f'lstm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
@@ -444,6 +444,7 @@ class TransformerClassifier(nn.Module):
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 2:
+            batch = x_stock.shape[0]
             if "svm" in self.ensembled_model:
                 svm_pred = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
 
@@ -454,7 +455,7 @@ class TransformerClassifier(nn.Module):
                 self.xgboost = self.xgboost.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
 
             if "lstm" in self.ensembled_model:
-                self.lstm = self.lstm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+                self.lstm = self.lstm(x)
 
             outputs = []
             if "svm" in self.ensembled_model:

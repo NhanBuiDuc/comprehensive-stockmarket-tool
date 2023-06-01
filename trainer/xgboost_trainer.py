@@ -249,83 +249,103 @@ class xgboost_trainer(Trainer):
                 print(f"Loss written to {save_path}.")
 
     def prepare_data(self, new_data):
-        df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
-        num_data_points = df.shape[0]
-        data_date = df.index.strftime("%Y-%m-%d").tolist()
+        file_paths = [
+            './dataset/X_train_' + self.model_name + '.npy',
+            './dataset/y_train_' + self.model_name + '.npy',
+            './dataset/X_valid_' + self.model_name + '.npy',
+            './dataset/y_valid_' + self.model_name + '.npy',
+            './dataset/X_test_' + self.model_name + '.npy',
+            './dataset/y_test_' + self.model_name + '.npy'
+        ]
 
-        # Split train and test sets based on date
-        train_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])  # 70% of data points
-        train_valid_date = data_date[:train_split_index]
-        test_date = data_date[train_split_index:]
+        if any(not os.path.exists(file_path) for file_path in file_paths):
+            df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
+            num_data_points = df.shape[0]
+            data_date = df.index.strftime("%Y-%m-%d").tolist()
 
-        # Prepare y
-        y = u.prepare_data_y_trend(df.to_numpy(), output_step=self.output_step)
-        y = np.array(y, dtype=int)
+            # Split train and test sets based on date
+            train_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])  # 70% of data points
+            train_valid_date = data_date[:train_split_index]
+            test_date = data_date[train_split_index:]
 
-        # Prepare X
-        X_stocks = np.array(df.values)[:-self.output_step]
-        if self.data_mode == 2:
-            _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
-                                                self.output_step,
-                                                self.topk, new_data)
-            news_X = news_X[:-self.output_step]
-            # Concatenate X_stocks and news_X
-            X = np.concatenate((X_stocks, news_X), axis=1)
+            # Prepare y
+            y = u.prepare_data_y_trend(df.to_numpy(), output_step=self.output_step)
+            y = np.array(y, dtype=int)
+
+            # Prepare X
+            X_stocks = np.array(df.values)[:-self.output_step]
+
+            # Save train, valid, and test datasets
+            X_train_file = './dataset/X_train_' + self.model_name + '.npy'
+            X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
+            X_test_file = './dataset/X_test_' + self.model_name + '.npy'
+            y_train_file = './dataset/y_train_' + self.model_name + '.npy'
+            y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
+            y_test_file = './dataset/y_test_' + self.model_name + '.npy'
+            if self.data_mode == 2:
+                _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
+                                                    self.output_step,
+                                                    self.topk, new_data)
+
+                news_X = news_X[:-self.output_step]
+                # Concatenate X_stocks and news_X
+                X = np.concatenate((X_stocks, news_X), axis=1)
+            else:
+                X = X_stocks
+            self.num_feature = X.shape[1]
+
+            # Split X and y into train, valid, and test datasets
+            train_indices = np.where(df.index.isin(train_valid_date))[0]
+            test_indices = np.where(df.index.isin(test_date))[0][:-self.output_step]
+            print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
+            print("Test from: " + test_date[0] + " to " + test_date[-1])
+            X_train_valid = X[train_indices]
+            X_test = X[test_indices]
+            y_train_valid = y[train_indices]
+            y_test = y[test_indices]
+
+            # Perform stratified splitting on train and valid datasets
+            sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"],
+                                            random_state=42)
+            for train_index, valid_index in sss_train.split(X_train_valid, y_train_valid):
+                X_train = X_train_valid[train_index]
+                X_valid = X_train_valid[valid_index]
+                y_train = y_train_valid[train_index]
+                y_valid = y_train_valid[valid_index]
+
+            # Print class distribution in train, valid, and test sets
+            train_class_counts = np.bincount(y_train)
+            valid_class_counts = np.bincount(y_valid)
+            test_class_counts = np.bincount(y_test)
+            print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+            print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+            print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
+
+            if os.path.exists(X_train_file):
+                os.remove(X_train_file)
+            if os.path.exists(X_valid_file):
+                os.remove(X_valid_file)
+            if os.path.exists(y_train_file):
+                os.remove(y_train_file)
+            if os.path.exists(y_valid_file):
+                os.remove(y_valid_file)
+
+            np.save(X_train_file, X_train)
+            np.save(X_valid_file, X_valid)
+            np.save(X_test_file, X_test)
+            np.save(y_train_file, y_train)
+            np.save(y_valid_file, y_valid)
+            np.save(y_test_file, y_test)
+
         else:
-            X = X_stocks
-        self.num_feature = X.shape[1]
-
-        # Split X and y into train, valid, and test datasets
-        train_indices = np.where(df.index.isin(train_valid_date))[0]
-        test_indices = np.where(df.index.isin(test_date))[0][:-self.output_step]
-        print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
-        print("Test from: " + test_date[0] + " to " + test_date[-1])
-        X_train_valid = X[train_indices]
-        X_test = X[test_indices]
-        y_train_valid = y[train_indices]
-        y_test = y[test_indices]
-
-        # Perform stratified splitting on train and valid datasets
-        sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"],
-                                           random_state=42)
-        for train_index, valid_index in sss_train.split(X_train_valid, y_train_valid):
-            X_train = X_train_valid[train_index]
-            X_valid = X_train_valid[valid_index]
-            y_train = y_train_valid[train_index]
-            y_valid = y_train_valid[valid_index]
-
-        # Print class distribution in train, valid, and test sets
-        train_class_counts = np.bincount(y_train)
-        valid_class_counts = np.bincount(y_valid)
-        test_class_counts = np.bincount(y_test)
-        print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
-        print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
-        print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
-
-        # Save train, valid, and test datasets
-        X_train_file = './dataset/X_train_' + self.model_name + '.npy'
-        X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
-        X_test_file = './dataset/X_test_' + self.model_name + '.npy'
-        y_train_file = './dataset/y_train_' + self.model_name + '.npy'
-        y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
-        y_test_file = './dataset/y_test_' + self.model_name + '.npy'
-
-        if os.path.exists(X_train_file):
-            os.remove(X_train_file)
-        if os.path.exists(X_valid_file):
-            os.remove(X_valid_file)
-        if os.path.exists(y_train_file):
-            os.remove(y_train_file)
-        if os.path.exists(y_valid_file):
-            os.remove(y_valid_file)
-
-        np.save(X_train_file, X_train)
-        np.save(X_valid_file, X_valid)
-        np.save(X_test_file, X_test)
-        np.save(y_train_file, y_train)
-        np.save(y_valid_file, y_valid)
-        np.save(y_test_file, y_test)
-
+            # Load train and validation data
+            X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
+            y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
+            X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
+            y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
+            # Load full test data
+            X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
+            y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
         # Create dataloaders for train, valid, and test sets
         train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, 39)
         valid_dataset = PriceAndIndicatorsAndNews_Dataset(X_valid, y_valid, 39)
