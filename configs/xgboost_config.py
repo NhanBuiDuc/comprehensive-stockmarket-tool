@@ -11,8 +11,8 @@ xgboost_cf = {
         "reg_alpha": 0,  # L1 regularization term on weights
         "reg_lambda": 1,  # L2 regularization term on weights
         "random_state": 42,  # Random seed for reproducibility        "dropout": 0.5,
-        "window_size": 3,
-        "output_step": 3,
+        "window_size": 14,
+        "output_step": 7,
         "data_mode": 2,
         "topk": 10,
     },
