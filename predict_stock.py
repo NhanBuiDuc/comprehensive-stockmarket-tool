@@ -58,7 +58,7 @@ class Predict_Stock_Price:
             symbol = 'TSLA'
         return symbol
     
-    def get_data_df(self, new_data=False):
+    def get_data_df(self, new_data=True):
         stock_key = config['alpha_vantage']['symbol']
         file_name = str(stock_key) + '.csv'
         if new_data == True:
@@ -169,7 +169,7 @@ class Predict_Stock_Price:
         return prediction
     
     def run_model(self):
-        data_date, data_close_price, num_data_points = self.get_data_df(new_data=False)
+        data_date, data_close_price, num_data_points = self.get_data_df(new_data=True)
         normalized_data_close_price = self.scaler.fit_transform(data_close_price)
         split_index, data_x_train, data_y_train, data_x_val, data_y_val, data_x_unseen = self.prepare_data(normalized_data_close_price, config)
         dataset_train = dts.PredictPrice_TimeSeriesDataset(data_x_train, data_y_train)

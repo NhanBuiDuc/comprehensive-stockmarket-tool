@@ -27,7 +27,7 @@ price_cf = {
         "dropout": 0.2,
     },
     "training": {
-        "is_training": False,
+        "is_training": True,
         "device": "cuda", # "cuda" or "cpu"
         "batch_size": 64,
         "num_epoch": 100,
