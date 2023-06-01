@@ -169,13 +169,13 @@ class Predict_Stock_Price:
         return prediction
     
     def run_model(self):
-        data_date, data_close_price, num_data_points = self.get_data_df(new_data=True)
+        data_date, data_close_price, num_data_points = self.get_data_df(new_data=False)
         normalized_data_close_price = self.scaler.fit_transform(data_close_price)
         split_index, data_x_train, data_y_train, data_x_val, data_y_val, data_x_unseen = self.prepare_data(normalized_data_close_price, config)
         dataset_train = dts.PredictPrice_TimeSeriesDataset(data_x_train, data_y_train)
         dataset_val = dts.PredictPrice_TimeSeriesDataset(data_x_val, data_y_val)
         if config['training']['is_training'] == True:
-            self.training_model(dataset_train=dataset_train, dataset_val=dataset_val, is_training=True)
+            self.training_model(dataset_train=dataset_train, dataset_val=dataset_val, is_training=False)
             model_name = config['alpha_vantage']['symbol'] + '_price.pth'
             self.model.load_state_dict(torch.load(self.models_path + model_name))
             predict_next_day = self.predict_model(data_x_unseen)
