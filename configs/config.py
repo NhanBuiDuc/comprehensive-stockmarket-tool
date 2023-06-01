@@ -92,8 +92,8 @@ config = {
             "optimizer": "adam",
             "scheduler_step_size": 50,
             "patient": 1000,
-            "start": "2015-01-01",
-            "end": "2023-05-15",
+            "start": "2022-07-01",
+            "end": "2023-05-01",
             "best_model": True,
             "early_stop": True,
             "train_shuffle": True,
@@ -110,11 +110,12 @@ config = {
             4: "lstm",
             5: "gru",
             6: "transformer",
-            7: "pred_price_LSTM"
+            7: "pred_price_LSTM",
     },
     "tensorflow_timeseries_model_type_dict": {
         1: "svm",
-        2: "random_forest"
+        2: "random_forest",
+        3: "xgboost"
     }
 }
 

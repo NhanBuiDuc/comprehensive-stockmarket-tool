@@ -103,11 +103,13 @@ class random_forest_trainer(Trainer):
             train_dataloader.dataset.X = train_dataloader.dataset.x_price
             valid_dataloader.dataset.X = valid_dataloader.dataset.x_price
             test_dataloader.dataset.X = test_dataloader.dataset.x_price
+            balancedtest_datataloader.dataset.X = balancedtest_datataloader.dataset.x_price
             self.num_feature = train_dataloader.dataset.X.shape[-1]
         elif self.data_mode == 1:
             train_dataloader.dataset.X = train_dataloader.dataset.x_stock
             valid_dataloader.dataset.X = valid_dataloader.dataset.x_stock
             test_dataloader.dataset.X = test_dataloader.dataset.x_stock
+            balancedtest_datataloader.dataset.X = balancedtest_datataloader.dataset.x_stock
             self.num_feature = train_dataloader.dataset.X.shape[-1]
         # Get the current date and time
         current_datetime = datetime.datetime.now()
@@ -249,8 +251,7 @@ class random_forest_trainer(Trainer):
         train_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])  # 70% of data points
         train_valid_date = data_date[:train_split_index]
         test_date = data_date[train_split_index:]
-        print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
-        print("Test from: " + test_date[0] + " to " + test_date[-1])
+
         # Prepare y
         y = u.prepare_data_y_trend(df.to_numpy(), output_step=self.output_step)
         y = np.array(y, dtype=int)
@@ -270,15 +271,16 @@ class random_forest_trainer(Trainer):
         # Split X and y into train, valid, and test datasets
         train_indices = np.where(df.index.isin(train_valid_date))[0]
         test_indices = np.where(df.index.isin(test_date))[0][:-self.output_step]
-
+        print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
+        print("Test from: " + test_date[0] + " to " + test_date[-1])
         X_train_valid = X[train_indices]
         X_test = X[test_indices]
         y_train_valid = y[train_indices]
         y_test = y[test_indices]
 
         # Perform stratified splitting on train and valid datasets
-        sss = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"], random_state=42)
-        for train_index, valid_index in sss.split(X_train_valid, y_train_valid):
+        sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"], random_state=42)
+        for train_index, valid_index in sss_train.split(X_train_valid, y_train_valid):
             X_train = X_train_valid[train_index]
             X_valid = X_train_valid[valid_index]
             y_train = y_train_valid[train_index]
@@ -299,6 +301,15 @@ class random_forest_trainer(Trainer):
         y_train_file = './dataset/y_train_' + self.model_name + '.npy'
         y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
         y_test_file = './dataset/y_test_' + self.model_name + '.npy'
+
+        if os.path.exists(X_train_file):
+            os.remove(X_train_file)
+        if os.path.exists(X_valid_file):
+            os.remove(X_valid_file)
+        if os.path.exists(y_train_file):
+            os.remove(y_train_file)
+        if os.path.exists(y_valid_file):
+            os.remove(y_valid_file)
 
         np.save(X_train_file, X_train)
         np.save(X_valid_file, X_valid)
@@ -357,7 +368,6 @@ class random_forest_trainer(Trainer):
         print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:", test_balanced_class_counts[1])
 
         return train_dataloader, valid_dataloader, test_full_dataloader, test_balanced_dataloader
-
     def run_epoch(self, model, dataloader, optimizer, criterion, scheduler, is_training, device):
         epoch_loss = 0
 

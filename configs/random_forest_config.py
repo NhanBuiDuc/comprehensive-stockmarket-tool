@@ -13,9 +13,9 @@ rf_cf = {
         'class_weight': 'balanced',  # Weights associated with classes to address class imbalance
         'verbose': 0,  # Controls the verbosity of the tree building process
         'n_jobs': -1,  # Number of parallel jobs to run (-1 means using all processors)
-        "window_size": 7,
-        "output_step": 7,
-        "data_mode": 1,
+        "window_size": 3,
+        "output_step": 3,
+        "data_mode": 2,
         "topk": 20,
         "symbol": "AAPL"
     },
@@ -30,7 +30,7 @@ rf_cf = {
         "scheduler_step_size": 50,
         "patient": 500,
         "start": "2022-07-01",
-        "end": None,
+        "end": "2023-05-01",
         "best_model": True,
         "early_stop": True,
         "train_shuffle": True,

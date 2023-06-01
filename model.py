@@ -5,6 +5,8 @@ import math
 import benchmark as bm
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
+import xgboost as xgb
+import numpy as np
 
 
 class Model:
@@ -34,7 +36,7 @@ class Model:
             pass
         elif self.model_type == self.pytorch_timeseries_model_type_dict[4]:
             self.parameters = self.parameters["model"]
-            self.structure = bm.LSTM_bench_mark(self.num_feature, **self.parameters)
+            self.structure = LSTM(self.num_feature, **self.parameters)
         elif self.model_type == self.pytorch_timeseries_model_type_dict[5]:
             self.parameters = self.parameters["model"]
             self.structure = bm.GRU_bench_mark(self.num_feature, **self.parameters)
@@ -47,6 +49,9 @@ class Model:
         elif self.model_type == self.tensorflow_timeseries_model_type_dict[2]:
             self.parameters = self.parameters["model"]
             self.structure = rf_classifier(self.num_feature, **self.parameters)
+        elif self.model_type == self.tensorflow_timeseries_model_type_dict[3]:
+            self.parameters = self.parameters["model"]
+            self.structure = xgb_classifier(self.num_feature, **self.parameters)
 
     def load_check_point(self, model_type, model_name):
 
@@ -67,6 +72,67 @@ class Model:
         elif self.model_type in self.tensorflow_timeseries_model_type_dict.values():
             y = self.structure.predict(x)
             return y
+
+
+class LSTM(nn.Module):
+    def __init__(self, num_feature, **param):
+        super().__init__()
+        self.__dict__.update(param)
+        self.num_feature = num_feature
+        self.lstm = nn.LSTM(input_size=self.num_feature, hidden_size=self.hidden_size, num_layers=self.num_layers,
+                            batch_first=True)
+
+        if self.data_mode == 0:
+            self.lstm = nn.LSTM(input_size=self.num_feature, hidden_size=self.hidden_size, num_layers=self.num_layers,
+                                batch_first=True)
+            self.fc1 = nn.Linear(28, 1)
+        elif self.data_mode == 1:
+            self.lstm = nn.LSTM(input_size=729, hidden_size=self.hidden_size, num_layers=self.num_layers,
+                                batch_first=True)
+            self.fc1 = nn.Linear(28, 1)
+        elif self.data_mode == 2:
+            self.lstm = nn.LSTM(input_size=729, hidden_size=self.hidden_size, num_layers=self.num_layers,
+                                batch_first=True)
+            self.fc1 = nn.Linear(256, 10)
+        self.relu = nn.ReLU()
+        self.tanh = nn.Tanh()
+        self.drop_out = nn.Dropout(self.drop_out)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x_stock, x_news):
+        if self.data_mode == 0:
+
+            batch = x_stock.shape[0]
+            lstm_out, (h_n, c_n) = self.lstm(x_stock)  # self-attention over the input sequence
+            x = h_n.reshape(batch, -1)
+            x = self.fc1(x)
+            x = self.sigmoid(x)
+            return x
+        elif self.data_mode == 1:
+            batch = x_news.shape[0]
+            lstm_out, (h_n, c_n) = self.lstm(x_news)  # self-attention over the input sequence
+            x = h_n.reshape(batch, -1)
+            x = self.fc1(x)
+            x = self.sigmoid(x)
+            return x
+        elif self.data_mode == 2:
+            batch = x_stock.shape[0]
+            svm_pred = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
+                "cuda").unsqueeze(1)
+            rfc_pred = self.rfc.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
+                "cuda").unsqueeze(1)
+            svm_pred = self.drop_out(svm_pred)
+            rfc_pred = self.drop_out(rfc_pred)
+            lstm_out, (h_n, c_n) = self.lstm(x_stock)  # self-attention over the input sequence
+            x = h_n.reshape(batch, -1)
+            x_news = self.fc2(x_news)
+            x_news = self.drop_out(x_news)
+            # x_news = self.relu(x_news)
+            # x_news = self.drop_out(x_news)
+            x = torch.cat([rfc_pred, svm_pred, x_news], dim=1)
+            x = self.fc3(x)
+            x = self.sigmoid(x)
+            return x
 
 
 class Movement(nn.Module):
@@ -335,7 +401,7 @@ class TransformerClassifier(nn.Module):
         self.news_transformer = nn.Transformer(d_model=768, nhead=64,
                                                num_encoder_layers=self.num_encoder_layers,
                                                dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-        
+
         if self.data_mode == 0:
             self.fc1 = nn.Linear(39 * self.window_size, 1)
         elif self.data_mode == 1:
@@ -347,7 +413,7 @@ class TransformerClassifier(nn.Module):
             self.svm = svm.load_check_point("svm", model_name)
             self.rfc = svm.load_check_point("svm", model_name)
             # self.fc1 = nn.Linear(11008, 1)
-            self.fc1 = nn.Linear(256, 1)
+            self.fc1 = nn.Linear(256, 10)
             self.fc2 = nn.Linear(768 * self.window_size, 1)
             self.fc3 = nn.Linear(3, 1)
 
@@ -358,6 +424,7 @@ class TransformerClassifier(nn.Module):
 
     def forward(self, x_stock, x_news):
         if self.data_mode == 0:
+            x_stock = x_stock[:, :, :5]
             batch = x_stock.shape[0]
             x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
             x = x_stock.reshape(batch, -1)
@@ -365,22 +432,30 @@ class TransformerClassifier(nn.Module):
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 1:
-            batch = x_news.shape[0]  # self-attention over the input sequence
-            x = x_news.reshape(batch, -1)   
+            batch = x_stock.shape[0]
+            x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
+            x = x_stock.reshape(batch, -1)
             x = self.fc1(x)
             x = self.sigmoid(x)
             return x
         elif self.data_mode == 2:
             batch = x_stock.shape[0]
-            x_stock = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+            svm_pred = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
+                "cuda").unsqueeze(1)
+            rfc_pred = self.rfc.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to(
+                "cuda").unsqueeze(1)
+            svm_pred = self.drop_out(svm_pred)
+            rfc_pred = self.drop_out(rfc_pred)
             x_news = x_news.view(batch, -1)
             x_news = self.fc2(x_news)
+            x_news = self.drop_out(x_news)
             # x_news = self.relu(x_news)
             # x_news = self.drop_out(x_news)
-            x = torch.cat([x_stock, x_news], dim=1)
+            x = torch.cat([rfc_pred, svm_pred, x_news], dim=1)
             x = self.fc3(x)
             x = self.sigmoid(x)
             return x
+
 
 class PredictPriceLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):
@@ -435,6 +510,7 @@ class svm_classifier:
         output = self.sklearn_model.predict(x)
         output = torch.from_numpy(output)
         return output
+
     def fit(self, x, y):
         self.sklearn_model.fit(x, y)
 
@@ -460,10 +536,39 @@ class rf_classifier:
         )
 
     def predict(self, x):
-
         output = self.sklearn_model.predict(x)
         output = torch.from_numpy(output)
         return output
 
     def fit(self, x, y):
         self.sklearn_model.fit(x, y)
+
+
+class xgb_classifier:
+    def __init__(self, num_feature, **param):
+        super().__init__()
+        self.__dict__.update(param)
+        self.xgb_model = xgb.XGBClassifier(
+            n_estimators=self.n_estimators,  # Number of trees in the ensemble
+            objective=self.objective,  # Objective function for binary classification
+            max_depth=self.max_depth,  # Maximum depth of each tree
+            learning_rate=self.learning_rate,  # Learning rate (step size shrinkage)
+            subsample=self.subsample,  # Subsample ratio of the training instances
+            colsample_bytree=self.colsample_bytree,  # Subsample ratio of columns when constructing each tree
+            reg_alpha=self.reg_alpha,  # L1 regularization term on weights
+            reg_lambda=self.reg_lambda,  # L2 regularization term on weights
+            random_state=self.random_state  # Random seed for reproducibility
+        )
+
+    def predict(self, x):
+        # x = x.cpu().detach().numpy()
+        output = self.xgb_model.predict(x)
+        output = torch.from_numpy(output)
+        return output
+
+    def fit(self, x, y):
+        if y.ndim == 1:
+            y = np.reshape(y, (-1, 1))
+
+        # Fit the model with the DMatrix
+        self.xgb_model.fit(x, y)

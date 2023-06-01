@@ -22,7 +22,7 @@ import NLP.util as nlp_u
 from tqdm import tqdm
 from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
 from loss import FocalLoss
-
+from sklearn.model_selection import train_test_split
 
 class Transformer_trainer(Trainer):
     def __init__(self, new_data=True, full_data=False, mode="train"):
@@ -312,45 +312,46 @@ class Transformer_trainer(Trainer):
         num_data_points = df.shape[0]
         data_date = df.index.strftime("%Y-%m-%d").tolist()
 
-        # Split train-val and test sets
+        # Split train-val and test dataframes
         trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
-        train_valid_date = data_date[:trainval_test_split_index]
-        test_date = data_date[trainval_test_split_index:]
-        print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
-        print("Test from: " + test_date[0] + " to " + test_date[-1])
-        # Prepare X data
-        X, y = u.prepare_timeseries_dataset(df.to_numpy(), window_size=self.window_size, output_step=self.output_step,
-                                          dilation=1)
-        dataset_slicing = X.shape[2]
+        trainval_df = df.iloc[:trainval_test_split_index]
+        test_df = df.iloc[trainval_test_split_index:]
+        print("Train date from: " + trainval_df.index[0].strftime("%Y-%m-%d") + " to " + trainval_df.index[-1].strftime("%Y-%m-%d"))
+        print("Test from: " + test_df.index[0].strftime("%Y-%m-%d") + " to " + test_df.index[-1].strftime("%Y-%m-%d"))
+
+
+        # Prepare X data for train-val dataframe
+        X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=self.window_size,
+                                                            output_step=self.output_step, dilation=1)
+        dataset_slicing = X_trainval.shape[2]
         if self.data_mode == 1:
-            X, _ = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
-                                     self.topk, new_data)
+            X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+                                                    self.output_step, self.topk, new_data)
         elif self.data_mode == 2:
-            news_X, _ = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
-                                          self.topk, new_data)
+            news_X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+                                                        self.output_step, self.topk, new_data)
             # Concatenate X_stocks and news_X
-            X = np.concatenate((X, news_X), axis=2)
+            X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
 
-        self.num_feature = X.shape[2]
-        # Split X and y into train, valid, and test datasets
-        train_indices = np.where(df.index.isin(train_valid_date))[0]
-        test_indices = np.where(df.index.isin(test_date))[0][:-self.output_step]
-        
-        X_train_valid = X[train_indices]
-        X_test = X[test_indices]
-        y_train_valid = y[train_indices]
-        y_test = y[test_indices]
+        # Prepare X data for test dataframe
+        X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
+                                                    output_step=self.output_step, dilation=1)
+        if self.data_mode == 1:
+            X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+                                                self.output_step, self.topk, new_data)
+        elif self.data_mode == 2:
+            news_X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+                                                    self.output_step, self.topk, new_data)
+            # Concatenate X_stocks and news_X
+            X_test = np.concatenate((X_test, news_X_test), axis=2)
 
-        # Create StratifiedShuffleSplit object for equal class distribution
-        sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"],
-                                           random_state=42)
-
-        # Use StratifiedShuffleSplit to split train and validation sets
-        for train_index, valid_index in sss_train.split(X_train, y_train):
-            X_train = X_train_valid[train_index]
-            X_valid = X_train_valid[valid_index]
-            y_train = y_train_valid[train_index]
-            y_valid = y_train_valid[valid_index]
+        self.num_feature = X_trainval.shape[2]
+        # Split X and y into train and validation datasets
+        train_indices, valid_indices = train_test_split(range(X_trainval.shape[0]), test_size=1 - self.cf["data"]["train_val_split_size"], shuffle=True, random_state=42)
+        X_train = X_trainval[train_indices]
+        X_valid = X_trainval[valid_indices]
+        y_train = y_trainval[train_indices]
+        y_valid = y_trainval[valid_indices]
 
         # Count the class distribution for each set
         train_class_counts = np.bincount(y_train[:, 0])
@@ -360,6 +361,7 @@ class Transformer_trainer(Trainer):
         print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
         print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
         print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
+
         # Save train and validation data
         X_train_file = './dataset/X_train_' + self.model_name + '.npy'
         X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
@@ -387,10 +389,11 @@ class Transformer_trainer(Trainer):
         # Create datasets and dataloaders for train and validation sets
         train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, dataset_slicing)
         valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, dataset_slicing)
-        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, dataset_slicing)
+        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, dataset_slicing)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
-        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)  
+        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+
 
     def prepare_eval_data(self):
         # Load train and validation data
@@ -421,10 +424,10 @@ class Transformer_trainer(Trainer):
         test_balanced_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test_balanced, y_test_balanced, dataset_slicing)
 
         # Print class distribution for all datasets
-        train_class_counts = np.bincount(y_train)
-        valid_class_counts = np.bincount(y_valid)
-        test_full_class_counts = np.bincount(y_test_full)
-        test_balanced_class_counts = np.bincount(y_test_balanced)
+        train_class_counts = np.bincount(np.squeeze(y_train))
+        valid_class_counts = np.bincount(np.squeeze(y_valid))
+        test_full_class_counts = np.bincount(np.squeeze(y_test_full))
+        test_balanced_class_counts = np.bincount(np.squeeze(y_test_balanced))
 
         print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
         print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])

@@ -3,7 +3,7 @@ from trainer.trainer import Trainer
 import torch
 from torch.utils.data import ConcatDataset
 from model import Model
-from configs.svm_config import svm_cf as cf
+from configs.xgboost_config import xgboost_cf as cf
 import torch.nn as nn
 import util as u
 from dataset import PriceAndIndicatorsAndNews_Dataset
@@ -19,12 +19,12 @@ from tqdm import tqdm
 from sklearn.model_selection import StratifiedShuffleSplit
 
 
-class svm_trainer(Trainer):
+class xgboost_trainer(Trainer):
     def __init__(self, new_data=True, full_data=False, mode="train"):
-        super(svm_trainer, self).__init__()
+        super(xgboost_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
-        self.model_type = "svm"
+        self.model_type = "xgboost"
         self.__dict__.update(self.config["model"])
         self.__dict__.update(self.config["training"])
         self.test_dataloader = None
@@ -74,9 +74,9 @@ class svm_trainer(Trainer):
             self.model.structure.fit(X_train, y_train)
 
             torch.save({"model": self.model,
-            "state_dict": []
-            },
-            "./models/" + self.model.name + ".pkl")
+                        "state_dict": []
+                        },
+                       "./models/" + self.model.name + ".pkl")
         elif self.full_data:
             self.combined_dataset = ConcatDataset([self.train_dataloader.dataset, self.valid_dataloader.dataset])
 
@@ -96,12 +96,11 @@ class svm_trainer(Trainer):
                 x_val = self.valid_dataloader.dataset.X
                 y_val = self.valid_dataloader.dataset.Y
 
-
             self.model.structure.fit(X_train, y_train)
             torch.save({"model": self.model,
-            "state_dict": []
-            },
-            "./models/" + self.model.name + ".pkl")
+                        "state_dict": []
+                        },
+                       "./models/" + self.model.name + ".pkl")
 
     def eval(self, model):
 
@@ -248,7 +247,7 @@ class svm_trainer(Trainer):
                     f.write("\n")
                 # Print a message to confirm that the file was written successfully
                 print(f"Loss written to {save_path}.")
- 
+
     def prepare_data(self, new_data):
         df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
         num_data_points = df.shape[0]
@@ -266,7 +265,8 @@ class svm_trainer(Trainer):
         # Prepare X
         X_stocks = np.array(df.values)[:-self.output_step]
         if self.data_mode == 2:
-            _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end, self.output_step,
+            _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
+                                                self.output_step,
                                                 self.topk, new_data)
             news_X = news_X[:-self.output_step]
             # Concatenate X_stocks and news_X
@@ -286,7 +286,8 @@ class svm_trainer(Trainer):
         y_test = y[test_indices]
 
         # Perform stratified splitting on train and valid datasets
-        sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"], random_state=42)
+        sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"],
+                                           random_state=42)
         for train_index, valid_index in sss_train.split(X_train_valid, y_train_valid):
             X_train = X_train_valid[train_index]
             X_valid = X_train_valid[valid_index]
@@ -331,7 +332,8 @@ class svm_trainer(Trainer):
         test_dataset = PriceAndIndicatorsAndNews_Dataset(X_test, y_test, 39)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
-        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)   
+        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+
     def prepare_eval_data(self):
         # Load train and validation data
         X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
@@ -361,7 +363,8 @@ class svm_trainer(Trainer):
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         test_full_dataloader = DataLoader(test_full_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
-        test_balanced_dataloader = DataLoader(test_balanced_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        test_balanced_dataloader = DataLoader(test_balanced_dataset, batch_size=self.batch_size,
+                                              shuffle=self.test_shuffle)
 
         # Print class distribution for all datasets
         train_class_counts = np.bincount(y_train)
@@ -371,8 +374,10 @@ class svm_trainer(Trainer):
 
         print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
         print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
-        print("Full Test set - Class 0 count:", test_full_class_counts[0], ", Class 1 count:", test_full_class_counts[1])
-        print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:", test_balanced_class_counts[1])
+        print("Full Test set - Class 0 count:", test_full_class_counts[0], ", Class 1 count:",
+              test_full_class_counts[1])
+        print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:",
+              test_balanced_class_counts[1])
 
         return train_dataloader, valid_dataloader, test_full_dataloader, test_balanced_dataloader
 
