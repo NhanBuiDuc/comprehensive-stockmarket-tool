@@ -1,6 +1,6 @@
 xgboost_cf = {
     "model": {
-        "symbol": "AAPL",
+        "symbol": "MSFT",
         "nhead": 3,
         "n_estimators": 100,  # Number of trees in the ensemble
         "objective": 'binary:logistic',  # Objective function for binary classification
@@ -12,7 +12,7 @@ xgboost_cf = {
         "reg_lambda": 1,  # L2 regularization term on weights
         "random_state": 42,  # Random seed for reproducibility        "dropout": 0.5,
         "window_size": 14,
-        "output_step": 7,
+        "output_step": 14,
         "data_mode": 2,
         "topk": 10,
     },

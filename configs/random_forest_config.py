@@ -14,10 +14,10 @@ rf_cf = {
         'verbose': 0,  # Controls the verbosity of the tree building process
         'n_jobs': -1,  # Number of parallel jobs to run (-1 means using all processors)
         "window_size": 14,
-        "output_step": 7,
+        "output_step": 14,
         "data_mode": 2,
         "topk": 20,
-        "symbol": "AAPL"
+        "symbol": "MSFT"
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
