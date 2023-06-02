@@ -8,7 +8,7 @@ svm_cf = {
         "class_weight": {0: 0.5, 1: 0.5},
         "window_size": 3,
         "output_step": 3,
-        "data_mode": 2,
+        "data_mode": 0,
         "topk": 10,
         "symbol": "AAPL"
     },

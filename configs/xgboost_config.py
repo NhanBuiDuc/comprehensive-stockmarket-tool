@@ -13,7 +13,7 @@ xgboost_cf = {
         "random_state": 42,  # Random seed for reproducibility        "dropout": 0.5,
         "window_size": 3,
         "output_step": 3,
-        "data_mode": 1,
+        "data_mode": 0,
         "topk": 10,
     },
     "training": {

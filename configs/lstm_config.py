@@ -18,7 +18,7 @@ lstm_cf = {
         },
         "symbol": "AAPL",
         "topk": 20,
-        "data_mode": 2,
+        "data_mode": 0,
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

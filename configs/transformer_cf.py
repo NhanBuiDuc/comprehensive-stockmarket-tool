@@ -5,7 +5,7 @@ transformer_cf = {
         "num_encoder_layers": 20,
         "dim_feedforward": 20,
         "dropout": 0.5,
-        "window_size": 3,
+        "window_size": 14,
         "output_step": 3,
         "data_mode":2,
         "topk": 10,
@@ -13,7 +13,8 @@ transformer_cf = {
             "svm": 1,
             "random_forest": 1,
             "xgboost": 1,
-            "lstm": -1
+            "lstm": 0,
+            "news": 1
         }
     },
     "training": {
