@@ -252,7 +252,7 @@ class random_forest_trainer(Trainer):
             './dataset/y_test_' + self.model_name + '.npy'
         ]
 
-        if any(not os.path.exists(file_path) for file_path in file_paths):
+        if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
             df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
             num_data_points = df.shape[0]
             data_date = df.index.strftime("%Y-%m-%d").tolist()
