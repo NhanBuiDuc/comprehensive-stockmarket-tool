@@ -57,7 +57,7 @@ if __name__ == "__main__":
     keyword_query = list(queries.values())
     model_name = 'philschmid/bart-large-cnn-samsum'
     summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
-    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
+    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-tokensmean-')
     u.download_news(symbol, from_date=from_date, to_date=to_date)
 
     dataframes_to_concat = []
