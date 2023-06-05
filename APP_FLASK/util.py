@@ -51,3 +51,4 @@ def prepare_news_data(stock_df, symbol, window_size, topK, new_data=False):
     top_sentences_dict = np.array(top_sentences_dict)
     data = top_sentences_dict[-window_size:, :]
     return data
+

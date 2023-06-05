@@ -2,7 +2,7 @@ import requests
 import datetime
 import os
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import timedelta
 import numpy as np
 import json
 from sklearn.preprocessing import OneHotEncoder
@@ -206,7 +206,8 @@ def filter_news_by_stock_dates(news_df, stock_df, max_rows):
 
             days_skipped = 1
             previous_date = date
-            while news_counts[date] < rows_remaining:  # and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
+            while news_counts[
+                date] < rows_remaining:  # and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
                 previous_date -= pd.DateOffset(days=days_skipped)
                 rows = news_df[news_df['date'] == previous_date]
                 if len(rows) == 0:
@@ -1133,3 +1134,53 @@ def download_news(symbol, from_date, to_date, new_data=True):
         return main_df.values
 
 
+def update_news_url(symbol):
+    save_folder = f'./NLP/news_web_url/{symbol}/'
+    file_name = f'{symbol}_url.csv'
+    save_path = os.path.join(save_folder, file_name)
+    main_df = pd.DataFrame()
+    if os.path.exists(save_path):
+        main_df = pd.read_csv(save_path)
+        main_df['date'] = pd.to_datetime(main_df['date'])
+        newest_date = main_df['date'].max()
+        current_day = datetime.datetime.now()
+        next_day = newest_date + datetime.timedelta(days=1)
+        if newest_date < current_day:
+            try:
+                google_df = download_google_news(symbol, next_day, current_day, save_folder, True)
+                if isinstance(google_df.index, pd.DatetimeIndex):
+                    google_df.reset_index(inplace=True)
+                    google_df.rename(columns={'index': 'date'}, inplace=True)
+                    google_df.reset_index(drop=True, inplace=True)
+                main_df = pd.concat([main_df, google_df])
+            except:
+                pass
+            try:
+                finhub_df = download_finhub_news(symbol, next_day, current_day, save_folder, True)
+                if isinstance(finhub_df.index, pd.DatetimeIndex):
+                    finhub_df.reset_index(inplace=True)
+                    finhub_df.rename(columns={'index': 'date'}, inplace=True)
+                    finhub_df.reset_index(drop=True, inplace=True)
+                main_df = pd.concat([main_df, finhub_df])
+            except:
+                pass
+            try:
+                benzema_df = download_benzinga_news(symbol, next_day, current_day, save_folder, True)
+                if isinstance(benzema_df.index, pd.DatetimeIndex):
+                    benzema_df.reset_index(inplace=True)
+                    benzema_df.rename(columns={'index': 'date'}, inplace=True)
+                    benzema_df.reset_index(drop=True, inplace=True)
+                main_df = pd.concat([main_df, benzema_df])
+            except:
+                pass
+
+            main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
+            main_df.reset_index(drop=True, inplace=True)
+            main_df.to_csv(save_path, index=False)
+        else:
+            pass
+        main_df["date"] = main_df["date"].dt.strftime("%Y-%m-%d")
+        main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
+        main_df.reset_index(drop=True, inplace=True)
+        main_df.to_csv(save_path, index=False)
+    return main_df.values
