@@ -99,7 +99,7 @@ chart = {
         // create the chart
         Highcharts.stockChart('candlechart', {
             chart: {
-                height: 600
+                height: 500
             },
             title: {
                 text: symbol + ' Historical'
