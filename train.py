@@ -7,7 +7,7 @@ from model import Model
 from configs.config import config
 
 ### SVM
-trainer = svm_trainer(new_data=False, full_data=False, mode = "train")
+trainer = svm_trainer(new_data=True, full_data=False, mode = "train")
 model = trainer.train()
 model = trainer.model
 model = model.load_check_point(model.model_type, trainer.model.name)
@@ -28,7 +28,7 @@ model = trainer.model
 model = model.load_check_point(model.model_type, trainer.model.name)
 trainer.eval(model)
 
-###LSTM
+##LSTM
 # trainer = lstm_tn.lstm_trainer(new_data=False, full_data=False, mode = "train")
 # trainer.train()
 # model = trainer.model
@@ -43,3 +43,4 @@ trainer.eval(model)
 # model = trainer.model
 # model = model.load_check_point(model.model_type, trainer.model.name)
 # trainer.eval(model)
+

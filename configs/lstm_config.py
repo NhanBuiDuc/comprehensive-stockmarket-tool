@@ -3,8 +3,8 @@ lstm_cf = {
         "num_layers": 2,
         "hidden_size": 14,
         "drop_out": 0.5,
-        "output_step": 3,
         "window_size": 3,
+        "output_step": 14,
         "conv1D_param": {
             "type": 1,
             "kernel_size": 4,
@@ -16,9 +16,9 @@ lstm_cf = {
             "sub_big_kernel_size": 30,
             "output_size": 20
         },
-        "symbol": "AAPL",
+        "symbol": "GOOGL",
         "topk": 20,
-        "data_mode": 1,
+        "data_mode": 0,
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

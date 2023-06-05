@@ -87,7 +87,7 @@ class LSTM(nn.Module):
                                 batch_first=True)
             self.fc1 = nn.Linear(28, 1)
         elif self.data_mode == 1:
-            self.lstm = nn.LSTM(input_size=729, hidden_size=self.hidden_size, num_layers=self.num_layers,
+            self.lstm = nn.LSTM(input_size=39, hidden_size=self.hidden_size, num_layers=self.num_layers,
                                 batch_first=True)
             self.fc1 = nn.Linear(28, 1)
         elif self.data_mode == 2:

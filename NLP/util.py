@@ -206,8 +206,7 @@ def filter_news_by_stock_dates(news_df, stock_df, max_rows):
 
             days_skipped = 1
             previous_date = date
-            while news_counts[
-                date] < rows_remaining:  # and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
+            while news_counts[date] < rows_remaining:  # and previous_date - pd.DateOffset(days=days_skipped) in news_df["date"]:
                 previous_date -= pd.DateOffset(days=days_skipped)
                 rows = news_df[news_df['date'] == previous_date]
                 if len(rows) == 0:
