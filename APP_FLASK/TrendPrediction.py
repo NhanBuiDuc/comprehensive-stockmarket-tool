@@ -30,14 +30,14 @@ class Predictor:
             "svm": 0,
             "transformer": 2
         }
-
+    
     def batch_predict(self, symbol, model_type_list, window_size, output_step):
         result = {}
         for model_type in model_type_list:
             result[model_type] = self.predict(symbol, model_type, window_size, output_step)
         print(result)
         return result
-
+    
     def predict(self, symbol, model_type, window_size, output_step):
 
         if model_type in self.pytorch_timeseries_model_type_dict:
@@ -84,7 +84,7 @@ class Predictor:
 
         threshold = 0.5
         converted_output = torch.where(output >= threshold, torch.tensor(1), torch.tensor(0))
-
+        
         if torch.all(converted_output == 1):
             output_json = {
                 f'{symbol}_{model_type}_{output_step}': "UP"
@@ -92,7 +92,7 @@ class Predictor:
         elif torch.all(converted_output == 0):
             output_json = {
                 f'{symbol}_{model_type}_{output_step}': "DOWN"
-            }
+            }     
         return output_json
 
     def prepare_data(self, symbol, window_size):

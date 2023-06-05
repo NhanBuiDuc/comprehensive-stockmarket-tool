@@ -58,7 +58,7 @@ class Predict_Stock_Price:
             symbol = 'TSLA'
         return symbol
     
-    def get_data_df(self, new_data=False):
+    def get_data_df(self, new_data=True):
         stock_key = config['alpha_vantage']['symbol']
         file_name = str(stock_key) + '.csv'
         if new_data == True:
@@ -175,7 +175,7 @@ class Predict_Stock_Price:
         dataset_train = dts.PredictPrice_TimeSeriesDataset(data_x_train, data_y_train)
         dataset_val = dts.PredictPrice_TimeSeriesDataset(data_x_val, data_y_val)
         if config['training']['is_training'] == True:
-            self.training_model(dataset_train=dataset_train, dataset_val=dataset_val, is_training=True)
+            self.training_model(dataset_train=dataset_train, dataset_val=dataset_val, is_training=False)
             model_name = config['alpha_vantage']['symbol'] + '_price.pth'
             self.model.load_state_dict(torch.load(self.models_path + model_name))
             predict_next_day = self.predict_model(data_x_unseen)
