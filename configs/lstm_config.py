@@ -1,7 +1,7 @@
 lstm_cf = {
     "model": {
-        "num_layers": 2,
-        "hidden_size": 14,
+        "num_layers": 10,
+        "hidden_size": 20,
         "drop_out": 0.5,
         "window_size": 3,
         "output_step": 14,
@@ -17,7 +17,7 @@ lstm_cf = {
             "output_size": 20
         },
         "symbol": "GOOGL",
-        "topk": 20,
+        "topk": 10,
         "data_mode": 0,
     },
     "training": {

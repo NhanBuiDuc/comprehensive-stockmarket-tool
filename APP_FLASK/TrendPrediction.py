@@ -244,6 +244,7 @@ class Predictor:
         # result = dict(result)
         result = reduce(lambda d1, d2: d1.update(d2) or d1, result, {})
         print(result)
+        
         return result
 
 

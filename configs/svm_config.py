@@ -1,16 +1,16 @@
 svm_cf = {
     "model": {
-        "C": 1000,
-        "kernel": 'poly',
-        "degree": 400,
+        "C": 100,
+        "kernel": 'rbf',
+        "degree": 0,
         "gamma": "scale",
-        "coef0": 100,
+        "coef0": 0,
         "class_weight": {0: 0.5, 1: 0.5},
         "window_size": 14,
         "output_step": 3,
         "data_mode": 0,
         "topk": 10,
-        "symbol": "TSLA"
+        "symbol": "AAPL"
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

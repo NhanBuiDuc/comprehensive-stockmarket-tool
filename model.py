@@ -83,17 +83,17 @@ class LSTM(nn.Module):
                             batch_first=True)
 
         if self.data_mode == 0:
-            self.lstm = nn.LSTM(input_size=self.num_feature, hidden_size=self.hidden_size, num_layers=self.num_layers,
+            self.lstm = nn.LSTM(input_size=5, hidden_size=self.hidden_size, num_layers=self.num_layers,
                                 batch_first=True)
-            self.fc1 = nn.Linear(28, 1)
+            self.fc1 = nn.Linear(200, 1)
         elif self.data_mode == 1:
             self.lstm = nn.LSTM(input_size=39, hidden_size=self.hidden_size, num_layers=self.num_layers,
                                 batch_first=True)
-            self.fc1 = nn.Linear(28, 1)
+            self.fc1 = nn.Linear(200, 1)
         elif self.data_mode == 2:
             self.lstm = nn.LSTM(input_size=807, hidden_size=self.hidden_size, num_layers=self.num_layers,
                                 batch_first=True)
-            self.fc1 = nn.Linear(28, 1)
+            self.fc1 = nn.Linear(200, 1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.drop_out = nn.Dropout(self.drop_out)
