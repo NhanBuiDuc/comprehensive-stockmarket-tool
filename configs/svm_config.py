@@ -1,14 +1,14 @@
 svm_cf = {
     "model": {
-        "C": 100,
-        "kernel": 'rbf',
-        "degree": 0,
+        "C": 1000,
+        "kernel": 'poly',
+        "degree": 400,
         "gamma": "scale",
-        "coef0": 0,
+        "coef0": 100,
         "class_weight": {0: 0.5, 1: 0.5},
-        "window_size": 14,
+        "window_size": 3,
         "output_step": 3,
-        "data_mode": 0,
+        "data_mode": 2,
         "topk": 10,
         "symbol": "AAPL"
     },

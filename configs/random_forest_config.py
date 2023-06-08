@@ -1,10 +1,10 @@
 rf_cf = {
     "model": {
-        'n_estimators': 10,  # Number of trees in the forest
+        'n_estimators': 100,  # Number of trees in the forest
         'criterion': 'entropy',  # Splitting criterion (can be 'gini' or 'entropy')
-        'max_depth': 10,  # Maximum depth of the tree
-        'min_samples_split': 2,  # Minimum number of samples required to split an internal node
-        'min_samples_leaf': 1,  # Minimum number of samples required to be at a leaf node
+        'max_depth': 100,  # Maximum depth of the tree
+        'min_samples_split': 5,  # Minimum number of samples required to split an internal node
+        'min_samples_leaf': 5,  # Minimum number of samples required to be at a leaf node
         'max_features': 'sqrt',
         # Number of features to consider for the best split ('sqrt' or 'log2' for square root and logarithm of total features respectively)
         'bootstrap': True,  # Whether bootstrap samples are used when building trees
@@ -13,10 +13,10 @@ rf_cf = {
         'class_weight': 'balanced',  # Weights associated with classes to address class imbalance
         'verbose': 0,  # Controls the verbosity of the tree building process
         'n_jobs': -1,  # Number of parallel jobs to run (-1 means using all processors)
-        "window_size": 14,
+        "window_size": 3,
         "output_step": 3,
         "data_mode": 2,
-        "topk": 10,
+        "topk": 20,
         "symbol": "AAPL"
     },
     "training": {
@@ -39,5 +39,3 @@ rf_cf = {
         "weight_decay": 0.0001
     }
 }
-
-

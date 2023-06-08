@@ -1,6 +1,7 @@
 xgboost_cf = {
     "model": {
         "symbol": "AAPL",
+        "nhead": 3,
         "n_estimators": 100,  # Number of trees in the ensemble
         "objective": 'binary:logistic',  # Objective function for binary classification
         "max_depth": 3,  # Maximum depth of each tree
@@ -10,9 +11,9 @@ xgboost_cf = {
         "reg_alpha": 0,  # L1 regularization term on weights
         "reg_lambda": 1,  # L2 regularization term on weights
         "random_state": 42,  # Random seed for reproducibility        "dropout": 0.5,
-        "window_size": 7,
+        "window_size": 3,
         "output_step": 3,
-        "data_mode": 2,
+        "data_mode": 1,
         "topk": 10,
     },
     "training": {

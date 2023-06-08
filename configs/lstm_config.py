@@ -16,9 +16,9 @@ lstm_cf = {
             "sub_big_kernel_size": 30,
             "output_size": 20
         },
-        "symbol": "GOOGL",
+        "symbol": "AAPL",
         "topk": 10,
-        "data_mode": 0,
+        "data_mode": 2,
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

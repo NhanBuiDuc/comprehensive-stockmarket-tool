@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from sklearn.preprocessing import MinMaxScaler
 from functools import reduce
+import json
 
 
 
@@ -14,12 +15,12 @@ class Predictor:
     def __init__(self):
         self
         self.data_folder = f"./csv/"
-        # self.stock_list = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
-        self.stock_list = ["AAPL"]
+        self.stock_list = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
+        #self.stock_list = ["AAPL"]
         self.window_size_list = [3, 7, 14]
         self.output_size_list = [3, 7, 14]
         self.scaler = MinMaxScaler(feature_range=(-100, 100))
-
+        self.path_to_des = './APP_WEB/static/file/prediction.json'
         self.config_dict = {
             "AAPL": {
                 "svm": [[7,2], [7,1], [14,1]],
@@ -244,6 +245,10 @@ class Predictor:
         # result = dict(result)
         result = reduce(lambda d1, d2: d1.update(d2) or d1, result, {})
         print(result)
+        #json_object = json.loads(result)
+        with open(self.path_to_des, "w") as json_file:
+            # Write the dictionary to the JSON file
+            json.dump(result, json_file)
         
         return result
 
