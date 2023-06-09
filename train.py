@@ -7,11 +7,11 @@ from model import Model
 from configs.config import config
 
 ### SVM
-# trainer = svm_trainer(new_data=False, full_data=False, mode = "train")
-# model = trainer.train()
-# model = trainer.model
-# model = model.load_check_point(model.model_type, trainer.model.name)
-# trainer.eval(model)
+trainer = svm_trainer(new_data=False, full_data=False, mode = "train")
+model = trainer.train()
+model = trainer.model
+model = model.load_check_point(model.model_type, trainer.model.name)
+trainer.eval(model)
 
 
 ### RF
@@ -29,11 +29,11 @@ from configs.config import config
 # trainer.eval(model)
 
 ##LSTM
-trainer = lstm_tn.lstm_trainer(new_data=False, full_data=False, mode = "train")
-trainer.train()
-model = trainer.model
-model = model.load_check_point(model.model_type, trainer.model.name)
-trainer.eval(model)
+# trainer = lstm_tn.lstm_trainer(new_data=False, full_data=False, mode = "train")
+# trainer.train()
+# model = trainer.model
+# model = model.load_check_point(model.model_type, trainer.model.name)
+# trainer.eval(model)
 
 
 

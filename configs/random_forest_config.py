@@ -17,7 +17,16 @@ rf_cf = {
         "output_step": 3,
         "data_mode": 2,
         "topk": 20,
-        "symbol": "AAPL"
+        "symbol": "AAPL",
+        'param_grid': {
+            'data_mode': [0, 1, 2],
+            'window_size': [3, 7, 14],
+            'output_size': [3, 7, 14],
+            'n_estimators': [5, 10, 100],
+            'criterion': ['gini', 'entropy'],
+            'min_samples_leaf': [2, 4, 6, 50],
+            'max_depth': range(1, 10)
+        }
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

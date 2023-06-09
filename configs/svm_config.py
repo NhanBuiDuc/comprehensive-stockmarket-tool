@@ -29,6 +29,14 @@ svm_cf = {
         "train_shuffle": True,
         "val_shuffle": True,
         "test_shuffle": True,
-        "weight_decay": 0.0001
+        "weight_decay": 0.0001,
+        "param_grid": {
+            'data_mode': [0, 1, 2],
+            'window_size': [3, 7, 14],
+            'output_size': [3, 7, 14],
+            'C': [1e3, 5e3, 1e4, 5e4, 1e5],
+            'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1],
+        }
+
     },
 }

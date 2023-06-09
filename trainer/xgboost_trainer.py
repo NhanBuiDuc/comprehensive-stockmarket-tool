@@ -17,7 +17,9 @@ import datetime
 import NLP.util as nlp_u
 from tqdm import tqdm
 from sklearn.model_selection import StratifiedShuffleSplit
-
+import pandas as pd
+from sklearn.model_selection import GridSearchCV
+from xgboost import XGBClassifier
 
 class xgboost_trainer(Trainer):
     def __init__(self, new_data=True, full_data=False, mode="train"):
@@ -354,6 +356,204 @@ class xgboost_trainer(Trainer):
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
+    def grid_search(self):
+        results = []
+        
+        train_dataloader, valid_dataloader, test_dataloader = self.prepare_gridsearch_data(new_data=False)
+        
+        best_cases = []
+        
+        for data_mode in self.param_grid['data_mode']:
+            for window_size in self.param_grid['window_size']:
+                for output_size in self.param_grid['output_size']:
+                    for n_estimators in self.param_grid['n_estimators']:
+                        for learning_rate in self.param_grid['learning_rate']:
+                            for subsample in self.param_grid['subsample']:
+                                for colsample_bytree in self.param_grid['colsample_bytree']:
+                                            if data_mode == 0:
+                                                X_train = train_dataloader.dataset.x_price
+                                                y_train = train_dataloader.dataset.Y
+                                                X_val = valid_dataloader.dataset.x_price
+                                                y_val = valid_dataloader.dataset.Y
+                                                num_feature = X_train.shape[-1]
+                                            elif data_mode == 1:
+                                                X_train = train_dataloader.dataset.x_stock
+                                                X_val = valid_dataloader.dataset.x_stock
+                                                y_train = train_dataloader.dataset.Y
+                                                y_val = valid_dataloader.dataset.Y
+                                                num_feature = X_train.shape[-1]
+                                            elif data_mode == 2:
+                                                X_train = train_dataloader.dataset.X
+                                                y_train = train_dataloader.dataset.Y
+                                                X_val = valid_dataloader.dataset.X
+                                                y_val = valid_dataloader.dataset.Y
+                                                num_feature = X_train.shape[-1]
+        
+                                            X_train_w = X_train
+                                            X_val_w = X_val
+                                            y_train_o = y_train
+                                            y_val_o = y_val
+        
+                                            xgb_model = XGBClassifier(n_estimators=n_estimators,
+                                                                    learning_rate=learning_rate,
+                                                                    subsample=subsample,
+                                                                    colsample_bytree=colsample_bytree)
+        
+                                            xgb_model.fit(X_train_w, y_train_o)
+        
+                                            score = xgb_model.score(X_val_w, y_val_o)
+        
+                                            result = {
+                                                'output_size': output_size,
+                                                'window_size': window_size,
+                                                'data_mode': data_mode,
+                                                'n_estimators': n_estimators,
+                                                'learning_rate': learning_rate,
+                                                'subsample': subsample,
+                                                'colsample_bytree': colsample_bytree,
+                                                'score': score
+                                            }
+        
+                                            # Check if the current result has the highest score within its own category
+                                            is_highest_score = not any(
+                                                case['score'] >= score and
+                                                case['data_mode'] == data_mode and
+                                                case['window_size'] == window_size and
+                                                case['output_size'] == output_size
+                                                for case in best_cases
+                                            )
+        
+                                            if is_highest_score:
+                                                # Find indices of cases with lower scores within the same category
+                                                lower_score_indices = [
+                                                    idx for idx, case in enumerate(best_cases) if (
+                                                        case['data_mode'] == data_mode and
+                                                        case['window_size'] == window_size and
+                                                        case['output_size'] == output_size and
+                                                        case['score'] < score
+                                                    )
+                                                ]
+        
+                                                # Remove cases with lower scores by indices
+                                                for idx in reversed(lower_score_indices):
+                                                    del best_cases[idx]
+        
+                                                # Append the current result to best_cases
+                                                best_cases.append(result)
+        
+        results_df = pd.DataFrame(best_cases)
+        results_df = results_df.sort_values('output_size', ascending=True)
+        results_df.to_csv("xgb_grid_search_results.csv", index=False)
+        return results_df
+
+    
+
+    def prepare_gridsearch_data(self, new_data):
+        file_paths = [
+            './dataset/X_train_' + self.model_name + '.npy',
+            './dataset/y_train_' + self.model_name + '.npy',
+            './dataset/X_valid_' + self.model_name + '.npy',
+            './dataset/y_valid_' + self.model_name + '.npy',
+            './dataset/X_test_' + self.model_name + '.npy',
+            './dataset/y_test_' + self.model_name + '.npy'
+        ]
+
+        if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
+            df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
+            num_data_points = df.shape[0]
+            data_date = df.index.strftime("%Y-%m-%d").tolist()
+
+            # Split train and test sets based on date
+            train_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])  # 70% of data points
+            train_valid_date = data_date[:train_split_index]
+            test_date = data_date[train_split_index:]
+
+            # Prepare y
+            y = u.prepare_data_y_trend(df.to_numpy(), output_step=self.output_step)
+            y = np.array(y, dtype=int)
+
+            # Prepare X
+            X_stocks = np.array(df.values)[:-self.output_step]
+
+            # Save train, valid, and test datasets
+            X_train_file = './dataset/X_train_' + self.model_name + '.npy'
+            X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
+            X_test_file = './dataset/X_test_' + self.model_name + '.npy'
+            y_train_file = './dataset/y_train_' + self.model_name + '.npy'
+            y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
+            y_test_file = './dataset/y_test_' + self.model_name + '.npy'
+            if self.data_mode == 2:
+                _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
+                                                    self.output_step,
+                                                    self.topk, new_data)
+
+                news_X = news_X[:-self.output_step]
+                # Concatenate X_stocks and news_X
+                X = np.concatenate((X_stocks, news_X), axis=1)
+            else:
+                X = X_stocks
+            self.num_feature = X.shape[1]
+
+            # Split X and y into train, valid, and test datasets
+            train_indices = np.where(df.index.isin(train_valid_date))[0]
+            test_indices = np.where(df.index.isin(test_date))[0][:-self.output_step]
+            print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
+            print("Test from: " + test_date[0] + " to " + test_date[-1])
+            X_train_valid = X[train_indices]
+            X_test = X[test_indices]
+            y_train_valid = y[train_indices]
+            y_test = y[test_indices]
+
+            # Perform stratified splitting on train and valid datasets
+            sss_train = StratifiedShuffleSplit(n_splits=1, test_size=1 - self.cf["data"]["train_val_split_size"],
+                                            random_state=42)
+            for train_index, valid_index in sss_train.split(X_train_valid, y_train_valid):
+                X_train = X_train_valid[train_index]
+                X_valid = X_train_valid[valid_index]
+                y_train = y_train_valid[train_index]
+                y_valid = y_train_valid[valid_index]
+
+            # Print class distribution in train, valid, and test sets
+            train_class_counts = np.bincount(y_train)
+            valid_class_counts = np.bincount(y_valid)
+            test_class_counts = np.bincount(y_test)
+            print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+            print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+            print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
+
+            if os.path.exists(X_train_file):
+                os.remove(X_train_file)
+            if os.path.exists(X_valid_file):
+                os.remove(X_valid_file)
+            if os.path.exists(y_train_file):
+                os.remove(y_train_file)
+            if os.path.exists(y_valid_file):
+                os.remove(y_valid_file)
+
+            np.save(X_train_file, X_train)
+            np.save(X_valid_file, X_valid)
+            np.save(X_test_file, X_test)
+            np.save(y_train_file, y_train)
+            np.save(y_valid_file, y_valid)
+            np.save(y_test_file, y_test)
+
+        else:
+            # Load train and validation data
+            X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
+            y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
+            X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
+            y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
+            # Load full test data
+            X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
+            y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
+        # Create dataloaders for train, valid, and test sets
+        train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, 39)
+        valid_dataset = PriceAndIndicatorsAndNews_Dataset(X_valid, y_valid, 39)
+        test_dataset = PriceAndIndicatorsAndNews_Dataset(X_test, y_test, 39)
+        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
+        valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
+        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        return train_dataloader, valid_dataloader, test_dataloader
     def prepare_eval_data(self):
         # Load train and validation data
         X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
