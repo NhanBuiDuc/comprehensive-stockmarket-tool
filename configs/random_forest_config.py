@@ -1,23 +1,26 @@
 rf_cf = {
     "model": {
-        'n_estimators': 100,  # Number of trees in the forest
+        'n_estimators': 5,  # Number of trees in the forest
         'criterion': 'entropy',  # Splitting criterion (can be 'gini' or 'entropy')
-        'max_depth': 100,  # Maximum depth of the tree
-        'min_samples_split': 5,  # Minimum number of samples required to split an internal node
-        'min_samples_leaf': 5,  # Minimum number of samples required to be at a leaf node
-        'max_features': 'sqrt',
-        # Number of features to consider for the best split ('sqrt' or 'log2' for square root and logarithm of total features respectively)
-        'bootstrap': True,  # Whether bootstrap samples are used when building trees
-        'oob_score': True,  # Whether to use out-of-bag samples to estimate the generalization accuracy
+        'max_depth': 1,  # Maximum depth of the tree
+        'min_samples_leaf': 2,  # Minimum number of samples required to be at a leaf node  # Whether to use out-of-bag samples to estimate the generalization accuracy
         'random_state': 42,  # Random seed for reproducibility
-        'class_weight': 'balanced',  # Weights associated with classes to address class imbalance
-        'verbose': 0,  # Controls the verbosity of the tree building process
-        'n_jobs': -1,  # Number of parallel jobs to run (-1 means using all processors)
         "window_size": 3,
         "output_step": 3,
         "data_mode": 2,
         "topk": 20,
         "symbol": "AAPL",
+        # "max_string_length": 500,
+        # 'param_grid': {
+        #     'data_mode': [0, 1, 2],
+        #     'window_size': [3, 7, 14],
+        #     'output_size': [3, 7, 14],
+        #     'n_estimators': [5, 10, 100],
+        #     'criterion': ['gini', 'entropy'],
+        #     'min_samples_leaf': [2, 4, 6, 50],
+        #     'max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        #     'max_string_length': [500, 1000, 10000, 20000]
+        # }
         'param_grid': {
             'data_mode': [0, 1, 2],
             'window_size': [3, 7, 14],
@@ -25,7 +28,8 @@ rf_cf = {
             'n_estimators': [5, 10, 100],
             'criterion': ['gini', 'entropy'],
             'min_samples_leaf': [2, 4, 6, 50],
-            'max_depth': range(1, 10)
+            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            'max_string_length': [500, 1000, 10000, 20000]
         }
     },
     "training": {

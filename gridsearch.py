@@ -11,8 +11,8 @@ from configs.config import config
 # model = trainer.grid_search()
 
 ### random_forest
-# trainer = random_forest_trainer(new_data=False, full_data=False, mode = "train")
-# model = trainer.grid_search()
+trainer = random_forest_trainer(new_data=False, full_data=False, mode = "train")
+model = trainer.grid_search()
 
 # ### xgboost
 trainer = xgboost_tn(new_data=False, full_data=False, mode = "train")

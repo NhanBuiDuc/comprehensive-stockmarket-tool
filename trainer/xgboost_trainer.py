@@ -359,7 +359,7 @@ class xgboost_trainer(Trainer):
     def grid_search(self):
         results = []
         
-        train_dataloader, valid_dataloader, test_dataloader = self.prepare_gridsearch_data(new_data=False)
+        # train_dataloader, valid_dataloader, test_dataloader = self.prepare_gridsearch_data(new_data=False)
         
         best_cases = []
         
@@ -370,6 +370,8 @@ class xgboost_trainer(Trainer):
                         for learning_rate in self.param_grid['learning_rate']:
                             for subsample in self.param_grid['subsample']:
                                 for colsample_bytree in self.param_grid['colsample_bytree']:
+                                    for string_length in self.param_grid['max_string_length']:
+                                            train_dataloader, valid_dataloader, test_dataloader = self.prepare_gridsearch_data(data_mode, window_size, output_size, string_length, new_data=True)
                                             if data_mode == 0:
                                                 X_train = train_dataloader.dataset.x_price
                                                 y_train = train_dataloader.dataset.Y
@@ -411,6 +413,7 @@ class xgboost_trainer(Trainer):
                                                 'learning_rate': learning_rate,
                                                 'subsample': subsample,
                                                 'colsample_bytree': colsample_bytree,
+                                                'max_string_length': string_length,
                                                 'score': score
                                             }
         
@@ -448,7 +451,7 @@ class xgboost_trainer(Trainer):
 
     
 
-    def prepare_gridsearch_data(self, new_data):
+    def prepare_gridsearch_data(self, data_mode, window_size, output_step, string_length, new_data):
         file_paths = [
             './dataset/X_train_' + self.model_name + '.npy',
             './dataset/y_train_' + self.model_name + '.npy',
@@ -459,7 +462,7 @@ class xgboost_trainer(Trainer):
         ]
 
         if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
-            df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
+            df = u.prepare_stock_dataframe(self.symbol, window_size, self.start, self.end, False)
             num_data_points = df.shape[0]
             data_date = df.index.strftime("%Y-%m-%d").tolist()
 
@@ -469,11 +472,11 @@ class xgboost_trainer(Trainer):
             test_date = data_date[train_split_index:]
 
             # Prepare y
-            y = u.prepare_data_y_trend(df.to_numpy(), output_step=self.output_step)
+            y = u.prepare_data_y_trend(df.to_numpy(), output_step=output_step)
             y = np.array(y, dtype=int)
 
             # Prepare X
-            X_stocks = np.array(df.values)[:-self.output_step]
+            X_stocks = np.array(df.values)[:-output_step]
 
             # Save train, valid, and test datasets
             X_train_file = './dataset/X_train_' + self.model_name + '.npy'
@@ -482,12 +485,12 @@ class xgboost_trainer(Trainer):
             y_train_file = './dataset/y_train_' + self.model_name + '.npy'
             y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
             y_test_file = './dataset/y_test_' + self.model_name + '.npy'
-            if self.data_mode == 2:
-                _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
-                                                    self.output_step,
-                                                    self.topk, new_data)
+            if data_mode == 2:
+                _, news_X = nlp_u.prepare_news_data(df, self.symbol, window_size, self.start, self.end,
+                                                    output_step,
+                                                    self.topk, string_length, new_data=False)
 
-                news_X = news_X[:-self.output_step]
+                news_X = news_X[:-output_step]
                 # Concatenate X_stocks and news_X
                 X = np.concatenate((X_stocks, news_X), axis=1)
             else:
@@ -496,7 +499,7 @@ class xgboost_trainer(Trainer):
 
             # Split X and y into train, valid, and test datasets
             train_indices = np.where(df.index.isin(train_valid_date))[0]
-            test_indices = np.where(df.index.isin(test_date))[0][:-self.output_step]
+            test_indices = np.where(df.index.isin(test_date))[0][:-output_step]
             print("Train date from: " + train_valid_date[0] + " to " + train_valid_date[-1])
             print("Test from: " + test_date[0] + " to " + test_date[-1])
             X_train_valid = X[train_indices]
@@ -554,7 +557,8 @@ class xgboost_trainer(Trainer):
         valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
         return train_dataloader, valid_dataloader, test_dataloader
-    def prepare_eval_data(self):
+    
+    def prepare_eval_data(self, data_mode, window_size, output_step, string_length, new_data):
         # Load train and validation data
         X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
         y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)

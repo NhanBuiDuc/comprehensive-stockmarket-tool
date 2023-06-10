@@ -551,19 +551,10 @@ class rf_classifier:
         super().__init__()
         self.__dict__.update(param)
         self.sklearn_model = RandomForestClassifier(
-            n_estimators=100,  # Number of trees in the forest
-            criterion='entropy',  # Splitting criterion (can be 'gini' or 'entropy')
-            max_depth=100,  # Maximum depth of the tree
-            min_samples_split=5,  # Minimum number of samples required to split an internal node
-            min_samples_leaf=5,  # Minimum number of samples required to be at a leaf node
-            max_features='sqrt',
-            # Number of features to consider for the best split ('sqrt' or 'log2' for square root and logarithm of total features respectively)
-            bootstrap=True,  # Whether bootstrap samples are used when building trees
-            oob_score=True,  # Whether to use out-of-bag samples to estimate the generalization accuracy
-            random_state=42,  # Random seed for reproducibility
-            class_weight='balanced',  # Weights associated with classes to address class imbalance
-            verbose=0,  # Controls the verbosity of the tree building process
-            n_jobs=-1  # Number of parallel jobs to run (-1 means using all processors)
+            n_estimators=self.n_estimators,  # Number of trees in the forest
+            criterion=self.criterion,  # Splitting criterion (can be 'gini' or 'entropy')
+            max_depth=self.max_depth,  # Maximum depth of the tree
+            min_samples_leaf=self.min_samples_leaf,  # Minimum number of samples required to be at a leaf node
         )
 
     def predict(self, x):
