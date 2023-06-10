@@ -231,82 +231,137 @@ def filter_news_by_stock_dates(news_df, stock_df, max_rows):
     return filtered_news_df
 
 
-def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
-    # Read the csv file
-    # Get the index stock news save with stock dataframe
-    # Get top 5 summary text
-    # Merge into 1 text, preprocess
-    # if merged text have lenght < max_input_lenght, add zero to it to meet the lenght
-    # if larger, remove sentences until meet the lenght, than add zero
-    # tokenize the text, convert tokens into ids
-    # convert into (batch, 14, n) data
-    max_string_lenght = 50
-    model_name = "bert-base-uncased"
-    sentence_model = SentenceTransformer("ProsusAI/finbert")
-    file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
-    news_query_folder = "./NLP/news_query"
-    news_query_file_name = symbol + "_" + "query.json"
-    news_query_path = news_query_folder + "/" + news_query_file_name
-    with open(news_query_path, "r") as f:
-        queries = json.load(f)
-    keyword_query = list(queries.values())
-    # df = load_data_with_index(file_path, stock_df.index)
-    news_df = pd.read_csv(file_path)
-    news_df['date'] = pd.to_datetime(news_df['date'])
-    news_df = filter_news_by_stock_dates(news_df, stock_df, max_rows=5)
-    top_sentences_dict = []
-    # news_df.reset_index(drop=True, inplace=True)
-    for date in news_df["date"].unique():
-        summmary_columns = news_df[news_df["date"] == date]["summary"]
-        top_summary = get_similar_summary(summmary_columns.values, keyword_query, sentence_model, topK, 0.5)
-        flattened_array = np.ravel(np.array(top_summary))
-        merged_summary = ' '.join(flattened_array)
-        ids = sentence_tokenize(merged_summary, sentence_model)
-        top_sentences_dict.append(ids)
+# def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
+#     # Read the csv file
+#     # Get the index stock news save with stock dataframe
+#     # Get top 5 summary text
+#     # Merge into 1 text, preprocess
+#     # if merged text have lenght < max_input_lenght, add zero to it to meet the lenght
+#     # if larger, remove sentences until meet the lenght, than add zero
+#     # tokenize the text, convert tokens into ids
+#     # convert into (batch, 14, n) data
+#     max_string_lenght = 50
+#     model_name = "bert-base-uncased"
+#     sentence_model = SentenceTransformer("ProsusAI/finbert")
+#     file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
+#     news_query_folder = "./NLP/news_query"
+#     news_query_file_name = symbol + "_" + "query.json"
+#     news_query_path = news_query_folder + "/" + news_query_file_name
+#     with open(news_query_path, "r") as f:
+#         queries = json.load(f)
+#     keyword_query = list(queries.values())
+#     # df = load_data_with_index(file_path, stock_df.index)
+#     news_df = pd.read_csv(file_path)
+#     news_df['date'] = pd.to_datetime(news_df['date'])
+#     news_df = filter_news_by_stock_dates(news_df, stock_df, max_rows=5)
+#     top_sentences_dict = []
+#     # news_df.reset_index(drop=True, inplace=True)
+#     for date in news_df["date"].unique():
+#         summmary_columns = news_df[news_df["date"] == date]["summary"]
+#         top_summary = get_similar_summary(summmary_columns.values, keyword_query, sentence_model, topK, 0.5)
+#         flattened_array = np.ravel(np.array(top_summary))
+#         merged_summary = ' '.join(flattened_array)
+#         ids = sentence_tokenize(merged_summary, sentence_model)
+#         top_sentences_dict.append(ids)
 
-    top_sentences_dict = np.array(top_sentences_dict)
-    data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
+#     top_sentences_dict = np.array(top_sentences_dict)
+#     data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
 
-    return data, top_sentences_dict
+#     return data, top_sentences_dict
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sentence_transformers import SentenceTransformer
-def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, new_data=False):
-    max_string_length = 50
-    model_name = "ProsusAI/finbert"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    sentence_model = SentenceTransformer(model_name)
-    file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
-    news_query_folder = "./NLP/news_query"
-    news_query_file_name = symbol + "_" + "query.json"
-    news_query_path = news_query_folder + "/" + news_query_file_name
+def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_step, topK, max_string_length, new_data=False):
+    file_name = f'./dataset/news_{symbol}_w{window_size}.npy'
+    if new_data == True:
+        model_name = "ProsusAI/finbert"
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        sentence_model = SentenceTransformer(model_name)
+        file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
+        news_query_folder = "./NLP/news_query"
+        news_query_file_name = symbol + "_" + "query.json"
+        news_query_path = news_query_folder + "/" + news_query_file_name
 
-    with open(news_query_path, "r") as f:
-        queries = json.load(f)
-    keyword_query = list(queries.values())
+        with open(news_query_path, "r") as f:
+            queries = json.load(f)
+        keyword_query = list(queries.values())
 
-    news_df = pd.read_csv(file_path)
-    news_df['date'] = pd.to_datetime(news_df['date'])
-    news_df = filter_news_by_stock_dates(news_df, stock_df, max_rows=5)
-    top_sentences_dict = []
+        news_df = pd.read_csv(file_path)
+        news_df['date'] = pd.to_datetime(news_df['date'])
+        news_df = filter_news_by_stock_dates(news_df, stock_df, max_rows=5)
+        top_sentences_dict = []
+        total_lenght = 0
+        
+        for date in news_df["date"].unique():
+            summary_columns = news_df[news_df["date"] == date]["summary"]
+            top_summary = get_similar_summary(summary_columns.values, keyword_query, sentence_model, topK, 0.5)
+            flattened_array = np.ravel(np.array(top_summary))
+            merged_summary = ' '.join(flattened_array)[:max_string_length]
+            total_lenght += len(merged_summary)
+            # print("len", len(merged_summary))
+            encoded_summary = tokenizer.encode_plus(
+                merged_summary,
+                max_length=max_string_length,
+                padding="max_length",
+                truncation=True,
+                return_tensors="pt"
+            )
+            input_ids = encoded_summary["input_ids"]
+            embeddings = sentence_model.encode(merged_summary)
 
-    for date in news_df["date"].unique():
-        summary_columns = news_df[news_df["date"] == date]["summary"]
-        top_summary = get_similar_summary(summary_columns.values, keyword_query, sentence_model, topK, 0.5)
-        flattened_array = np.ravel(np.array(top_summary))
-        merged_summary = ' '.join(flattened_array)
-        encoded_summary = tokenizer.encode_plus(
-            merged_summary,
-            max_length=max_string_length,
-            padding="max_length",
-            truncation=True,
-            return_tensors="pt"
-        )
-        input_ids = encoded_summary["input_ids"]
-        embeddings = sentence_model.encode(merged_summary)
+            top_sentences_dict.append(embeddings)
+        print("average lenght: ", total_lenght / len(news_df["date"].unique()))
+        
+        top_sentences_dict = np.array(top_sentences_dict)
+        if os.path.exists(file_name):
+            os.remove(file_name)
+        np.save(file_name, top_sentences_dict)
+    else:
+        if os.path.exists(file_name):
+            top_sentences_dict = np.load(file_name, allow_pickle=True)
+        else:
+            model_name = "ProsusAI/finbert"
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            sentence_model = SentenceTransformer(model_name)
+            file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
+            news_query_folder = "./NLP/news_query"
+            news_query_file_name = symbol + "_" + "query.json"
+            news_query_path = news_query_folder + "/" + news_query_file_name
 
-        top_sentences_dict.append(embeddings)
+            with open(news_query_path, "r") as f:
+                queries = json.load(f)
+            keyword_query = list(queries.values())
 
-    top_sentences_dict = np.array(top_sentences_dict)
+            news_df = pd.read_csv(file_path)
+            news_df['date'] = pd.to_datetime(news_df['date'])
+            news_df = filter_news_by_stock_dates(news_df, stock_df, max_rows=5)
+            top_sentences_dict = []
+            total_lenght = 0
+            
+            for date in news_df["date"].unique():
+                summary_columns = news_df[news_df["date"] == date]["summary"]
+                top_summary = get_similar_summary(summary_columns.values, keyword_query, sentence_model, topK, 0.5)
+                flattened_array = np.ravel(np.array(top_summary))
+                merged_summary = ' '.join(flattened_array)[:max_string_length]
+                total_lenght += len(merged_summary)
+                # print("len", len(merged_summary))
+                encoded_summary = tokenizer.encode_plus(
+                    merged_summary,
+                    max_length=max_string_length,
+                    padding="max_length",
+                    truncation=True,
+                    return_tensors="pt"
+                )
+                input_ids = encoded_summary["input_ids"]
+                embeddings = sentence_model.encode(merged_summary)
+
+                top_sentences_dict.append(embeddings)
+                print("average lenght: ", total_lenght / len(news_df["date"].unique()))
+            
+            top_sentences_dict = np.array(top_sentences_dict)           
+            
+            if os.path.exists(file_name):
+                os.remove(file_name)
+            np.save(file_name, top_sentences_dict)
     data = prepare_time_series_news_data(top_sentences_dict, window_size, output_step, 1)
 
     return data, top_sentences_dict
@@ -478,7 +533,7 @@ def get_similar_summary(summaries, queries, sentence_model, topK, threshold=0.5)
         similarity_scores = np.array(get_similarity_score(summaries, queries, sentence_model))
         sorted_indices = np.argsort(similarity_scores, axis=0)[::-1]
         sorted_sentences = summaries[sorted_indices]
-        return sorted_sentences[:topK]
+        return sorted_sentences
     elif isinstance(summaries, str):
         return summaries
 
