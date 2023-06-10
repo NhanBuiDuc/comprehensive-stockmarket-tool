@@ -31,6 +31,7 @@ class Signal:
         df = pd.read_csv(src_path + filename)
         #df = df.iloc[-date_length:]
         df.rename(columns={df.columns[0]: 'date'}, inplace=True)
+        
         df = pd.DataFrame({
             'date':df['date'],
             '4. close': df['close'],
@@ -52,6 +53,23 @@ class Signal:
         # for i in [12, 26]:
         #     macd = MACD(df, i)
         #     df = pd.concat([df, macd], axis=1)
+        
+        '''
+        smi 5 - 20 - 5 
+        dm 14
+        cfo 9
+        cmo len = 7
+        er len = auto
+        roc len = auto
+        stc len = auto
+        vwap len = auto
+        cmf len = 20
+        '''
+        # smi = ta.smi(close=df['close'], fast=5, slow=20, signal=5)
+        # dm = DM(df, 14)
+        # cfo = CFO(df, 9)
+        # cmf = CMF(df, 20)
+        
         macd = MACD(df, 12)
         rsi = RSI(df, 14)
         stochrsi = STOCHRSI(df, window_size=14)
@@ -272,6 +290,7 @@ class Signal:
                 signal[i] = np.nan
         return signal
 
+   
 
     def define_signal(self, path='./technical_signal/'):
         # if new_data:
@@ -340,6 +359,7 @@ class Signal:
 
         #save to json file
         df['date'] = pd.to_datetime(df['date'])
+        df = df[df['date'] < '2023-05-02']
         df['date'] = df['date'].dt.strftime('%d/%m/%Y')
         df = df.fillna("")
         df = df.to_dict(orient='records')
