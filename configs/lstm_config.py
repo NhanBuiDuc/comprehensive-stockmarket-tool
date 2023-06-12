@@ -4,7 +4,7 @@ lstm_cf = {
         "hidden_size": 20,
         "drop_out": 0.5,
         "window_size": 3,
-        "output_step": 14,
+        "output_step": 3,
         "conv1D_param": {
             "type": 1,
             "kernel_size": 4,
@@ -19,6 +19,7 @@ lstm_cf = {
         "symbol": "AAPL",
         "topk": 10,
         "data_mode": 2,
+        "max_string_length": 1000,
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

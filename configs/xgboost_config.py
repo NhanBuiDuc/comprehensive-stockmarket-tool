@@ -34,24 +34,27 @@ xgboost_cf = {
         "val_shuffle": True,
         "test_shuffle": True,
         "weight_decay": 0.001,
-        # "param_grid": {
-        #     'data_mode': [0, 1, 2],
-        #     'window_size': [3, 7, 14],
-        #     'output_size': [3, 7, 14],
-        #     'n_estimators': [10, 15, 20],
-        #     'learning_rate': [0.1, 0.01, 0.001, 0.0001],
-        #     'subsample': [0.5, 0.6, 0.7, 0.8, 0.9],
-        #     'colsample_bytree': [0.5, 0.6, 0.7, 0.8, 0.9],
-        # }
         "param_grid": {
             'data_mode': [0, 1, 2],
             'window_size': [3, 7, 14],
             'output_size': [3, 7, 14],
-            'n_estimators': [10],
-            'learning_rate': [0.1],
-            'subsample': [0.6],
-            'colsample_bytree': [0.5],
+            'n_estimators': [10, 15, 20],
+            'learning_rate': [0.1, 0.01, 0.001, 0.0001],
+            'subsample': [0.5, 0.6, 0.7, 0.8, 0.9],
+            'colsample_bytree': [0.5, 0.6, 0.7, 0.8, 0.9],
+            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
             'max_string_length': [500, 1000, 10000, 20000]
         }
+
+        # "param_grid": {
+        #     'data_mode': [0, 1, 2],
+        #     'window_size': [3, 7, 14],
+        #     'output_size': [3, 7, 14],
+        #     'n_estimators': [10],
+        #     'learning_rate': [0.1],
+        #     'subsample': [0.6],
+        #     'colsample_bytree': [0.5],
+        #     'max_string_length': [500, 1000, 10000, 20000]
+        # }
     }
 }

@@ -544,7 +544,8 @@ class svm_classifier:
 
     def fit(self, x, y):
         self.sklearn_model.fit(x, y)
-
+    def score(self, x, y):
+        return self.sklearn_model.score(x,y)
 
 class rf_classifier:
     def __init__(self, num_feature, **param):
@@ -563,8 +564,9 @@ class rf_classifier:
         return output
 
     def fit(self, x, y):
-        self.sklearn_model.fit(x, y)
-
+        return self.sklearn_model.fit(x, y)
+    def score(self, x, y):
+        return self.sklearn_model.score(x,y)
 
 class xgb_classifier:
     def __init__(self, num_feature, **param):
@@ -594,3 +596,5 @@ class xgb_classifier:
 
         # Fit the model with the DMatrix
         self.xgb_model.fit(x, y)
+    def score(self, x, y):
+        return self.xgb_model.score(x,y)

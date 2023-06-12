@@ -10,10 +10,10 @@ from configs.config import config
 # trainer = svm_trainer(new_data=False, full_data=False, mode = "train")
 # model = trainer.grid_search()
 
-### random_forest
+# ### random_forest
 trainer = random_forest_trainer(new_data=False, full_data=False, mode = "train")
 model = trainer.grid_search()
 
-# ### xgboost
+# # # ### xgboost
 trainer = xgboost_tn(new_data=False, full_data=False, mode = "train")
 model = trainer.grid_search()
