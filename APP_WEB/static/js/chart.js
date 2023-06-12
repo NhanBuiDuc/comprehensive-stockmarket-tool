@@ -236,7 +236,7 @@ chart = {
                 <td>${value}</td>
                 <td>10</td>
                 <td>${res["svm"][`${outputsize}`]}</td>
-                <td>${res["xgboosst"][`${outputsize}`]}</td>
+                <td>${res["xgboost"][`${outputsize}`]}</td>
                 <td>${res["random"][`${outputsize}`]}</td>`;
                 tbody.append(tr);
             };
@@ -244,12 +244,27 @@ chart = {
     },
 
     callApiGetPrice: function (value, callback) {
-
+        let url = `http://127.0.0.1:5000/execute/${value}`
+        fetch(url, {
+                method: 'GET',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+            })
+                .then(response => {
+                    console.log('aaaa', response)
+                    return response.json()})
+                .then(data => {
+                console.log("Respone API", data);
+                callback(data);
+                }).catch(err => {
+                console.log('API went wrong.', err);
+            });
     },
 
     getDataTable: function (value, callback) {
         let object = this;
-
+        
         object.getData("prediction2.json")
             .then(function (data) {
                 let dataSymbol = data[`${value}`];
@@ -259,6 +274,7 @@ chart = {
                 console.error('Error:', error);
             });
     },
+
 
     // getDataTable: function(value, callback) {
     //     let object = this;
