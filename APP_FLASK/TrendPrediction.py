@@ -204,14 +204,23 @@ class Predictor:
 
         threshold = 0.5
         converted_output = torch.where(output >= threshold, torch.tensor(1), torch.tensor(0))
-        
+        '''
+        format data
+        '''
+        match model_type:
+            case 'svm':
+                model_print_name = 'svm'
+            case 'random_forest':
+                model_print_name = 'random'
+            case 'xgboost':
+                model_print_name = 'xgboost'
         if torch.all(converted_output == 1):
             output_json = {
-                f'{model_type}_{symbol}_w{window_size}_o{output_step}': "UP"
+                f'{model_print_name}_{symbol}_{output_step}': "UP"
             }
         elif torch.all(converted_output == 0):
             output_json = {
-                f'{model_type}_{symbol}_w{window_size}_o{output_step}': "DOWN"
+                f'{model_print_name}_{symbol}_{output_step}': "DOWN"
             }     
         return output_json
 
@@ -244,13 +253,27 @@ class Predictor:
                         result.append(self.predict_1(symbol, model_type, output_step))
         # result = dict(result)
         result = reduce(lambda d1, d2: d1.update(d2) or d1, result, {})
-        print(result)
+        #print(result)
+        reformatted_data = {}
+        for key, value in result.items():
+            model, stock, interval = key.split("_")
+            
+            # Create a nested dictionary for each stock if it doesn't exist
+            if stock not in reformatted_data:
+                reformatted_data[stock] = {}
+            
+            # Create a nested dictionary for each model if it doesn't exist
+            if model not in reformatted_data[stock]:
+                reformatted_data[stock][model] = {}
+            
+            # Add the prediction to the corresponding interval
+            reformatted_data[stock][model][interval] = value
         #json_object = json.loads(result)
         with open(self.path_to_des, "w") as json_file:
             # Write the dictionary to the JSON file
-            json.dump(result, json_file)
+            json.dump(reformatted_data, json_file)
         
-        return result
+        return reformatted_data
 
 
 '''
