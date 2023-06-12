@@ -1,8 +1,27 @@
 index = {
-    build: function () {
+    build: function (symbol) {
         let object = this;
-        object.buildSectionNeutral();
+        //object.buildSectionNeutral();
+        if (object.currentData) {
+            object.buildSectionNeutral(object.currentData, symbol); // Use the current data if available
+            console.log("Building Technical Analysis")
+        } else {
+            console.log("No data available.");
+        }
         object.scrollEvent();
+    },
+
+    getData: function (filename) {
+        const path = '../static/file/';
+        let filepath = path + filename;
+        return fetch(filepath)
+            .then(response => response.json())
+            .then(data => {
+                return data; // Return the loaded JSON data
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     },
 
     scrollEvent: function () {
@@ -13,7 +32,6 @@ index = {
             let screen = window.scrollY + window.innerHeight;
             let targetPosition = footer.offsetTop;
 
-            console.log(targetPosition, screen);
             if (screen + 100 > targetPosition) {
                 mainfuncbuttons.style.bottom = "5rem";
             } else {
@@ -22,15 +40,36 @@ index = {
         });
     },
 
-    buildSectionNeutral: function () {
+    buildSectionNeutral: function (data, symbol) {
+        let object = this;
+
+        // jquery code
         $(document).ready(function () {
-            $.getJSON("../static/file/AAPL_signal.json", function (data) {
+            $.getJSON(`../static/file/${symbol}_signal.json`, function (data) {
                 data = data.reverse();
+
+                // let sel = document.getElementById("sel");
+                // sel.innerHTML = ``;
                 $.each(data, function (i, option) {
                     $('#sel').append($('<option/>').text(option.date));
                 });
             });
         });
+
+        // vanilla js code
+        // object.getData("../static/file/AAPL_signal.json")
+        //     .then(function (data) {
+        //         let sel = document.getElementById("sel");
+        //         data = data.reverse();
+        //         data.forEach(childData => {
+        //             let option = document.createElement("option");
+        //             option.innerText = childData.date;
+        //             sel.append(option);
+        //         });
+        //     })
+        //     .catch(function (error) {
+        //         console.error('Error:', error);
+        //     });
 
         $("#sel").change(function () {
             var e = document.getElementById("sel");
@@ -50,7 +89,7 @@ index = {
             var buytxt3 = document.getElementById("buy3");
             var total3 = document.getElementById("total3");
             var arrow3 = document.getElementById("arr3");
-            $.getJSON("../static/file/AAPL_signal.json", function (data) {
+            $.getJSON(`../static/file/${symbol}_signal.json`, function (data) {
                 var sell2 = 0;
                 var neutral2 = 0;
                 var buy2 = 0;
@@ -339,7 +378,7 @@ index = {
 
 
         $(document).ready(function () {
-            $.getJSON("../static/file/AAPL_signal.json", function (data) {
+            $.getJSON(`../static/file/${symbol}_signal.json`, function (data) {
                 var row = '';
 
                 row += '<tr>';
@@ -590,7 +629,7 @@ index = {
         });
 
         $(document).ready(function () {
-            $.getJSON("../static/file/AAPL_signal.json", function (data) {
+            $.getJSON(`../static/file/${symbol}_signal.json`, function (data) {
                 var row = '';
 
                 row += '<tr>';

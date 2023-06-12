@@ -344,14 +344,14 @@ class Signal:
         df['BUY'] = (df.iloc[:, 36:] == 1).sum(axis=1)
         
         new_columns = {
-            '4. close': 'close',
-            '1. open': 'open',
-            '2. high': 'high',
-            '3. low': 'low',
-            '6. volume': 'volumn'
+            '4. close': '4. close',
+            '1. open': '1. open',
+            '2. high': '2. high',
+            '3. low': '3. low',
+            '6. volume': '6. volumn'
         }
         df = df.rename(columns=new_columns)
-        df.columns = df.columns.str.replace('.', '')
+        #df.columns = df.columns.str.replace('.', '')
         file_name = cf['alpha_vantage']['symbol'] + '_signal.csv'
         name = path + file_name
         #save to csv file
@@ -363,7 +363,7 @@ class Signal:
         df['date'] = df['date'].dt.strftime('%d/%m/%Y')
         df = df.fillna("")
         df = df.to_dict(orient='records')
-        file_path = path + cf['alpha_vantage']['symbol'] + '_signal.json'
+        file_path = './APP_WEB/static/file/' + cf['alpha_vantage']['symbol'] + '_signal.json'
         # Save the data to a JSON file with the specified path
         with open(file_path, 'w') as file:
             file.write(json.dumps(df, indent=2))
