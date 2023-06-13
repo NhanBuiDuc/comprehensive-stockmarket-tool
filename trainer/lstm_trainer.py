@@ -306,7 +306,6 @@ class lstm_trainer(Trainer):
                     f.write("\n")
                 # Print a message to confirm that the file was written successfully
                 print(f"Loss written to {save_path}.")
-
     def prepare_data(self, new_data):
 
         file_paths = [
@@ -339,11 +338,11 @@ class lstm_trainer(Trainer):
             X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
                                                         output_step=self.output_step, dilation=1)
             if self.data_mode == 2:
-                news_X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
-                                                            self.output_step, self.topk, new_data)
+                news_X_trainval, _ = nlp_u.prepare_splited_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+                                                            self.output_step, self.topk, self.max_string_length, True, False)
                 X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
-                news_X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
-                                                            self.output_step, self.topk, new_data)
+                news_X_test, _ = nlp_u.prepare_splited_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+                                                            self.output_step, self.topk, self.max_string_length, False, False)
                 X_test = np.concatenate((X_test, news_X_test), axis=2)
             self.num_feature = X_trainval.shape[2]
             # Concatenate X_stocks and news_X

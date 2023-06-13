@@ -10,7 +10,7 @@ rf_cf = {
         "data_mode": 2,
         "topk": 20,
         "symbol": "AAPL",
-        # "max_string_length": 500,
+        "max_string_length": 500,
         # 'param_grid': {
         #     'data_mode': [0, 1, 2],
         #     'window_size': [3, 7, 14],
