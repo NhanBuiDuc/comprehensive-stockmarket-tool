@@ -591,7 +591,7 @@ class lstm_trainer(Trainer):
         # # Drop duplicates based on data_mode, window_size, and output_size, keeping the first occurrence (highest score)
         # results_df = results_df.drop_duplicates(subset=['data_mode', 'window_size', 'output_size'], keep='first')
 
-        results_df.to_csv("rf_grid_search_results.csv", index=False)
+        results_df.to_csv("lstm_grid_search_results.csv", index=False)
         return results_df
     
     def prepare_gridsearch_data(self, symbol, data_mode, window_size, output_step, string_length, new_data):
