@@ -320,11 +320,11 @@ class random_forest_trainer(Trainer):
                                                 # Append the current result to best_cases
                                                 best_cases.append(result)
                             else:
-                                for string_length in self.param_grid['max_string_length']:
-                                    for n_estimators in self.param_grid["n_estimators"]:
-                                        for criterion in self.param_grid["criterion"]:
-                                            for max_depth in self.param_grid['max_depth']:
-                                                train_dataloader, valid_dataloader, test_dataloader, balance_dataloader = self.prepare_gridsearch_data(symbol, data_mode, window_size, output_size, string_length, new_data=True)
+                                string_length = 0
+                                for n_estimators in self.param_grid["n_estimators"]:
+                                    for criterion in self.param_grid["criterion"]:
+                                        for max_depth in self.param_grid['max_depth']:
+                                            train_dataloader, valid_dataloader, test_dataloader, balance_dataloader = self.prepare_gridsearch_data(symbol, data_mode, window_size, output_size, string_length, new_data=True)
 
                                             if data_mode == 0:
                                                 X_train = train_dataloader.dataset.x_price
@@ -346,62 +346,62 @@ class random_forest_trainer(Trainer):
                                                 y_test = test_dataloader.dataset.Y
                                                 y_balance_test = balance_dataloader.dataset.Y
                                                 num_feature = X_train.shape[-1]
-                                                
-                                                print('{symbol}_o{output_size}_w{window_size}_d{data_mode}')
+                                            
+                                            print(f'{symbol}_o{output_size}_w{window_size}_d{data_mode}')
 
-                                                X_train_w = X_train
-                                                X_val_w = X_val
-                                                y_train_o = y_train
-                                                y_val_o = y_val
-                                                model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
-                                                config = self.config
-                                                model_config = {
-                                                    'n_estimators': n_estimators,  # Number of trees in the forest
-                                                    'criterion': criterion,  # Splitting criterion (can be 'gini' or 'entropy')
-                                                    'max_depth': max_depth,  # Maximum depth of the tree
-                                                    'min_samples_leaf': 5,  # Minimum number of samples required to be at a leaf node  # Whether to use out-of-bag samples to estimate the generalization accuracy
-                                                    'random_state': 42,  # Random seed for reproducibility
-                                                    "window_size": window_size,
-                                                    "output_step": output_size,
-                                                    "data_mode": data_mode,
-                                                    "topk": 20,
-                                                    "symbol": symbol,
-                                                    "max_string_length": string_length,
-                                                }
-                                                config["model"] = model_config
+                                            X_train_w = X_train
+                                            X_val_w = X_val
+                                            y_train_o = y_train
+                                            y_val_o = y_val
+                                            model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                            config = self.config
+                                            model_config = {
+                                                'n_estimators': n_estimators,  # Number of trees in the forest
+                                                'criterion': criterion,  # Splitting criterion (can be 'gini' or 'entropy')
+                                                'max_depth': max_depth,  # Maximum depth of the tree
+                                                'min_samples_leaf': 5,  # Minimum number of samples required to be at a leaf node  # Whether to use out-of-bag samples to estimate the generalization accuracy
+                                                'random_state': 42,  # Random seed for reproducibility
+                                                "window_size": window_size,
+                                                "output_step": output_size,
+                                                "data_mode": data_mode,
+                                                "topk": 20,
+                                                "symbol": symbol,
+                                                "max_string_length": string_length,
+                                            }
+                                            config["model"] = model_config
 
-                                                model = Model(name=model_name, num_feature=self.num_feature, parameters=config,
-                                                                model_type=self.model_type,
-                                                                full_name=model_name)
-                                                model.structure.fit(X_train_w, y_train_o)
-                                                torch.save({"model": model,
-                                                "state_dict": []
-                                                }, "./models/" + model.name + ".pkl")
-                                                val_score = model.structure.score(X_val_w, y_val_o)
-                                                test_score = model.structure.score(X_test, y_test)
-                                                balance_score = model.structure.score(X_balance_test, y_balance_test)
-                                                result = {
-                                                    "symbol": symbol,
-                                                    'output_size': output_size,
-                                                    'window_size': window_size,
-                                                    'data_mode': data_mode,
-                                                    'n_estimators': n_estimators,
-                                                    'criterion': criterion,
-                                                    'min_samples_leaf': 5,
-                                                    'max_depth': max_depth,
-                                                    'max_string_lenght:': string_length,
-                                                    'val_score': val_score,
-                                                    "test_score": test_score,
-                                                    "balance_score": balance_score  
-                                                }
+                                            model = Model(name=model_name, num_feature=self.num_feature, parameters=config,
+                                                            model_type=self.model_type,
+                                                            full_name=model_name)
+                                            model.structure.fit(X_train_w, y_train_o)
+                                            torch.save({"model": model,
+                                            "state_dict": []
+                                            }, "./models/" + model.name + ".pkl")
+                                            val_score = model.structure.score(X_val_w, y_val_o)
+                                            test_score = model.structure.score(X_test, y_test)
+                                            balance_score = model.structure.score(X_balance_test, y_balance_test)
+                                            result = {
+                                                "symbol": symbol,
+                                                'output_size': output_size,
+                                                'window_size': window_size,
+                                                'data_mode': data_mode,
+                                                'n_estimators': n_estimators,
+                                                'criterion': criterion,
+                                                'min_samples_leaf': 5,
+                                                'max_depth': max_depth,
+                                                'max_string_lenght:': string_length,
+                                                'val_score': val_score,
+                                                "test_score": test_score,
+                                                "balance_score": balance_score
+                                            }
 
-                                                # Append the current result to best_cases
-                                                best_cases.append(result)
+                                            # Append the current result to best_cases
+                                            best_cases.append(result)
 
         results_df = pd.DataFrame(best_cases)
 
         # Sort the DataFrame by score in descending order
-        results_df = results_df.sort_values('val_score', ascending=True)
+        # results_df = results_df.sort_values('val_score', ascending=True)
 
         # # Drop duplicates based on data_mode, window_size, and output_size, keeping the first occurrence (highest score)
         # results_df = results_df.drop_duplicates(subset=['data_mode', 'window_size', 'output_size'], keep='first')

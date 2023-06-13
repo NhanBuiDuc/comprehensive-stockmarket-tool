@@ -20,6 +20,13 @@ lstm_cf = {
         "topk": 10,
         "data_mode": 2,
         "max_string_length": 1000,
+        "param_grid": {
+            'data_mode': [0, 1, 2],
+            'window_size': [3, 7, 14],
+            'output_size': [3, 7, 14],
+            'drop_out': [0.0, 0.2, 0.5, 0.8],
+            'max_string_length': [500, 1000, 10000, 20000]
+        },
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
