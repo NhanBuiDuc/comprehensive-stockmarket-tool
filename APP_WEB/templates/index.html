@@ -253,7 +253,9 @@
 
         <div class="slidecontainer mb-6">
             <select id="sel" class="option">
+                <option disabled selected value> -- select an option -- </option>
             </select>
+            
         </div>
 
         <div class="container mb-6">
@@ -328,8 +330,7 @@
                     chart.build(symbol); // Rebuild the chart using the new data
                     index.build(symbol); // Rebuild the chart using the new data
                     chart.renderDataToTable(symbol);
-
-
+                    
                     // UI Process (Hide Loading, Show Table, Show Chart,...)
                     loadingSection.classList.add("is-hidden");
                     loadingSection.classList.remove("is-flex");

@@ -25,9 +25,6 @@ CORS(app, support_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 
-#CODE_DIR = ROOT_DIR + '/APPWEB'
-predictor = Predictor()
-
 @app.route('/execute/<file>', methods=['GET'])
 def predict_LSTM(file):
     symbol = file
@@ -51,10 +48,11 @@ def predict_LSTM(file):
     except Exception as e:
         return f'Error executing Python file: {str(e)}'
 
-
 @app.route('/', methods=['GET'])
 def index1():
-    return render_template('chart.html')
+    return render_template('index.html')
+
+
 
 
 def createFile(content):
@@ -104,13 +102,8 @@ def Predict_trend():
     )
     return response
     # except Exception as e:
-    #     return f'Error executing Python file: {str(e)}''''
-    
-
-
-
-
-
+    #     return f'Error executing Python file: {str(e)}'
+'''
 
 if __name__ == '__main__':
     app.run(debug=True)
