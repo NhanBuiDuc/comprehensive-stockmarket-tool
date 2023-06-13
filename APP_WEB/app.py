@@ -25,36 +25,34 @@ CORS(app, support_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
 
-#CODE_DIR = ROOT_DIR + '/APPWEB'
-predictor = Predictor()
-
-# @app.route('/execute/<file>', methods=['GET'])
-# def predict_LSTM(file):
-#     symbol = file
+@app.route('/execute/<file>', methods=['GET'])
+def predict_LSTM(file):
+    symbol = file
     
 
-#     try:
-#         # Execute your Python file using subprocess module
-#         # subprocess.run(['python', './predict_stock.py'], check=True)
-#         # returnValue = subprocess.check_output(
-#         # ['python', './predict_stock.py'])
+    try:
+        # Execute your Python file using subprocess module
+        # subprocess.run(['python', './predict_stock.py'], check=True)
+        # returnValue = subprocess.check_output(
+        # ['python', './predict_stock.py'])
 
-#         createFile(symbol)
-#         returnValue = subprocess.check_output(
-#                 "python predict_stock.py")
+        createFile(symbol)
+        returnValue = subprocess.check_output(
+                "python predict_stock.py")
 
-#         json_str = json.dumps(
-#             {'price': returnValue.decode('utf-8').replace("\\", "").replace("\r", "").replace("\n", "").split("tensor")[1].split("(")[1].split(")")[0]})
-#         formated = json.loads(json_str)
-#         # return jsonify(json_str)
-#         return formated
-#     except Exception as e:
-#         return f'Error executing Python file: {str(e)}'
-
+        json_str = json.dumps(
+            {'price': returnValue.decode('utf-8').replace("\\", "").replace("\r", "").replace("\n", "").split("tensor")[1].split("(")[1].split(")")[0]})
+        formated = json.loads(json_str)
+        # return jsonify(json_str)
+        return formated
+    except Exception as e:
+        return f'Error executing Python file: {str(e)}'
 
 @app.route('/', methods=['GET'])
 def index1():
-    return render_template('chart.html')
+    return render_template('index.html')
+
+
 
 
 def createFile(content):
@@ -81,7 +79,7 @@ def createFile(content):
 # 	)
 #     return response
 
-@cross_origin(supports_credentials=True)
+'''@cross_origin(supports_credentials=True)
 @app.route("/execute", methods = ['POST'])
 def Predict_trend():
     data = json.loads(request.data)
@@ -105,12 +103,7 @@ def Predict_trend():
     return response
     # except Exception as e:
     #     return f'Error executing Python file: {str(e)}'
-    
-
-
-
-
-
+'''
 
 if __name__ == '__main__':
     app.run(debug=True)

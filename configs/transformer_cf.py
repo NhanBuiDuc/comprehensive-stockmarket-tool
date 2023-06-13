@@ -8,7 +8,13 @@ transformer_cf = {
         "window_size": 3,
         "output_step": 3,
         "data_mode":2,
-        "topk": 10
+        "topk": 10,
+        "ensembled_model": {
+            "svm": 1,
+            "random_forest": 1,
+            "xgboost": 1,
+            "lstm": -1
+        }
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

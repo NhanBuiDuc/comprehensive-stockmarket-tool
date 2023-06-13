@@ -308,88 +308,101 @@ class Transformer_trainer(Trainer):
                 print(f"Loss written to {save_path}.")
 
     def prepare_data(self, new_data):
-        df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
-        num_data_points = df.shape[0]
-        data_date = df.index.strftime("%Y-%m-%d").tolist()
 
-        # Split train-val and test dataframes
-        trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
-        trainval_df = df.iloc[:trainval_test_split_index]
-        test_df = df.iloc[trainval_test_split_index:]
-        print("Train date from: " + trainval_df.index[0].strftime("%Y-%m-%d") + " to " + trainval_df.index[-1].strftime("%Y-%m-%d"))
-        print("Test from: " + test_df.index[0].strftime("%Y-%m-%d") + " to " + test_df.index[-1].strftime("%Y-%m-%d"))
+        file_paths = [
+            './dataset/X_train_' + self.model_name + '.npy',
+            './dataset/y_train_' + self.model_name + '.npy',
+            './dataset/X_valid_' + self.model_name + '.npy',
+            './dataset/y_valid_' + self.model_name + '.npy',
+            './dataset/X_test_' + self.model_name + '.npy',
+            './dataset/y_test_' + self.model_name + '.npy'
+        ]
+        if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
+            df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
+            num_data_points = df.shape[0]
+            data_date = df.index.strftime("%Y-%m-%d").tolist()
+
+            # Split train-val and test dataframes
+            trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
+            trainval_df = df.iloc[:trainval_test_split_index]
+            test_df = df.iloc[trainval_test_split_index:]
+            print("Train date from: " + trainval_df.index[0].strftime("%Y-%m-%d") + " to " + trainval_df.index[-1].strftime("%Y-%m-%d"))
+            print("Test from: " + test_df.index[0].strftime("%Y-%m-%d") + " to " + test_df.index[-1].strftime("%Y-%m-%d"))
 
 
-        # Prepare X data for train-val dataframe
-        X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=self.window_size,
-                                                            output_step=self.output_step, dilation=1)
-        dataset_slicing = X_trainval.shape[2]
-        if self.data_mode == 1:
-            X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
-                                                    self.output_step, self.topk, new_data)
-        elif self.data_mode == 2:
-            news_X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
-                                                        self.output_step, self.topk, new_data)
+            # Prepare X data for train-val dataframe
+            X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=self.window_size,
+                                                                output_step=self.output_step, dilation=1)
+            dataset_slicing = X_trainval.shape[2]
+
+            # Prepare X data for test dataframe
+            X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
+                                                        output_step=self.output_step, dilation=1)
+            if self.data_mode == 2:
+                news_X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+                                                            self.output_step, self.topk, new_data)
+                X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
+                news_X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+                                                            self.output_step, self.topk, new_data)
+                X_test = np.concatenate((X_test, news_X_test), axis=2)
+            self.num_feature = X_trainval.shape[2]
             # Concatenate X_stocks and news_X
-            X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
 
-        # Prepare X data for test dataframe
-        X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
-                                                    output_step=self.output_step, dilation=1)
-        if self.data_mode == 1:
-            X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
-                                                self.output_step, self.topk, new_data)
-        elif self.data_mode == 2:
-            news_X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
-                                                    self.output_step, self.topk, new_data)
-            # Concatenate X_stocks and news_X
-            X_test = np.concatenate((X_test, news_X_test), axis=2)
 
-        self.num_feature = X_trainval.shape[2]
-        # Split X and y into train and validation datasets
-        train_indices, valid_indices = train_test_split(range(X_trainval.shape[0]), test_size=1 - self.cf["data"]["train_val_split_size"], shuffle=True, random_state=42)
-        X_train = X_trainval[train_indices]
-        X_valid = X_trainval[valid_indices]
-        y_train = y_trainval[train_indices]
-        y_valid = y_trainval[valid_indices]
+            # Split X and y into train and validation datasets
+            train_indices, valid_indices = train_test_split(range(X_trainval.shape[0]), test_size=1 - self.cf["data"]["train_val_split_size"], shuffle=True, random_state=42)
+            X_train = X_trainval[train_indices]
+            X_valid = X_trainval[valid_indices]
+            y_train = y_trainval[train_indices]
+            y_valid = y_trainval[valid_indices]
 
-        # Count the class distribution for each set
-        train_class_counts = np.bincount(y_train[:, 0])
-        valid_class_counts = np.bincount(y_valid[:, 0])
-        test_class_counts = np.bincount(y_test[:, 0])
+            # Count the class distribution for each set
+            train_class_counts = np.bincount(y_train[:, 0])
+            valid_class_counts = np.bincount(y_valid[:, 0])
+            test_class_counts = np.bincount(y_test[:, 0])
 
-        print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
-        print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
-        print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
+            print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+            print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+            print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
 
-        # Save train and validation data
-        X_train_file = './dataset/X_train_' + self.model_name + '.npy'
-        X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
-        X_test_file = './dataset/X_test_' + self.model_name + '.npy'
-        y_train_file = './dataset/y_train_' + self.model_name + '.npy'
-        y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
-        y_test_file = './dataset/y_test_' + self.model_name + '.npy'
+            # Save train and validation data
+            X_train_file = './dataset/X_train_' + self.model_name + '.npy'
+            X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
+            X_test_file = './dataset/X_test_' + self.model_name + '.npy'
+            y_train_file = './dataset/y_train_' + self.model_name + '.npy'
+            y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
+            y_test_file = './dataset/y_test_' + self.model_name + '.npy'
 
-        if os.path.exists(X_train_file):
-            os.remove(X_train_file)
-        if os.path.exists(X_valid_file):
-            os.remove(X_valid_file)
-        if os.path.exists(y_train_file):
-            os.remove(y_train_file)
-        if os.path.exists(y_valid_file):
-            os.remove(y_valid_file)
+            if os.path.exists(X_train_file):
+                os.remove(X_train_file)
+            if os.path.exists(X_valid_file):
+                os.remove(X_valid_file)
+            if os.path.exists(y_train_file):
+                os.remove(y_train_file)
+            if os.path.exists(y_valid_file):
+                os.remove(y_valid_file)
 
-        np.save(X_train_file, X_train)
-        np.save(X_valid_file, X_valid)
-        np.save(X_test_file, X_test)
-        np.save(y_train_file, y_train)
-        np.save(y_valid_file, y_valid)
-        np.save(y_test_file, y_test)
-
+            np.save(X_train_file, X_train)
+            np.save(X_valid_file, X_valid)
+            np.save(X_test_file, X_test)
+            np.save(y_train_file, y_train)
+            np.save(y_valid_file, y_valid)
+            np.save(y_test_file, y_test)
+        else:
+            # Load train and validation data
+            X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
+            y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
+            X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
+            y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
+            
+            self.num_feature = X_train.shape[2]
+            # Load full test data
+            X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
+            y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
         # Create datasets and dataloaders for train and validation sets
-        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, dataset_slicing)
-        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, dataset_slicing)
-        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, dataset_slicing)
+        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, 39)
+        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, 39)
+        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, 39)
         self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
         self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)

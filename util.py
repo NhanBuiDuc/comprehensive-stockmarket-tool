@@ -18,7 +18,6 @@ def download_stock_csv_file(path, file_name, symbol, window_size):
 
     daily_adjusted_df = daily_dataframe(api_key, symbol)
 
-
     willr = WILLR(daily_adjusted_df, window_size)
     smi = SMI(daily_adjusted_df, window_size)
     stochrsi = STOCHRSI(daily_adjusted_df, window_size)

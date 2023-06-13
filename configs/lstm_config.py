@@ -1,10 +1,10 @@
 lstm_cf = {
     "model": {
-        "num_layers": 2,
-        "hidden_size": 14,
+        "num_layers": 10,
+        "hidden_size": 20,
         "drop_out": 0.5,
-        "output_step": 3,
         "window_size": 3,
+        "output_step": 3,
         "conv1D_param": {
             "type": 1,
             "kernel_size": 4,
@@ -17,8 +17,16 @@ lstm_cf = {
             "output_size": 20
         },
         "symbol": "AAPL",
-        "topk": 20,
+        "topk": 10,
         "data_mode": 2,
+        "max_string_length": 1000,
+        "param_grid": {
+            'data_mode': [0, 1, 2],
+            'window_size': [3, 7, 14],
+            'output_size': [3, 7, 14],
+            'drop_out': [0.0, 0.2, 0.5, 0.8],
+            'max_string_length': [500, 1000, 10000, 20000]
+        },
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

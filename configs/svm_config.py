@@ -10,7 +10,8 @@ svm_cf = {
         "output_step": 3,
         "data_mode": 2,
         "topk": 10,
-        "symbol": "AAPL"
+        "symbol": "AAPL",
+        "max_string_length": 500,
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
@@ -29,6 +30,14 @@ svm_cf = {
         "train_shuffle": True,
         "val_shuffle": True,
         "test_shuffle": True,
-        "weight_decay": 0.0001
-    },
+        "weight_decay": 0.0001,
+        "param_grid": {
+            'data_mode': [0, 1, 2],
+            'window_size': [3, 7, 14],
+            'output_size': [3, 7, 14],
+            'C': [1e3, 1e4, 1e5],
+            'gamma': [0.001, 0.01, 0.1],
+            'max_string_length': [500, 1000, 10000, 20000]
+        },
+    }
 }
