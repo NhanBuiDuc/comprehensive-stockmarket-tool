@@ -23,14 +23,14 @@ from tqdm import tqdm
 from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
 from loss import FocalLoss
 from sklearn.model_selection import train_test_split
-
+from sklearn.metrics import accuracy_score
 class Transformer_trainer(Trainer):
     def __init__(self, new_data=True, full_data=False, mode="train"):
         super(Transformer_trainer, self).__init__()
         self.__dict__.update(self.cf)
         self.config = cf
         # self.symbol = self.cf["alpha_vantage"]["symbol"]
-        self.model_type = "transformer"
+        self.model_type = "ensembler"
         self.__dict__.update(self.config["model"])
         self.__dict__.update(self.config["training"])
         self.test_dataloader = None
@@ -309,103 +309,103 @@ class Transformer_trainer(Trainer):
 
     def prepare_data(self, new_data):
 
-        file_paths = [
-            './dataset/X_train_' + self.model_name + '.npy',
-            './dataset/y_train_' + self.model_name + '.npy',
-            './dataset/X_valid_' + self.model_name + '.npy',
-            './dataset/y_valid_' + self.model_name + '.npy',
-            './dataset/X_test_' + self.model_name + '.npy',
-            './dataset/y_test_' + self.model_name + '.npy'
-        ]
-        if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
-            df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
-            num_data_points = df.shape[0]
-            data_date = df.index.strftime("%Y-%m-%d").tolist()
+            file_paths = [
+                './dataset/X_train_' + self.model_name + '.npy',
+                './dataset/y_train_' + self.model_name + '.npy',
+                './dataset/X_valid_' + self.model_name + '.npy',
+                './dataset/y_valid_' + self.model_name + '.npy',
+                './dataset/X_test_' + self.model_name + '.npy',
+                './dataset/y_test_' + self.model_name + '.npy'
+            ]
+            if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
+                df = u.prepare_stock_dataframe(self.symbol, self.window_size, self.start, self.end, new_data)
+                num_data_points = df.shape[0]
+                data_date = df.index.strftime("%Y-%m-%d").tolist()
 
-            # Split train-val and test dataframes
-            trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
-            trainval_df = df.iloc[:trainval_test_split_index]
-            test_df = df.iloc[trainval_test_split_index:]
-            print("Train date from: " + trainval_df.index[0].strftime("%Y-%m-%d") + " to " + trainval_df.index[-1].strftime("%Y-%m-%d"))
-            print("Test from: " + test_df.index[0].strftime("%Y-%m-%d") + " to " + test_df.index[-1].strftime("%Y-%m-%d"))
-
-
-            # Prepare X data for train-val dataframe
-            X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=self.window_size,
-                                                                output_step=self.output_step, dilation=1)
-            dataset_slicing = X_trainval.shape[2]
-
-            # Prepare X data for test dataframe
-            X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
-                                                        output_step=self.output_step, dilation=1)
-            if self.data_mode == 2:
-                news_X_trainval, _ = nlp_u.prepare_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
-                                                            self.output_step, self.topk, new_data)
-                X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
-                news_X_test, _ = nlp_u.prepare_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
-                                                            self.output_step, self.topk, new_data)
-                X_test = np.concatenate((X_test, news_X_test), axis=2)
-            self.num_feature = X_trainval.shape[2]
-            # Concatenate X_stocks and news_X
+                # Split train-val and test dataframes
+                trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
+                trainval_df = df.iloc[:trainval_test_split_index]
+                test_df = df.iloc[trainval_test_split_index:]
+                print("Train date from: " + trainval_df.index[0].strftime("%Y-%m-%d") + " to " + trainval_df.index[-1].strftime("%Y-%m-%d"))
+                print("Test from: " + test_df.index[0].strftime("%Y-%m-%d") + " to " + test_df.index[-1].strftime("%Y-%m-%d"))
 
 
-            # Split X and y into train and validation datasets
-            train_indices, valid_indices = train_test_split(range(X_trainval.shape[0]), test_size=1 - self.cf["data"]["train_val_split_size"], shuffle=True, random_state=42)
-            X_train = X_trainval[train_indices]
-            X_valid = X_trainval[valid_indices]
-            y_train = y_trainval[train_indices]
-            y_valid = y_trainval[valid_indices]
+                # Prepare X data for train-val dataframe
+                X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=self.window_size,
+                                                                    output_step=self.output_step, dilation=1)
+                dataset_slicing = X_trainval.shape[2]
 
-            # Count the class distribution for each set
-            train_class_counts = np.bincount(y_train[:, 0])
-            valid_class_counts = np.bincount(y_valid[:, 0])
-            test_class_counts = np.bincount(y_test[:, 0])
+                # Prepare X data for test dataframe
+                X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=self.window_size,
+                                                            output_step=self.output_step, dilation=1)
+                if self.data_mode == 2:
+                    news_X_trainval, _ = nlp_u.prepare_splited_news_data(trainval_df, self.symbol, self.window_size, self.start, self.end,
+                                                                self.output_step, self.topk, 500, True, False)
+                    X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
+                    news_X_test, _ = nlp_u.prepare_splited_news_data(test_df, self.symbol, self.window_size, self.start, self.end,
+                                                                self.output_step, self.topk, 500, False, False)
+                    X_test = np.concatenate((X_test, news_X_test), axis=2)
+                self.num_feature = X_trainval.shape[2]
+                # Concatenate X_stocks and news_X
 
-            print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
-            print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
-            print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
 
-            # Save train and validation data
-            X_train_file = './dataset/X_train_' + self.model_name + '.npy'
-            X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
-            X_test_file = './dataset/X_test_' + self.model_name + '.npy'
-            y_train_file = './dataset/y_train_' + self.model_name + '.npy'
-            y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
-            y_test_file = './dataset/y_test_' + self.model_name + '.npy'
+                # Split X and y into train and validation datasets
+                train_indices, valid_indices = train_test_split(range(X_trainval.shape[0]), test_size=1 - self.cf["data"]["train_val_split_size"], shuffle=True, random_state=42)
+                X_train = X_trainval[train_indices]
+                X_valid = X_trainval[valid_indices]
+                y_train = y_trainval[train_indices]
+                y_valid = y_trainval[valid_indices]
 
-            if os.path.exists(X_train_file):
-                os.remove(X_train_file)
-            if os.path.exists(X_valid_file):
-                os.remove(X_valid_file)
-            if os.path.exists(y_train_file):
-                os.remove(y_train_file)
-            if os.path.exists(y_valid_file):
-                os.remove(y_valid_file)
+                # Count the class distribution for each set
+                train_class_counts = np.bincount(y_train[:, 0])
+                valid_class_counts = np.bincount(y_valid[:, 0])
+                test_class_counts = np.bincount(y_test[:, 0])
 
-            np.save(X_train_file, X_train)
-            np.save(X_valid_file, X_valid)
-            np.save(X_test_file, X_test)
-            np.save(y_train_file, y_train)
-            np.save(y_valid_file, y_valid)
-            np.save(y_test_file, y_test)
-        else:
-            # Load train and validation data
-            X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
-            y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
-            X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
-            y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
-            
-            self.num_feature = X_train.shape[2]
-            # Load full test data
-            X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
-            y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
-        # Create datasets and dataloaders for train and validation sets
-        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, 39)
-        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, 39)
-        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, 39)
-        self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
-        self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
-        self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+                print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+                print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+                print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
+
+                # Save train and validation data
+                X_train_file = './dataset/X_train_' + self.model_name + '.npy'
+                X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
+                X_test_file = './dataset/X_test_' + self.model_name + '.npy'
+                y_train_file = './dataset/y_train_' + self.model_name + '.npy'
+                y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
+                y_test_file = './dataset/y_test_' + self.model_name + '.npy'
+
+                if os.path.exists(X_train_file):
+                    os.remove(X_train_file)
+                if os.path.exists(X_valid_file):
+                    os.remove(X_valid_file)
+                if os.path.exists(y_train_file):
+                    os.remove(y_train_file)
+                if os.path.exists(y_valid_file):
+                    os.remove(y_valid_file)
+
+                np.save(X_train_file, X_train)
+                np.save(X_valid_file, X_valid)
+                np.save(X_test_file, X_test)
+                np.save(y_train_file, y_train)
+                np.save(y_valid_file, y_valid)
+                np.save(y_test_file, y_test)
+            else:
+                # Load train and validation data
+                X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
+                y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
+                X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
+                y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
+                
+                self.num_feature = X_train.shape[2]
+                # Load full test data
+                X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
+                y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
+            # Create datasets and dataloaders for train and validation sets
+            train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, 39)
+            valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, 39)
+            test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, 39)
+            self.train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
+            self.valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
+            self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
 
 
     def prepare_eval_data(self):
@@ -499,3 +499,368 @@ class Transformer_trainer(Trainer):
         except:
             lr = optimizer.param_groups[0]['lr']
         return epoch_loss, lr
+    
+    def grid_search(self):
+
+        best_cases = []
+        symbol_list = ["AAPL", "AMZN", "GOOGL", "MSFT","TSLA"]
+        output_size_list = [3, 7, 14]
+        for symbol in symbol_list:
+                for output_size in output_size_list:
+                    window_size = self.param_grid[symbol][output_size]["window_size"]
+                    data_mode_list = self.param_grid[symbol][output_size]["ensembled_model"]
+                    comb = ""
+
+                    for key, value in data_mode_list.items():
+                        if value != -1:
+                            comb += key + str(value) + "_"
+
+                    # Remove the trailing underscore
+                    comb = comb.rstrip("_")
+
+                    data_mode = 2
+
+                    for svm_drop_out in self.dropout_list['svm']:
+                            for random_forest_drop_out in self.dropout_list['random_forest']:
+                                for xgboost_drop_out in self.dropout_list['xgboost']:
+                                    for lstm_drop_out in self.dropout_list['lstm']:
+                                        for news_drop_out in self.dropout_list['news']:
+                                                train_dataloader, valid_dataloader, test_dataloader, balance_dataloader = self.prepare_gridsearch_data(symbol, data_mode, window_size, output_size, 500, new_data=True)
+                                                num_feature = train_dataloader.dataset.X.shape[-1]
+
+                                                model_name = f'{comb}_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                                print(model_name)
+                                                config = self.config
+                                                model_config = {
+                                                    "symbol": symbol,
+                                                    "nhead": 3,
+                                                    "num_encoder_layers": 20,
+                                                    "dim_feedforward": 20,
+                                                    "dropout": 0.5,
+                                                    "window_size": window_size,
+                                                    "output_step": output_size,
+                                                    "data_mode": data_mode,
+                                                    "topk": 10,
+                                                    "max_string_length": 500,
+                                                    "svm_drop_out_rate": svm_drop_out,
+                                                    "rfc_drop_out_rate": random_forest_drop_out,
+                                                    "xgboost_drop_out_rate": xgboost_drop_out,
+                                                    "lstm_drop_out_rate": lstm_drop_out,
+                                                    "news_drop_out_rate": news_drop_out,
+                                                    "ensembled_model": data_mode_list
+                                                }
+                                                config["model"] = model_config
+
+                                                model = Model(name=self.model_name, num_feature=num_feature, parameters=config,
+                                                                model_type=self.model_type,
+                                                                full_name=model_name)
+                                                model = self.grid_train(model, train_dataloader, valid_dataloader)
+                                                val_score = self.grid_eval(model, valid_dataloader)
+                                                test_score = self.grid_eval(model, test_dataloader)
+                                                balance_score = self.grid_eval(model, balance_dataloader)
+                                                result = {
+                                                    "symbol": symbol,
+                                                    "combination": comb,
+                                                    'output_size': output_size,
+                                                    'window_size': window_size,
+                                                    'data_mode': data_mode,
+                                                    "svm_drop_out_rate": svm_drop_out,
+                                                    "rfc_drop_out_rate": random_forest_drop_out,
+                                                    "xgboost_drop_out_rate": xgboost_drop_out,
+                                                    "lstm_drop_out_rate": lstm_drop_out,
+                                                    "news_drop_out_rate": news_drop_out,
+                                                    'val_score': val_score,
+                                                    "test_score": test_score,
+                                                    "balance_score": balance_score  
+                                                }
+
+                                                # Append the current result to best_cases
+                                                best_cases.append(result)
+
+        results_df = pd.DataFrame(best_cases)
+
+        # Sort the DataFrame by score in descending order
+        try:
+            results_df = results_df.sort_values(["output_size", "window_size", "data_mode", "test_score"], ascending=True)
+        except:
+            pass
+        # # Drop duplicates based on data_mode, window_size, and output_size, keeping the first occurrence (highest score)
+        # results_df = results_df.drop_duplicates(subset=['data_mode', 'window_size', 'output_size'], keep='first')
+
+        results_df.to_csv("ensemble_grid_search_results.csv", index=False)
+        return results_df
+    
+    def grid_train(self, model, train_dataloader, valid_dataloader):
+        self.mode = "train"
+        if "mse" in self.loss:
+            criterion = nn.MSELoss()
+        elif "mae" in self.loss:
+            criterion = nn.L1Loss()
+        elif "bce" in self.loss:
+            criterion = nn.BCELoss()
+        elif "focal" in self.loss:
+            criterion = FocalLoss(alpha=0.5, gamma=2)
+        if "adam" in self.optimizer:
+            optimizer = optim.Adam(model.structure.parameters(), lr=self.learning_rate,
+                                   weight_decay=self.weight_decay)
+        elif "sgd" in self.optimizer:
+            optimizer = optim.SGD(model.structure.parameters(), lr=self.learning_rate,
+                                  weight_decay=self.weight_decay)
+        scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1,
+                                      patience=self.scheduler_step_size, verbose=True)
+
+        model.structure.to(self.device)
+        if self.best_model:
+            best_loss = sys.float_info.max
+        else:
+            best_loss = sys.float_info.min
+
+        if self.early_stop:
+            stop = False
+        # Run train valid
+        if not self.full_data:
+            for epoch in range(self.num_epoch):
+                loss_train, lr_train = self.run_epoch(model, train_dataloader, optimizer, criterion,
+                                                      scheduler,
+                                                      is_training=True, device=self.device)
+                loss_val, lr_val = self.run_epoch(model, valid_dataloader, optimizer, criterion, scheduler,
+                                                  is_training=False, device=self.device)
+                # loss_test, lr_test = self.run_epoch(model, test_dataloader, optimizer, criterion, scheduler,
+                #                                     is_training=False, device=self.device)
+                scheduler.step(loss_val)
+                if self.best_model:
+                    if check_best_loss(best_loss=best_loss, loss=loss_val):
+                        best_loss = loss_val
+                        patient_count = 0
+                        model.train_stop_lr = lr_train
+                        model.train_stop_epoch = epoch
+
+                        model.state_dict = self.model.structure.state_dict()
+                        model.train_stop_epoch = epoch
+                        model.train_stop_lr = lr_train
+                        torch.save({"model": model,
+                                    "state_dict": model.structure.state_dict()
+                                    },
+                                   "./models/" + model.name + ".pth")
+                    else:
+                        if self.early_stop:
+                            stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss,
+                                                                              current_loss=loss_val,
+                                                                              patient_count=patient_count,
+                                                                              max_patient=self.patient)
+                else:
+                    model.state_dict = self.model.structure.state_dict()
+                    model.train_stop_epoch = epoch
+                    model.train_stop_lr = lr_train
+                    torch.save({"model": model,
+                                "state_dict": model.structure.state_dict()
+                                },
+                               "./models/" + model.name + ".pth")
+
+                print('Epoch[{}/{}] | loss train:{:.6f}, valid:{:.6f}| lr:{:.6f}'
+                      .format(epoch + 1, self.num_epoch, loss_train, loss_val, lr_train))
+                if stop:
+                    print("Early Stopped At Epoch: {}", epoch + 1)
+                    break
+        elif self.full_data:
+            combined_dataset = ConcatDataset([train_dataloader.dataset, valid_dataloader.dataset])
+
+            # Create a new data loader using the combined dataset
+            combined_dataset = DataLoader(combined_dataset, batch_size=32, shuffle=True)
+            for epoch in range(self.num_epoch):
+                loss_train, lr_train = self.run_epoch(model, combined_dataset, optimizer, criterion, scheduler,
+                                                      is_training=True, device=self.device)
+                scheduler.step(loss_train)
+                if self.best_model:
+                    if check_best_loss(best_loss=best_loss, loss=loss_train):
+                        best_loss = loss_train
+                        patient_count = 0
+                        model.train_stop_lr = lr_train
+                        model.train_stop_epoch = epoch
+
+                        model.state_dict = model.structure.state_dict()
+                        model.train_stop_epoch = epoch
+                        model.train_stop_lr = lr_train
+                        torch.save({"model": model,
+                                    "state_dict": model.structure.state_dict()
+                                    },
+                                   "./models/" + model.name + ".pth")
+                    else:
+                        if self.early_stop:
+                            stop, patient_count, best_loss, _ = is_early_stop(best_loss=best_loss,
+                                                                              current_loss=loss_train,
+                                                                              patient_count=patient_count,
+                                                                              max_patient=self.patient)
+                else:
+                    model.state_dict = model.structure.state_dict()
+                    model.train_stop_epoch = epoch
+                    model.train_stop_lr = lr_train
+                    torch.save({"model": model,
+                                "state_dict": model.structure.state_dict()
+                                },
+                               "./models/" + model.name + ".pth")
+
+                print('Epoch[{}/{}] | loss train:{:.6f}| lr:{:.6f}'
+                      .format(epoch + 1, self.num_epoch, loss_train, lr_train))
+
+                print("patient", patient_count)
+                if stop:
+                    print("Early Stopped At Epoch: {}", epoch + 1)
+                    break
+        return model
+    
+    def grid_eval(self, model, dataloader):
+        # Get the current date and time
+
+        model.structure.to(self.device)
+
+        if "accuracy" or "precision" or "f1" in self.evaluate:
+            # Create empty lists to store the true and predicted labels
+            true_labels = []
+            predicted_labels = []
+
+        target_list = torch.empty(0).to(self.device)
+        output_list = torch.empty(0).to(self.device)
+        # Iterate over the dataloader
+        for x_stock, x_news, labels in dataloader:
+            # Move inputs and labels to device
+            x_stock = x_stock.to(self.device)
+            x_news = x_news.to(self.device)
+            labels = labels.to(self.device)
+            # Forward pass
+            outputs = model.structure(x_stock, x_news)
+            target_list = torch.cat([target_list, labels], dim=0)
+            output_list = torch.cat([output_list, outputs], dim=0)
+            if "accuracy" in self.evaluate:
+                predicted = (outputs > 0.5).float()
+                # Append true and predicted labels to the respective lists
+                true_labels.extend(labels.cpu().detach().numpy())
+                predicted_labels.extend(predicted.cpu().detach().numpy())
+
+        if "accuracy" in self.evaluate:
+            # Compute classification report
+            target_names = ["DOWN", "UP"]  # Add target class names here
+            accuracy = accuracy_score(true_labels, predicted_labels)
+
+        return accuracy
+    
+    def prepare_gridsearch_data(self, symbol, data_mode, window_size, output_step, string_length, new_data):
+
+        model_name = f'{self.model_type}_{symbol}_w{window_size}_o{output_step}_d{str(data_mode)}'
+        file_paths = [
+            './dataset/X_train_' + model_name + '.npy',
+            './dataset/y_train_' + model_name + '.npy',
+            './dataset/X_valid_' + model_name + '.npy',
+            './dataset/y_valid_' + model_name + '.npy',
+            './dataset/X_test_' + model_name + '.npy',
+            './dataset/y_test_' + model_name + '.npy',
+            './dataset/X_balance_test_' + model_name + '.npy',
+            './dataset/y_balance_test_' + model_name + '.npy'
+        ]
+        if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
+            df = u.prepare_stock_dataframe(symbol, window_size, self.start, self.end, False)
+            num_data_points = df.shape[0]
+            data_date = df.index.strftime("%Y-%m-%d").tolist()
+
+            # Split train-val and test dataframes
+            trainval_test_split_index = int(num_data_points * self.cf["data"]["train_test_split_size"])
+            trainval_df = df.iloc[:trainval_test_split_index]
+            test_df = df.iloc[trainval_test_split_index:]
+            print("Train date from: " + trainval_df.index[0].strftime("%Y-%m-%d") + " to " + trainval_df.index[-1].strftime("%Y-%m-%d"))
+            print("Test from: " + test_df.index[0].strftime("%Y-%m-%d") + " to " + test_df.index[-1].strftime("%Y-%m-%d"))
+
+
+            # Prepare X data for train-val dataframe
+            X_trainval, y_trainval = u.prepare_timeseries_dataset(trainval_df.to_numpy(), window_size=window_size,
+                                                                output_step=output_step, dilation=1)
+            dataset_slicing = X_trainval.shape[2]
+
+            # Prepare X data for test dataframe
+            X_test, y_test = u.prepare_timeseries_dataset(test_df.to_numpy(), window_size=window_size,
+                                                        output_step=output_step, dilation=1)
+            if data_mode == 2:
+                news_X_trainval, _ = nlp_u.prepare_splited_news_data(trainval_df, symbol, window_size, self.start, self.end,
+                                                            output_step, self.topk, string_length, True, False)
+                X_trainval = np.concatenate((X_trainval, news_X_trainval), axis=2)
+                news_X_test, _ = nlp_u.prepare_splited_news_data(test_df, symbol, window_size, self.start, self.end,
+                                                            output_step, self.topk, string_length, False, False)
+                X_test = np.concatenate((X_test, news_X_test), axis=2)
+            self.num_feature = X_trainval.shape[2]
+            # Concatenate X_stocks and news_X
+
+
+            # Split X and y into train and validation datasets
+            train_indices, valid_indices = train_test_split(range(X_trainval.shape[0]), test_size=1 - self.cf["data"]["train_val_split_size"], shuffle=True, random_state=42)
+            X_train = X_trainval[train_indices]
+            X_valid = X_trainval[valid_indices]
+            y_train = y_trainval[train_indices]
+            y_valid = y_trainval[valid_indices]
+
+            class_0_indices = np.where(y_test == 0)[0]
+            class_1_indices = np.where(y_test == 1)[0]
+            min_class_count = min(len(class_0_indices), len(class_1_indices))
+            balanced_indices = np.concatenate([class_0_indices[:min_class_count], class_1_indices[:min_class_count]])
+            X_test_balanced = X_test[balanced_indices]
+            y_test_balanced = y_test[balanced_indices]
+
+            # Count the class distribution for each set
+            train_class_counts = np.bincount(y_train[:, 0])
+            valid_class_counts = np.bincount(y_valid[:, 0])
+            test_class_counts = np.bincount(y_test[:, 0])
+            test_balanced_class_counts = np.bincount(y_test_balanced[:, 0])
+
+            print("Train set - Class 0 count:", train_class_counts[0], ", Class 1 count:", train_class_counts[1])
+            print("Validation set - Class 0 count:", valid_class_counts[0], ", Class 1 count:", valid_class_counts[1])
+            print("Test set - Class 0 count:", test_class_counts[0], ", Class 1 count:", test_class_counts[1])
+            print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:",
+                test_balanced_class_counts[1])
+            # Save train and validation data
+            X_train_file = './dataset/X_train_' + model_name + '.npy'
+            X_valid_file = './dataset/X_valid_' + model_name + '.npy'
+            X_test_file = './dataset/X_test_' + model_name + '.npy'
+            
+            y_train_file = './dataset/y_train_' + model_name + '.npy'
+            y_valid_file = './dataset/y_valid_' + model_name + '.npy'
+            y_test_file = './dataset/y_test_' + model_name + '.npy'
+            X_balance_test_file = './dataset/X_balance_test_' + model_name + '.npy'
+            y_balance_test_file = './dataset/y_balance_test_' + model_name + '.npy'
+            # if os.path.exists(X_train_file):
+            #     os.remove(X_train_file)
+            # if os.path.exists(X_valid_file):
+            #     os.remove(X_valid_file)
+            # if os.path.exists(y_train_file):
+            #     os.remove(y_train_file)
+            # if os.path.exists(y_valid_file):
+            #     os.remove(y_valid_file)
+
+            np.save(X_train_file, X_train)
+            np.save(X_valid_file, X_valid)
+            np.save(X_test_file, X_test)
+            np.save(X_balance_test_file, X_test_balanced)
+            np.save(y_train_file, y_train)
+            np.save(y_valid_file, y_valid)
+            np.save(y_test_file, y_test)
+            np.save(y_balance_test_file, y_test_balanced)
+        else:
+            # Load train and validation data
+            X_train = np.load('./dataset/X_train_' + model_name + '.npy', allow_pickle=True)
+            y_train = np.load('./dataset/y_train_' + model_name + '.npy', allow_pickle=True)
+            X_valid = np.load('./dataset/X_valid_' + model_name + '.npy', allow_pickle=True)
+            y_valid = np.load('./dataset/y_valid_' + model_name + '.npy', allow_pickle=True)
+            
+            self.num_feature = X_train.shape[2]
+            # Load full test data
+            X_test = np.load('./dataset/X_test_' + model_name + '.npy', allow_pickle=True)
+            y_test = np.load('./dataset/y_test_' + model_name + '.npy', allow_pickle=True)
+        # Create datasets and dataloaders for train and validation sets
+        train_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_train, y_train, 39)
+        valid_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_valid, y_valid, 39)
+        test_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test, y_test, 39)
+        test_balanced_dataset = PriceAndIndicatorsAndNews_TimeseriesDataset(X_test_balanced, y_test_balanced, 39)
+        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=self.train_shuffle)
+        valid_dataloader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=self.val_shuffle)
+        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
+        # Create dataloaders for train, validation, full test, and balanced test
+        test_balanced_dataloader = DataLoader(test_balanced_dataset, batch_size=self.batch_size,
+                                                shuffle=self.test_shuffle)
+        return train_dataloader, valid_dataloader, test_dataloader, test_balanced_dataloader

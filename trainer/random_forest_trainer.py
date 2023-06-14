@@ -275,7 +275,7 @@ class random_forest_trainer(Trainer):
                                                 X_val_w = X_val
                                                 y_train_o = y_train
                                                 y_val_o = y_val
-                                                model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                                model_name = f'random_forest_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
                                                 config = self.config
                                                 model_config = {
                                                     'n_estimators': n_estimators,  # Number of trees in the forest
@@ -353,7 +353,7 @@ class random_forest_trainer(Trainer):
                                             X_val_w = X_val
                                             y_train_o = y_train
                                             y_val_o = y_val
-                                            model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                            model_name = f'random_forest_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
                                             config = self.config
                                             model_config = {
                                                 'n_estimators': n_estimators,  # Number of trees in the forest

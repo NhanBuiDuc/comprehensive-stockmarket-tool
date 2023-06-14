@@ -109,7 +109,7 @@ config = {
             3: "assembler",
             4: "lstm",
             5: "gru",
-            6: "transformer",
+            6: "ensembler",
             7: "pred_price_LSTM",
     },
     "tensorflow_timeseries_model_type_dict": {

@@ -304,7 +304,7 @@ chart = {
     let object = this;
 
     object
-      .getData("prediction2.json")
+      .getData("prediction.json")
       .then(function (data) {
         let dataSymbol = data[`${value}`];
         callback(dataSymbol);

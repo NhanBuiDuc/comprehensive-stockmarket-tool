@@ -387,7 +387,7 @@ class xgboost_trainer(Trainer):
                                                     X_val_w = X_val
                                                     y_train_o = y_train
                                                     y_val_o = y_val
-                                                    model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                                    model_name = f'xgboost_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
                                                     config = self.config
                                                     model_config = {
                                                         "symbol": symbol,
@@ -465,7 +465,7 @@ class xgboost_trainer(Trainer):
                                                         y_test = test_dataloader.dataset.Y
                                                         y_balance_test = balance_dataloader.dataset.Y
                                                         num_feature = X_train.shape[-1]
-                                                    model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                                    model_name = f'xgboost_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
                                                     config = self.config
                                                     model_config = {
                                                         "symbol": symbol,
