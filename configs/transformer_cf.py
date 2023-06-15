@@ -4,7 +4,7 @@ transformer_cf = {
         "nhead": 3,
         "num_encoder_layers": 20,
         "dim_feedforward": 20,
-        "dropout": 0.5,
+        "drop_out": 0.5,
         "window_size": 14,
         "output_step": 3,
         "data_mode":2,
@@ -43,6 +43,7 @@ transformer_cf = {
         "test_shuffle": True,
         "weight_decay": 0.001,
         'param_grid': {
+            "drop_out": [0, 0.2, 0.5],
             "AAPL":{
                 3: {
                     'window_size': 3,
@@ -205,11 +206,11 @@ transformer_cf = {
             },
         },
         "dropout_list":{
-            "svm": [0, 0.2, 0,5, 0.8],
-            "random_forest":  [0, 0.2, 0,5, 0.8],
-            "xgboost":  [0, 0.2, 0,5, 0.8], 
-            "lstm":  [0, 0.2, 0,5, 0.8],
-            "news":  [0, 0.2, 0,5, 0.8]
+            "svm": [0, 0.2, 0,5],
+            "random_forest":  [0, 0.2, 0,5],
+            "xgboost":  [0, 0.2, 0,5], 
+            "lstm":  [0, 0.2, 0,5],
+            "news":  [0, 0.2, 0,5]
         },
     }
 }

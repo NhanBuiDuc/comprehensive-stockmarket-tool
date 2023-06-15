@@ -381,54 +381,39 @@ class TransformerClassifier(nn.Module):
         super().__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
-        self.stock_transformer = nn.Transformer(d_model=39, nhead=13,
-                                                num_encoder_layers=self.num_encoder_layers,
-                                                dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-        # Define LSTM parameters
-        self.hidden_size = 128
-        self.num_layers = 2
-        self.news_transformer = nn.Transformer(d_model=768, nhead=64,
-                                               num_encoder_layers=self.num_encoder_layers,
-                                               dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-
-
         model_list = self.ensembled_model
-        number_of_feature = 0
+        self.number_of_feature = 0
         if model_list["svm"] != -1:
             svm = Model()
             data_mode = model_list["svm"]
             model_name = f'svm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
             self.svm = svm.load_check_point("svm", model_name)
-            self.svm_drop_out = nn.Dropout(self.svm_drop_out_rate)
-            number_of_feature += 1
+            self.number_of_feature += 1
         if model_list["random_forest"] != -1:
             rfc = Model()
             data_mode = model_list["random_forest"]
             model_name = f'random_forest_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
             self.rfc = rfc.load_check_point("random_forest", model_name)
-            self.rfc_drop_out = nn.Dropout(self.rfc_drop_out_rate)
-            number_of_feature += 1
+            self.number_of_feature += 1
         if model_list["xgboost"] != -1:
             xgboost = Model()
             data_mode = model_list["xgboost"]
             model_name = f'xgboost_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
             self.xgboost = xgboost.load_check_point("xgboost", model_name)
-            self.xgboost_drop_out = nn.Dropout(self.xgboost_drop_out_rate)
-            number_of_feature += 1
+            self.number_of_feature += 1
         if model_list["lstm"] != -1:
             lstm = Model()
             data_mode = model_list["lstm"]
             model_name = f'lstm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
             self.lstm = lstm.load_check_point("lstm", model_name).structure
-            self.lstm_drop_out = nn.Dropout(self.lstm_drop_out_rate)
-            number_of_feature += 1
+            self.number_of_feature += 1
         if model_list["news"] != -1:
             self.news_fc = nn.Linear(768 * self.window_size, 1)
-            number_of_feature += 1
-            self.news_drop_out = nn.Dropout(self.news_drop_out_rate)
-        self.final_fc = nn.Linear(number_of_feature, 1)
+            self.number_of_feature += 1
+            
+        self.final_fc = nn.Linear(self.number_of_feature, 1)
         self.tanh = nn.Tanh()
-        self.drop_out = nn.Dropout(self.dropout)
+        self.drop_out = nn.Dropout(self.drop_out)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x_stock, x_news):
@@ -463,28 +448,29 @@ class TransformerClassifier(nn.Module):
 
         outputs = []
         if model_list["svm"] != -1:
-            svm_pred = self.svm_drop_out(svm_pred)
-            outputs.append(svm_pred)
+            svm_pred = self.drop_out(svm_pred)
+            outputs.append(svm_pred.cpu().detach().numpy())
 
         if model_list["random_forest"] != -1:
-            rfc_pred = self.rfc_drop_out(rfc_pred)
-            outputs.append(rfc_pred)
+            rfc_pred = self.drop_out(rfc_pred)
+            outputs.append(rfc_pred.cpu().detach().numpy())
 
         if model_list["xgboost"] != -1:
-            xgboost_pred = self.xgboost_drop_out(xgboost_pred)
-            outputs.append(xgboost_pred)
+            xgboost_pred = self.drop_out(xgboost_pred.float().to(torch.float32))
+            outputs.append(xgboost_pred.cpu().detach().numpy())
 
         if model_list["lstm"] != -1:
-            lstm_pred = self.lstm_drop_out(lstm_pred)
-            outputs.append(lstm_pred)
+            lstm_pred = self.drop_out(lstm_pred)
+            outputs.append(lstm_pred.cpu().detach().numpy())
         if model_list["news"] != -1:
             x_news = x_news.view(batch, -1)
             x_news = self.news_fc(x_news)
-            x_news = self.news_drop_out(x_news)
-            outputs.append(lstm_pred)
+            x_news = self.drop_out(x_news)
+            outputs.append(x_news.cpu().detach().numpy())
 
         if outputs:
-            outputs = np.array(outputs)[:, np.newaxis]
+            # outputs = [tensor.cpu().detach().numpy() for tensor in outputs]
+            outputs = np.concatenate(outputs, axis=1)
             x = torch.tensor(outputs, dtype=torch.float32).to("cuda")
             x = self.final_fc(x)
             x = self.sigmoid(x)          

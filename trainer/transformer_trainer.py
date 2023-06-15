@@ -24,6 +24,7 @@ from sklearn.model_selection import TimeSeriesSplit, StratifiedShuffleSplit
 from loss import FocalLoss
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from itertools import combinations
 class Transformer_trainer(Trainer):
     def __init__(self, new_data=True, full_data=False, mode="train"):
         super(Transformer_trainer, self).__init__()
@@ -500,82 +501,88 @@ class Transformer_trainer(Trainer):
             lr = optimizer.param_groups[0]['lr']
         return epoch_loss, lr
     
+
     def grid_search(self):
 
         best_cases = []
         symbol_list = ["AAPL", "AMZN", "GOOGL", "MSFT","TSLA"]
         output_size_list = [3, 7, 14]
+        
+        data_mode = 2
         for symbol in symbol_list:
                 for output_size in output_size_list:
                     window_size = self.param_grid[symbol][output_size]["window_size"]
-                    data_mode_list = self.param_grid[symbol][output_size]["ensembled_model"]
-                    comb = ""
+                    original_ensembled_model = self.param_grid[symbol][output_size]["ensembled_model"]
 
-                    for key, value in data_mode_list.items():
-                        if value != -1:
-                            comb += key + str(value) + "_"
+                    keys = list(original_ensembled_model.keys())
 
-                    # Remove the trailing underscore
-                    comb = comb.rstrip("_")
+                    combinations_list = []
+                    for r in range(2, len(keys) + 1):
+                        combinations_list.extend(combinations(keys, r))
 
-                    data_mode = 2
+                    for combination in combinations_list:
+                        new_ensembled_model = original_ensembled_model.copy()
+                        for word in keys:
+                            if word not in combination:
+                                new_ensembled_model[word] = -1
 
-                    for svm_drop_out in self.dropout_list['svm']:
-                            for random_forest_drop_out in self.dropout_list['random_forest']:
-                                for xgboost_drop_out in self.dropout_list['xgboost']:
-                                    for lstm_drop_out in self.dropout_list['lstm']:
-                                        for news_drop_out in self.dropout_list['news']:
-                                                train_dataloader, valid_dataloader, test_dataloader, balance_dataloader = self.prepare_gridsearch_data(symbol, data_mode, window_size, output_size, 500, new_data=True)
-                                                num_feature = train_dataloader.dataset.X.shape[-1]
+                        if list(new_ensembled_model.values()).count(-1) <= 3:
+                            print(new_ensembled_model)
 
-                                                model_name = f'{comb}_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
-                                                print(model_name)
-                                                config = self.config
-                                                model_config = {
-                                                    "symbol": symbol,
-                                                    "nhead": 3,
-                                                    "num_encoder_layers": 20,
-                                                    "dim_feedforward": 20,
-                                                    "dropout": 0.5,
-                                                    "window_size": window_size,
-                                                    "output_step": output_size,
-                                                    "data_mode": data_mode,
-                                                    "topk": 10,
-                                                    "max_string_length": 500,
-                                                    "svm_drop_out_rate": svm_drop_out,
-                                                    "rfc_drop_out_rate": random_forest_drop_out,
-                                                    "xgboost_drop_out_rate": xgboost_drop_out,
-                                                    "lstm_drop_out_rate": lstm_drop_out,
-                                                    "news_drop_out_rate": news_drop_out,
-                                                    "ensembled_model": data_mode_list
-                                                }
-                                                config["model"] = model_config
+                            comb = ""
 
-                                                model = Model(name=self.model_name, num_feature=num_feature, parameters=config,
-                                                                model_type=self.model_type,
-                                                                full_name=model_name)
-                                                model = self.grid_train(model, train_dataloader, valid_dataloader)
-                                                val_score = self.grid_eval(model, valid_dataloader)
-                                                test_score = self.grid_eval(model, test_dataloader)
-                                                balance_score = self.grid_eval(model, balance_dataloader)
-                                                result = {
-                                                    "symbol": symbol,
-                                                    "combination": comb,
-                                                    'output_size': output_size,
-                                                    'window_size': window_size,
-                                                    'data_mode': data_mode,
-                                                    "svm_drop_out_rate": svm_drop_out,
-                                                    "rfc_drop_out_rate": random_forest_drop_out,
-                                                    "xgboost_drop_out_rate": xgboost_drop_out,
-                                                    "lstm_drop_out_rate": lstm_drop_out,
-                                                    "news_drop_out_rate": news_drop_out,
-                                                    'val_score': val_score,
-                                                    "test_score": test_score,
-                                                    "balance_score": balance_score  
-                                                }
+                            for key, value in new_ensembled_model.items():
+                                if value != -1:
+                                    comb += key + str(value) + "_"
 
-                                                # Append the current result to best_cases
-                                                best_cases.append(result)
+                            # Remove the trailing underscore
+                            comb = comb.rstrip("_")
+                            print(comb)
+
+                            for drop_out in self.param_grid['drop_out']:
+                                train_dataloader, valid_dataloader, test_dataloader, balance_dataloader = self.prepare_gridsearch_data(symbol, data_mode, window_size, output_size, 500, new_data=True)
+                                num_feature = train_dataloader.dataset.X.shape[-1]
+
+                                model_name = f'{comb}_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                print(model_name)
+                                config = self.config
+                                model_config = {
+                                    "symbol": symbol,
+                                    "nhead": 3,
+                                    "num_encoder_layers": 20,
+                                    "dim_feedforward": 20,
+                                    "dropout": 0.5,
+                                    "window_size": window_size,
+                                    "output_step": output_size,
+                                    "data_mode": data_mode,
+                                    "topk": 10,
+                                    "max_string_length": 500,
+                                    "drop_out": drop_out,
+                                    "ensembled_model": new_ensembled_model
+                                }
+                                config["model"] = model_config
+
+                                model = Model(name=self.model_name, num_feature=num_feature, parameters=config,
+                                                model_type=self.model_type,
+                                                full_name=model_name)
+                                model = self.grid_train(model, train_dataloader, valid_dataloader)
+                                val_score = self.grid_eval(model, valid_dataloader)
+                                test_score = self.grid_eval(model, test_dataloader)
+                                balance_score = self.grid_eval(model, balance_dataloader)
+                                result = {
+                                    "symbol": symbol,
+                                    "combination": comb,
+                                    'output_size': output_size,
+                                    'window_size': window_size,
+                                    'data_mode': data_mode,
+                                    "drop_out": drop_out,
+                                    'val_score': val_score,
+                                    "test_score": test_score,
+                                    "balance_score": balance_score  
+                                }
+
+                                # Append the current result to best_cases
+                                best_cases.append(result)
 
         results_df = pd.DataFrame(best_cases)
 

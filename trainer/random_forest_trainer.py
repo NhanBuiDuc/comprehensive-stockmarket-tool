@@ -259,7 +259,6 @@ class random_forest_trainer(Trainer):
                                         for criterion in self.param_grid["criterion"]:
                                             for max_depth in self.param_grid['max_depth']:
                                                 train_dataloader, valid_dataloader, test_dataloader, balance_dataloader = self.prepare_gridsearch_data(symbol, data_mode, window_size, output_size, string_length, new_data=True)
-
                                                 X_train = train_dataloader.dataset.X
                                                 X_val = valid_dataloader.dataset.X
                                                 X_test = test_dataloader.dataset.X
