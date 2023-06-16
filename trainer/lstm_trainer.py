@@ -508,8 +508,8 @@ class lstm_trainer(Trainer):
                                                 model = Model(name=model_name, num_feature=num_feature, parameters=config,
                                                                 model_type=self.model_type,
                                                                 full_name=model_name)
-                                                model = self.grid_train(model, train_dataloader)
-                                                train_score = self.grid_eval(model, valid_dataloader)
+                                                model = self.grid_train(model, train_dataloader, valid_dataloader)
+                                                train_score = self.grid_eval(model, train_dataloader)
                                                 val_score = self.grid_eval(model, valid_dataloader)
                                                 test_score = self.grid_eval(model, test_dataloader)
                                                 balance_score = self.grid_eval(model, balance_dataloader)
@@ -567,7 +567,7 @@ class lstm_trainer(Trainer):
                                                             model_type=self.model_type,
                                                             full_name=model_name)
                                             model = self.grid_train(model, train_dataloader, valid_dataloader)
-                                            train_score = self.grid_eval(model, valid_dataloader)
+                                            train_score = self.grid_eval(model, train_dataloader)
                                             val_score = self.grid_eval(model, valid_dataloader)
                                             test_score = self.grid_eval(model, test_dataloader)
                                             balance_score = self.grid_eval(model, balance_dataloader)

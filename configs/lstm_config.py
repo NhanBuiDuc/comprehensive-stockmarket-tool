@@ -32,7 +32,7 @@ lstm_cf = {
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
         "batch_size": 64,
-        "num_epoch": 100,
+        "num_epoch": 50,
         "learning_rate": 0.001,
         "loss": "bce",
         "evaluate": ["bce", "accuracy", "precision", "f1"],

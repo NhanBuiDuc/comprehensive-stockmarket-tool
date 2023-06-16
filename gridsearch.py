@@ -16,12 +16,12 @@ from configs.config import config
 # model = trainer.grid_search()
 
 # # # ### xgboost
-# trainer = xgboost_tn(new_data=False, full_data=False, mode = "train")
-# model = trainer.grid_search()
+trainer = xgboost_tn(new_data=False, full_data=False, mode = "train")
+model = trainer.grid_search()
 
 ##LSTM
-trainer = lstm_tn(new_data=False, full_data=False, mode = "train")
-model = trainer.grid_search()
+# trainer = lstm_tn(new_data=False, full_data=False, mode = "train")
+# model = trainer.grid_search()
 
 # Ensembler
 # trainer = ttn(new_data=False, full_data=False, mode = "train")

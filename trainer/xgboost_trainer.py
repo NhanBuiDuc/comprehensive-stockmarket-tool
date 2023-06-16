@@ -607,24 +607,24 @@ class xgboost_trainer(Trainer):
                 test_full_class_counts[1])
             print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:",
                 test_balanced_class_counts[1])
-            if os.path.exists(X_train_file):
-                os.remove(X_train_file)
-                np.save(X_train_file, X_train)
-            if os.path.exists(X_valid_file):
-                os.remove(X_valid_file)
-                np.save(X_valid_file, X_valid)
-            if os.path.exists(X_test_file):
-                os.remove(X_test_file)
-                np.save(X_test_file, X_test)
-            if os.path.exists(y_train_file):
-                os.remove(y_train_file)
-                np.save(y_train_file, y_train)
-            if os.path.exists(y_valid_file):
-                os.remove(y_valid_file)
-                np.save(y_valid_file, y_valid)
-            if os.path.exists(y_test_file):
-                os.remove(y_test_file)
-                np.save(y_test_file, y_test)
+            # if os.path.exists(X_train_file):
+            #     os.remove(X_train_file)
+            #     np.save(X_train_file, X_train)
+            # if os.path.exists(X_valid_file):
+            #     os.remove(X_valid_file)
+            #     np.save(X_valid_file, X_valid)
+            # if os.path.exists(X_test_file):
+            #     os.remove(X_test_file)
+            #     np.save(X_test_file, X_test)
+            # if os.path.exists(y_train_file):
+            #     os.remove(y_train_file)
+            #     np.save(y_train_file, y_train)
+            # if os.path.exists(y_valid_file):
+            #     os.remove(y_valid_file)
+            #     np.save(y_valid_file, y_valid)
+            # if os.path.exists(y_test_file):
+            #     os.remove(y_test_file)
+            #     np.save(y_test_file, y_test)
         else:
             # Load train and validation data
             X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
