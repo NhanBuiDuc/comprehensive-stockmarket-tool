@@ -274,7 +274,7 @@ def prepare_news_data(stock_df, symbol, window_size, from_date, to_date, output_
     file_name = f'./dataset/news_{symbol}_w{window_size}_l{max_string_length}.npy'
     if new_data == True:
         model_name = "ProsusAI/finbert"
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name) #### 
         sentence_model = SentenceTransformer(model_name)
         file_path = './NLP/news_data/' + symbol + "/" + symbol + "_" + "data.csv"
         news_query_folder = "./NLP/news_query"

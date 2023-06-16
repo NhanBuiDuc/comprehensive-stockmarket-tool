@@ -573,12 +573,14 @@ class xgb_classifier:
         super().__init__()
         self.__dict__.update(param)
         self.xgb_model = xgb.XGBClassifier(
-            n_estimators=self.n_estimators,  # Number of trees in the ensemble
-            objective=self.objective,  # Objective function for binary classification
+            n_estimators = self.n_estimators,  # Number of trees in the ensemble
+            objective = self.objective,  # Objective function for binary classification
             max_depth=self.max_depth,  # Maximum depth of each tree
-            learning_rate=self.learning_rate,  # Learning rate (step size shrinkage)
+            # Learning rate (step size shrinkage)
+            learning_rate=self.learning_rate,
             subsample=self.subsample,  # Subsample ratio of the training instances
-            colsample_bytree=self.colsample_bytree,  # Subsample ratio of columns when constructing each tree
+            # Subsample ratio of columns when constructing each tree
+            colsample_bytree=self.colsample_bytree,
             reg_alpha=self.reg_alpha,  # L1 regularization term on weights
             reg_lambda=self.reg_lambda,  # L2 regularization term on weights
             random_state=self.random_state  # Random seed for reproducibility
