@@ -505,7 +505,8 @@ class Transformer_trainer(Trainer):
     def grid_search(self):
 
         best_cases = []
-        symbol_list = ["AAPL", "AMZN", "GOOGL", "MSFT","TSLA"]
+        # symbol_list = ["AAPL", "AMZN", "GOOGL", "MSFT","TSLA"]
+        symbol_list = ["AAPL"]
         output_size_list = [3, 7, 14]
         
         data_mode = 2
@@ -584,18 +585,18 @@ class Transformer_trainer(Trainer):
                                 # Append the current result to best_cases
                                 best_cases.append(result)
 
-        results_df = pd.DataFrame(best_cases)
+                                results_df = pd.DataFrame(best_cases)
 
-        # Sort the DataFrame by score in descending order
-        try:
-            results_df = results_df.sort_values(["output_size", "window_size", "data_mode", "test_score"], ascending=True)
-        except:
-            pass
-        # # Drop duplicates based on data_mode, window_size, and output_size, keeping the first occurrence (highest score)
-        # results_df = results_df.drop_duplicates(subset=['data_mode', 'window_size', 'output_size'], keep='first')
+                                # Sort the DataFrame by score in descending order
+                                try:
+                                    results_df = results_df.sort_values(["output_size", "window_size", "data_mode", "test_score"], ascending=True)
+                                except:
+                                    pass
+                                # # Drop duplicates based on data_mode, window_size, and output_size, keeping the first occurrence (highest score)
+                                # results_df = results_df.drop_duplicates(subset=['data_mode', 'window_size', 'output_size'], keep='first')
 
-        results_df.to_csv("ensemble_grid_search_results.csv", index=False)
-        return results_df
+                                results_df.to_csv(f"{symbol}_grid_search_results.csv", index=False)
+
     
     def grid_train(self, model, train_dataloader, valid_dataloader):
         self.mode = "train"

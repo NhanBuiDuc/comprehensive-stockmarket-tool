@@ -27,7 +27,7 @@ transformer_cf = {
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
         "batch_size": 64,
-        "num_epoch": 100,
+        "num_epoch": 50,
         "learning_rate": 0.001,
         "loss": "focal",
         "evaluate": ["bce", "accuracy", "precision", "f1"],
@@ -46,31 +46,31 @@ transformer_cf = {
             "drop_out": [0, 0.2, 0.5],
             "AAPL":{
                 3: {
-                    'window_size': 3,
+                    'window_size': 14,
                     "ensembled_model": {
-                        "svm": 0,
-                        "random_forest": 1,
-                        "xgboost": 2, 
-                        "lstm": 2,
-                        "news": 0
+                        "random_forest": 2,
+                        "svm": 2,
+                        "xgboost": 2,
+                        "lstm": 1,
+                        "news": 2
                     },
                 },
                 7: {
-                    'window_size': 3,
+                    'window_size': 7,
                     "ensembled_model": {
-                        "svm": 0,
                         "random_forest": 1,
-                        "xgboost": 2, 
+                        "svm": 0,
+                        "xgboost": 1, 
                         "lstm": 2,
-                        "news": 0
+                        "news": 2
                     },
                 },
                 14: {
                     'window_size': 3,
                     "ensembled_model": {
-                        "svm": 0,
-                        "random_forest": 1,
-                        "xgboost": 2, 
+                        "random_forests": 0,
+                        "svm": 1,
+                        "xgboost": 1, 
                         "lstm": 2,
                         "news": 0
                     },

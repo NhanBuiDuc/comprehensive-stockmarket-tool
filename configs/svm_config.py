@@ -6,12 +6,12 @@ svm_cf = {
         "gamma": "scale",
         "coef0": 100,
         "class_weight": {0: 0.5, 1: 0.5},
-        "window_size": 3,
+        "window_size": 14,
         "output_step": 3,
         "data_mode": 2,
         "topk": 10,
         "symbol": "AAPL",
-        "max_string_length": 500,
+        "max_string_length": 10000,
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
