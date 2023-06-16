@@ -504,13 +504,14 @@ class Transformer_trainer(Trainer):
 
     def grid_search(self):
 
-        best_cases = []
+
         # symbol_list = ["AAPL", "AMZN", "GOOGL", "MSFT","TSLA"]
         symbol_list = ["AAPL"]
         output_size_list = [3, 7, 14]
         
         data_mode = 2
         for symbol in symbol_list:
+                best_cases = []
                 for output_size in output_size_list:
                     window_size = self.param_grid[symbol][output_size]["window_size"]
                     original_ensembled_model = self.param_grid[symbol][output_size]["ensembled_model"]
@@ -585,18 +586,17 @@ class Transformer_trainer(Trainer):
                                 # Append the current result to best_cases
                                 best_cases.append(result)
 
-                                results_df = pd.DataFrame(best_cases)
+                results_df = pd.DataFrame(best_cases)
 
-                                # Sort the DataFrame by score in descending order
-                                try:
-                                    results_df = results_df.sort_values(["output_size", "window_size", "data_mode", "test_score"], ascending=True)
-                                except:
-                                    pass
-                                # # Drop duplicates based on data_mode, window_size, and output_size, keeping the first occurrence (highest score)
-                                # results_df = results_df.drop_duplicates(subset=['data_mode', 'window_size', 'output_size'], keep='first')
+                # Sort the DataFrame by score in descending order
+                try:
+                    results_df = results_df.sort_values(["output_size", "window_size", "data_mode", "test_score"], ascending=True)
+                except:
+                    pass
+                # # Drop duplicates based on data_mode, window_size, and output_size, keeping the first occurrence (highest score)
+                # results_df = results_df.drop_duplicates(subset=['data_mode', 'window_size', 'output_size'], keep='first')
 
-                                results_df.to_csv(f"{symbol}_grid_search_results.csv", index=False)
-
+                results_df.to_csv(f"{symbol}_ensemble_grid_search_results.csv", index=False)
     
     def grid_train(self, model, train_dataloader, valid_dataloader):
         self.mode = "train"
@@ -841,14 +841,14 @@ class Transformer_trainer(Trainer):
             # if os.path.exists(y_valid_file):
             #     os.remove(y_valid_file)
 
-            np.save(X_train_file, X_train)
-            np.save(X_valid_file, X_valid)
-            np.save(X_test_file, X_test)
-            np.save(X_balance_test_file, X_test_balanced)
-            np.save(y_train_file, y_train)
-            np.save(y_valid_file, y_valid)
-            np.save(y_test_file, y_test)
-            np.save(y_balance_test_file, y_test_balanced)
+            # np.save(X_train_file, X_train)
+            # np.save(X_valid_file, X_valid)
+            # np.save(X_test_file, X_test)
+            # np.save(X_balance_test_file, X_test_balanced)
+            # np.save(y_train_file, y_train)
+            # np.save(y_valid_file, y_valid)
+            # np.save(y_test_file, y_test)
+            # np.save(y_balance_test_file, y_test_balanced)
         else:
             # Load train and validation data
             X_train = np.load('./dataset/X_train_' + model_name + '.npy', allow_pickle=True)
