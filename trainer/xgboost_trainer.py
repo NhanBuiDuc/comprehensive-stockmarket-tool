@@ -413,10 +413,7 @@ class xgboost_trainer(Trainer):
                                                                     full_name=model_name)
                                                     
                                                     model.structure.fit(X_train_w, y_train_o)
-                                                    torch.save({"model": model,
-                                                            "state_dict": []
-                                                            },
-                                                        "./models/" + model.name + ".pkl")
+                                                    train_score = model.structure.score(X_train_w, y_train_o)
                                                     val_score = model.structure.score(X_val_w, y_val_o)
                                                     test_score = model.structure.score(X_test, y_test)
                                                     balance_score = model.structure.score(X_balance_test, y_balance_test)
@@ -432,6 +429,7 @@ class xgboost_trainer(Trainer):
                                                         'subsample': subsample,
                                                         'colsample_bytree': 0.5,
                                                         'max_string_length': string_length,
+                                                        "train_score": train_score,
                                                         'val_score': val_score,
                                                         "test_score": test_score,
                                                         "balance_score": balance_score                                    
@@ -491,10 +489,7 @@ class xgboost_trainer(Trainer):
                                                                     full_name=model_name)
                                                     
                                                     model.structure.fit(X_train, y_train)
-                                                    torch.save({"model": model,
-                                                            "state_dict": []
-                                                            },
-                                                        "./models/" + model.name + ".pkl")
+                                                    train_score = model.structure.score(X_train, y_train)
                                                     val_score = model.structure.score(X_val, y_val)
                                                     test_score = model.structure.score(X_test, y_test)
                                                     balance_score = model.structure.score(X_balance_test, y_balance_test)
@@ -510,6 +505,7 @@ class xgboost_trainer(Trainer):
                                                         'subsample': subsample,
                                                         'colsample_bytree': 0.5,
                                                         'max_string_length': string_length,
+                                                        "train_score": train_score,
                                                         'val_score': val_score,
                                                         "test_score": test_score,
                                                         "balance_score": balance_score                                    
@@ -653,7 +649,7 @@ class xgboost_trainer(Trainer):
                                                 shuffle=self.test_shuffle)
         return train_dataloader, valid_dataloader, test_dataloader, test_balanced_dataloader
     
-    def prepare_eval_data(self, data_mode, window_size, output_step, string_length, new_data):
+    def prepare_eval_data(self):
         # Load train and validation data
         X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
         y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)

@@ -48,7 +48,7 @@ class Transformer_trainer(Trainer):
             self.prepare_data(self.new_data)
         else:
             self.num_feature = 807
-        self.indentify()
+        # self.indentify()
 
     def indentify(self):
         self.model = Model(name=self.model_name, num_feature=self.num_feature, parameters=self.config,
@@ -643,7 +643,7 @@ class Transformer_trainer(Trainer):
                         model.train_stop_lr = lr_train
                         model.train_stop_epoch = epoch
 
-                        model.state_dict = self.model.structure.state_dict()
+                        model.state_dict = model.structure.state_dict()
                         model.train_stop_epoch = epoch
                         model.train_stop_lr = lr_train
                         torch.save({"model": model,
@@ -657,7 +657,7 @@ class Transformer_trainer(Trainer):
                                                                               patient_count=patient_count,
                                                                               max_patient=self.patient)
                 else:
-                    model.state_dict = self.model.structure.state_dict()
+                    model.state_dict = model.structure.state_dict()
                     model.train_stop_epoch = epoch
                     model.train_stop_lr = lr_train
                     torch.save({"model": model,

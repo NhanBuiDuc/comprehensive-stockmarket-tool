@@ -157,7 +157,7 @@ class svm_trainer(Trainer):
 
                                         
                                         svm_model.fit(X_train_w, y_train_o)
-
+                                        train_score = svm_model.score(X_train_w, y_train_o)
                                         val_score = svm_model.score(X_val_w, y_val_o)
                                         test_score = svm_model.score(X_test, y_test)
                                         balance_score = svm_model.score(X_balance_test, y_balance_test)
@@ -169,6 +169,7 @@ class svm_trainer(Trainer):
                                             'C': C,
                                             'gamma': 'scale',
                                             'max_string_lenght': string_length,
+                                            'train_score': train_score,
                                             'val_score': val_score,
                                             "test_score": test_score,
                                             "balance_score": balance_score                                    
@@ -271,7 +272,7 @@ class svm_trainer(Trainer):
 
                                     
                                     svm_model.fit(X_train_w, y_train_o)
-
+                                    train_score = svm_model.score(X_train_w, y_train_o)
                                     val_score = svm_model.score(X_val_w, y_val_o)
                                     test_score = svm_model.score(X_test, y_test)
                                     balance_score = svm_model.score(X_balance_test, y_balance_test)
@@ -283,6 +284,7 @@ class svm_trainer(Trainer):
                                         'C': C,
                                         'gamma': 'scale',
                                         'max_string_lenght': string_length,
+                                        'train_score': train_score,
                                         'val_score': val_score,
                                         "test_score": test_score,
                                         "balance_score": balance_score

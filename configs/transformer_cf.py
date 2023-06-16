@@ -29,7 +29,7 @@ transformer_cf = {
         "batch_size": 64,
         "num_epoch": 50,
         "learning_rate": 0.001,
-        "loss": "focal",
+        "loss": "bce",
         "evaluate": ["bce", "accuracy", "precision", "f1"],
         "optimizer": "adam",
         "scheduler_step_size": 100,
@@ -59,18 +59,18 @@ transformer_cf = {
                     'window_size': 7,
                     "ensembled_model": {
                         "random_forest": 1,
-                        "svm": 0,
-                        "xgboost": 1, 
+                        "svm": 1,
+                        "xgboost": 2, 
                         "lstm": 2,
                         "news": 2
                     },
                 },
                 14: {
-                    'window_size': 3,
+                    'window_size': 14,
                     "ensembled_model": {
-                        "random_forests": 0,
+                        "random_forest": 0,
                         "svm": 1,
-                        "xgboost": 1, 
+                        "xgboost": 0, 
                         "lstm": 2,
                         "news": 0
                     },
