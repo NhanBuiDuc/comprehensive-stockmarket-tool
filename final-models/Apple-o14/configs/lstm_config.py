@@ -2,7 +2,7 @@ lstm_cf = {
     "model": {
         "num_layers": 10,
         "hidden_size": 20,
-        "drop_out": 0.0,
+        "drop_out": 0.2,
 
         "conv1D_param": {
             "type": 1,
@@ -20,7 +20,7 @@ lstm_cf = {
         "data_mode": 2,
         "window_size": 14,
         "output_step": 14,
-        "max_string_length": 20000,
+        "max_string_length": 1000,
         "param_grid": {
             'data_mode': [0, 1, 2],
             'window_size': [3, 7, 14],
@@ -32,7 +32,7 @@ lstm_cf = {
     "training": {
         "device": "cuda",  # "cuda" or "cpu"
         "batch_size": 64,
-        "num_epoch": 100,
+        "num_epoch": 50,
         "learning_rate": 0.001,
         "loss": "bce",
         "evaluate": ["bce", "accuracy", "precision", "f1"],

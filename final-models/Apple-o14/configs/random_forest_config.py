@@ -2,7 +2,7 @@ rf_cf = {
     "model": {
         'n_estimators': 5,  # Number of trees in the forest
         'criterion': 'gini',  # Splitting criterion (can be 'gini' or 'entropy')
-        'max_depth': 3,  # Maximum depth of the tree
+        'max_depth': 8,  # Maximum depth of the tree
         'min_samples_leaf': 2,  # Minimum number of samples required to be at a leaf node  # Whether to use out-of-bag samples to estimate the generalization accuracy
         'random_state': 42,  # Random seed for reproducibility
         "window_size": 14,
@@ -10,7 +10,7 @@ rf_cf = {
         "data_mode": 0,
         "topk": 20,
         "symbol": "AAPL",
-        "max_string_length": 0,
+        "max_string_length": 10000,
         # 'param_grid': {
         #     'data_mode': [0, 1, 2],
         #     'window_size': [3, 7, 14],

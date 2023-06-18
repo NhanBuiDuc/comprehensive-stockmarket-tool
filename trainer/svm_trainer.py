@@ -526,7 +526,7 @@ class svm_trainer(Trainer):
             if self.data_mode == 2:
                 _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
                                                     self.output_step,
-                                                    self.topk, new_data)
+                                                    self.topk, self.max_string_length, new_data)
 
                 news_X = news_X[:-self.output_step]
                 # Concatenate X_stocks and news_X
