@@ -2,7 +2,7 @@ lstm_cf = {
     "model": {
         "num_layers": 10,
         "hidden_size": 20,
-        "drop_out": 0.8,
+        "drop_out": 0.2,
 
         "conv1D_param": {
             "type": 1,
@@ -18,8 +18,8 @@ lstm_cf = {
         "symbol": "MSFT",
         "topk": 10,
         "data_mode": 2,
-        "window_size": 7,
-        "output_step": 7,
+        "window_size": 3,
+        "output_step": 3,
         "max_string_length": 500,
         "param_grid": {
             'data_mode': [0, 1, 2],

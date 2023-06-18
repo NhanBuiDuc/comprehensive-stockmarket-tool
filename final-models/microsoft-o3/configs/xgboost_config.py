@@ -4,16 +4,16 @@ xgboost_cf = {
         "nhead": 3,
         "n_estimators": 20,  # Number of trees in the ensemble
         "objective": 'binary:logistic',  # Objective function for binary classification
-        "max_depth": 1,  # Maximum depth of each tree
+        "max_depth": 5,  # Maximum depth of each tree
         "learning_rate": 0.1,  # Learning rate (step size shrinkage)
-        "subsample": 0.6,  # Subsample ratio of the training instances
+        "subsample": 0.9,  # Subsample ratio of the training instances
         "colsample_bytree": 0.8,  # Subsample ratio of columns when constructing each tree
         "reg_alpha": 0,  # L1 regularization term on weights
         "reg_lambda": 1,  # L2 regularization term on weights
         "random_state": 42,  # Random seed for reproducibility        "dropout": 0.5,
-        "window_size": 7,
-        "output_step": 7,
-        "data_mode": 1,
+        "window_size": 3,
+        "output_step": 3,
+        "data_mode": 2,
         "topk": 10,
         "max_string_length": 500
     },
