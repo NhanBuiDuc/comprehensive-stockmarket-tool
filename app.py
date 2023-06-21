@@ -20,7 +20,7 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = ROOT_DIR.replace('\\', '/')
 os.chdir(ROOT_DIR.split("APP_WEB")[0])
 print(os.getcwd())
-#CODE_DIR = ROOT_DIR + '/APPWEB'
+CODE_DIR = ROOT_DIR + '/APPWEB'
 
 
 @app.route('/execute/<file>', methods=['GET'])
@@ -48,7 +48,7 @@ def predict_LSTM(file):
 
 @app.route('/', methods=['GET'])
 def index1():
-    return render_template('chart.html')
+    return render_template('index.html')
 
 
 def createFile(content):

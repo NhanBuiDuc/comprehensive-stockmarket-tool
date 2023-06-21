@@ -298,6 +298,7 @@ class random_forest_trainer(Trainer):
                                                 torch.save({"model": model,
                                                 "state_dict": []
                                                 }, "./models/" + model.name + ".pkl")
+                                                train_score = model.structure.score(X_train_w, y_train_o)
                                                 val_score = model.structure.score(X_val_w, y_val_o)
                                                 test_score = model.structure.score(X_test, y_test)
                                                 balance_score = model.structure.score(X_balance_test, y_balance_test)
@@ -311,6 +312,7 @@ class random_forest_trainer(Trainer):
                                                     'min_samples_leaf': 5,
                                                     'max_depth': max_depth,
                                                     'max_string_lenght:': string_length,
+                                                    "train_score": train_score,
                                                     'val_score': val_score,
                                                     "test_score": test_score,
                                                     "balance_score": balance_score  
@@ -376,6 +378,7 @@ class random_forest_trainer(Trainer):
                                             torch.save({"model": model,
                                             "state_dict": []
                                             }, "./models/" + model.name + ".pkl")
+                                            train_score = model.structure.score(X_train_w, y_train_o)
                                             val_score = model.structure.score(X_val_w, y_val_o)
                                             test_score = model.structure.score(X_test, y_test)
                                             balance_score = model.structure.score(X_balance_test, y_balance_test)
@@ -389,6 +392,8 @@ class random_forest_trainer(Trainer):
                                                 'min_samples_leaf': 5,
                                                 'max_depth': max_depth,
                                                 'max_string_lenght:': string_length,
+                                                
+                                                "train_score": train_score,
                                                 'val_score': val_score,
                                                 "test_score": test_score,
                                                 "balance_score": balance_score

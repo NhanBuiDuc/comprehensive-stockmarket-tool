@@ -231,7 +231,7 @@ class lstm_trainer(Trainer):
                                                                               patient_count=patient_count,
                                                                               max_patient=self.patient)
                 else:
-                    model.state_dict = self.model.structure.state_dict()
+                    model.state_dict = model.structure.state_dict()
                     model.train_stop_epoch = epoch
                     model.train_stop_lr = lr_train
                     torch.save({"model": model,
@@ -509,6 +509,7 @@ class lstm_trainer(Trainer):
                                                                 model_type=self.model_type,
                                                                 full_name=model_name)
                                                 model = self.grid_train(model, train_dataloader, valid_dataloader)
+                                                train_score = self.grid_eval(model, train_dataloader)
                                                 val_score = self.grid_eval(model, valid_dataloader)
                                                 test_score = self.grid_eval(model, test_dataloader)
                                                 balance_score = self.grid_eval(model, balance_dataloader)
@@ -519,6 +520,7 @@ class lstm_trainer(Trainer):
                                                     'data_mode': data_mode,
                                                     "drop_out": drop_out,
                                                     'max_string_lenght:': string_length,
+                                                    'train_score': train_score,
                                                     'val_score': val_score,
                                                     "test_score": test_score,
                                                     "balance_score": balance_score  
@@ -565,6 +567,7 @@ class lstm_trainer(Trainer):
                                                             model_type=self.model_type,
                                                             full_name=model_name)
                                             model = self.grid_train(model, train_dataloader, valid_dataloader)
+                                            train_score = self.grid_eval(model, train_dataloader)
                                             val_score = self.grid_eval(model, valid_dataloader)
                                             test_score = self.grid_eval(model, test_dataloader)
                                             balance_score = self.grid_eval(model, balance_dataloader)
@@ -575,6 +578,7 @@ class lstm_trainer(Trainer):
                                                 'data_mode': data_mode,
                                                 "drop_out": drop_out,
                                                 'max_string_lenght:': string_length,
+                                                'train_score': train_score,
                                                 'val_score': val_score,
                                                 "test_score": test_score,
                                                 "balance_score": balance_score  

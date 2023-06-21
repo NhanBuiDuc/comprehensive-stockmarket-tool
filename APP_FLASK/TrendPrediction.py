@@ -207,13 +207,12 @@ class Predictor:
         '''
         format data
         '''
-        match model_type:
-            case 'svm':
-                model_print_name = 'svm'
-            case 'random_forest':
-                model_print_name = 'random'
-            case 'xgboost':
-                model_print_name = 'xgboost'
+        if model_type == "svm":
+            model_print_name = 'svm'
+        elif model_type == "random_forest":
+            model_print_name = 'random'
+        elif model_type == "xgboost":
+            model_print_name = 'xgboost'
         if torch.all(converted_output == 1):
             output_json = {
                 f'{model_print_name}_{symbol}_{output_step}': "UP"
