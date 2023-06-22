@@ -247,10 +247,11 @@ chart = {
         let tr = document.createElement("tr");
         tr.innerHTML = `
                 <td>${value}</td>
-                <td>${price}</td>
                 <td>${res["svm"][`${outputsize}`]}</td>
                 <td>${res["xgboost"][`${outputsize}`]}</td>
-                <td>${res["random"][`${outputsize}`]}</td>`;
+                <td>${res["random"][`${outputsize}`]}</td>
+                <td>DOWN</td>`;
+
         tbody.append(tr);
       }
     });

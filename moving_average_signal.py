@@ -9,6 +9,7 @@ import pandas as pd
 from configs.price_config import price_cf as cf
 import pandas_ta as ta
 
+
 # window_size = [10,20,30,50,100,200] for MA
 class Signal:
     def __init__(self):
@@ -255,7 +256,7 @@ class Signal:
             if df[label][i] is not None:
                 if df[label][i] > 100:
                     signal[i] = 1
-                elif df[label][i] < 100:
+                elif df[label][i] < -100:
                     signal[i] = -1
                 else:
                     signal[i] = 0
