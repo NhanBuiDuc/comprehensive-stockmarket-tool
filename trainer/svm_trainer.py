@@ -157,7 +157,7 @@ class svm_trainer(Trainer):
 
                                         
                                         svm_model.fit(X_train_w, y_train_o)
-
+                                        train_score = svm_model.score(X_train_w, y_train_o)
                                         val_score = svm_model.score(X_val_w, y_val_o)
                                         test_score = svm_model.score(X_test, y_test)
                                         balance_score = svm_model.score(X_balance_test, y_balance_test)
@@ -169,6 +169,7 @@ class svm_trainer(Trainer):
                                             'C': C,
                                             'gamma': 'scale',
                                             'max_string_lenght': string_length,
+                                            'train_score': train_score,
                                             'val_score': val_score,
                                             "test_score": test_score,
                                             "balance_score": balance_score                                    
@@ -271,7 +272,7 @@ class svm_trainer(Trainer):
 
                                     
                                     svm_model.fit(X_train_w, y_train_o)
-
+                                    train_score = svm_model.score(X_train_w, y_train_o)
                                     val_score = svm_model.score(X_val_w, y_val_o)
                                     test_score = svm_model.score(X_test, y_test)
                                     balance_score = svm_model.score(X_balance_test, y_balance_test)
@@ -283,6 +284,7 @@ class svm_trainer(Trainer):
                                         'C': C,
                                         'gamma': 'scale',
                                         'max_string_lenght': string_length,
+                                        'train_score': train_score,
                                         'val_score': val_score,
                                         "test_score": test_score,
                                         "balance_score": balance_score
@@ -524,7 +526,7 @@ class svm_trainer(Trainer):
             if self.data_mode == 2:
                 _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
                                                     self.output_step,
-                                                    self.topk, new_data)
+                                                    self.topk, self.max_string_length, new_data)
 
                 news_X = news_X[:-self.output_step]
                 # Concatenate X_stocks and news_X
@@ -594,13 +596,17 @@ class svm_trainer(Trainer):
         self.test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=self.test_shuffle)
      
     def prepare_gridsearch_data(self, symbol, data_mode, window_size, output_step, string_length, new_data):
+
+        model_name = f'{self.model_type}_{symbol}_w{window_size}_o{output_step}_d{str(data_mode)}'
         file_paths = [
-            './dataset/X_train_' + self.model_name + '.npy',
-            './dataset/y_train_' + self.model_name + '.npy',
-            './dataset/X_valid_' + self.model_name + '.npy',
-            './dataset/y_valid_' + self.model_name + '.npy',
-            './dataset/X_test_' + self.model_name + '.npy',
-            './dataset/y_test_' + self.model_name + '.npy'
+            './dataset/X_train_' + model_name + '.npy',
+            './dataset/y_train_' + model_name + '.npy',
+            './dataset/X_valid_' + model_name + '.npy',
+            './dataset/y_valid_' + model_name + '.npy',
+            './dataset/X_test_' + model_name + '.npy',
+            './dataset/y_test_' + model_name + '.npy',
+            './dataset/X_balance_test_' + model_name + '.npy',
+            './dataset/y_balance_test_' + model_name + '.npy'
         ]
 
         if any(not os.path.exists(file_path) for file_path in file_paths) or new_data:
@@ -621,12 +627,14 @@ class svm_trainer(Trainer):
             X_stocks = np.array(df.values)[:-output_step]
 
             # Save train, valid, and test datasets
-            X_train_file = './dataset/X_train_' + self.model_name + '.npy'
-            X_valid_file = './dataset/X_valid_' + self.model_name + '.npy'
-            X_test_file = './dataset/X_test_' + self.model_name + '.npy'
-            y_train_file = './dataset/y_train_' + self.model_name + '.npy'
-            y_valid_file = './dataset/y_valid_' + self.model_name + '.npy'
-            y_test_file = './dataset/y_test_' + self.model_name + '.npy'
+            X_train_file = './dataset/X_train_' + model_name + '.npy'
+            X_valid_file = './dataset/X_valid_' + model_name + '.npy'
+            X_test_file = './dataset/X_test_' + model_name + '.npy'
+            X_balance_test_file = './dataset/X_balance_test_' + model_name + '.npy'
+            y_train_file = './dataset/y_train_' + model_name + '.npy'
+            y_valid_file = './dataset/y_valid_' + model_name + '.npy'
+            y_test_file = './dataset/y_test_' + model_name + '.npy'
+            y_balance_test_file = './dataset/y_balance_test_' + model_name + '.npy'
             if data_mode == 2:
                 _, news_X = nlp_u.prepare_news_data(df, symbol, window_size, self.start, self.end,
                                                     output_step,
@@ -689,6 +697,9 @@ class svm_trainer(Trainer):
             if os.path.exists(X_test_file):
                 os.remove(X_test_file)
                 np.save(X_test_file, X_test)
+            if os.path.exists(X_balance_test_file):
+                os.remove(X_balance_test_file)
+                np.save(X_balance_test_file, X_test_balanced)                
             if os.path.exists(y_train_file):
                 os.remove(y_train_file)
                 np.save(y_train_file, y_train)
@@ -698,16 +709,20 @@ class svm_trainer(Trainer):
             if os.path.exists(y_test_file):
                 os.remove(y_test_file)
                 np.save(y_test_file, y_test)
+            if os.path.exists(y_test_file):
+                os.remove(y_test_file)
+                np.save(y_balance_test_file, y_test_balanced)
         else:
             # Load train and validation data
-            X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
-            y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
-            X_valid = np.load('./dataset/X_valid_' + self.model_name + '.npy', allow_pickle=True)
-            y_valid = np.load('./dataset/y_valid_' + self.model_name + '.npy', allow_pickle=True)
+            X_train = np.load('./dataset/X_train_' + model_name + '.npy', allow_pickle=True)
+            y_train = np.load('./dataset/y_train_' + model_name + '.npy', allow_pickle=True)
+            X_valid = np.load('./dataset/X_valid_' + model_name + '.npy', allow_pickle=True)
+            y_valid = np.load('./dataset/y_valid_' + model_name + '.npy', allow_pickle=True)
             # Load full test data
-            X_test = np.load('./dataset/X_test_' + self.model_name + '.npy', allow_pickle=True)
-            y_test = np.load('./dataset/y_test_' + self.model_name + '.npy', allow_pickle=True)
-
+            X_test = np.load('./dataset/X_test_' + model_name + '.npy', allow_pickle=True)
+            y_test = np.load('./dataset/y_test_' + model_name + '.npy', allow_pickle=True)
+            X_test_balanced = np.load('./dataset/X_balance_test_' + model_name + '.npy', allow_pickle=True)
+            y_test_balanced = np.load('./dataset/y_balance_test_' + model_name + '.npy', allow_pickle=True)
         # Create dataloaders for train, valid, and test sets
         train_dataset = PriceAndIndicatorsAndNews_Dataset(X_train, y_train, 39)
         valid_dataset = PriceAndIndicatorsAndNews_Dataset(X_valid, y_valid, 39)

@@ -24,22 +24,22 @@ class Predictor:
         self.config_dict = {
             "AAPL": {
                 "svm": [[7,2], [7,1], [14,1]],
-                "random_forest": [[3,0], [7,2], [3,0]],
-                "xgboost": [[3,0], [7,2], [3,0]],
+                "random_forest": [[3,0], [7,1], [3,2]],
+                "xgboost": [[3,2], [7,2], [7,0]],
             },
             "AMZN": {
                 "svm": [[3,1], [14,1], [7,1]],
-                "random_forest": [[3,0], [3,0], [7,2]],
-                "xgboost": [[14,1], [14,1], [14,1]]
+                "random_forest": [[3,0], [7,2], [14,2]],
+                "xgboost": [[14,2], [3,0], [14,1]]
             },
             "GOOGL": {
-                "svm": [[7,2], [7,2], [3,2]],
-                "random_forest": [[7,1], [3,1], [7,1]],
-                "xgboost": [[7,1], [7,1], [7,1]]
+                "svm": [[7,2], [7,2], [7,1]],
+                "random_forest": [[3,0], [7,1], [7,1]],
+                "xgboost": [[7,2], [7,1], [7,1]]
             },
             "MSFT": {
-                "svm": [[3,1], [3,0], [3,0]],
-                "random_forest": [[7,2], [3,2], [3,0]],
+                "svm": [[3,1], [7,0], [3,0]],
+                "random_forest": [[7,1], [3,2], [3,0]],
                 "xgboost": [[7,1], [7,2], [3,0]]
             },
             "TSLA": {
@@ -207,13 +207,12 @@ class Predictor:
         '''
         format data
         '''
-        match model_type:
-            case 'svm':
-                model_print_name = 'svm'
-            case 'random_forest':
-                model_print_name = 'random'
-            case 'xgboost':
-                model_print_name = 'xgboost'
+        if model_type == "svm":
+            model_print_name = 'svm'
+        elif model_type == "random_forest":
+            model_print_name = 'random'
+        elif model_type == "xgboost":
+            model_print_name = 'xgboost'
         if torch.all(converted_output == 1):
             output_json = {
                 f'{model_print_name}_{symbol}_{output_step}': "UP"

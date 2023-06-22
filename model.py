@@ -381,112 +381,101 @@ class TransformerClassifier(nn.Module):
         super().__init__()
         self.__dict__.update(param)
         self.num_feature = num_feature
-        self.stock_transformer = nn.Transformer(d_model=39, nhead=13,
-                                                num_encoder_layers=self.num_encoder_layers,
-                                                dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-        # Define LSTM parameters
-        self.hidden_size = 128
-        self.num_layers = 2
-        self.lstm = nn.LSTM(input_size=39, hidden_size=self.hidden_size, num_layers=self.num_layers, batch_first=True)
-        self.news_transformer = nn.Transformer(d_model=768, nhead=64,
-                                               num_encoder_layers=self.num_encoder_layers,
-                                               dim_feedforward=self.dim_feedforward, dropout=self.dropout)
-
-        if self.data_mode == 0:
-            self.fc1 = nn.Linear(39 * self.window_size, 1)
-        elif self.data_mode == 1:
-            self.fc1 = nn.Linear(729 * self.window_size, 1)
-        elif self.data_mode == 2:
-            model_list = self.ensembled_model
-            if model_list["svm"] != -1:
-                svm = Model()
-                data_mode = model_list["svm"]
-                model_name = f'svm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
-                self.svm = svm.load_check_point("svm", model_name)
-            if model_list["random_forest"] != -1:
-                rfc = Model()
-                data_mode = model_list["random_forest"]
-                model_name = f'random_forest_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
-                self.rfc = rfc.load_check_point("random_forest", model_name)
-            if model_list["xgboost"] != -1:
-                xgboost = Model()
-                data_mode = model_list["xgboost"]
-                model_name = f'xgboost_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
-                self.xgboost = xgboost.load_check_point("xgboost", model_name)
-            if model_list["lstm"] != -1:
-                lstm = Model()
-                data_mode = model_list["lstm"]
-                model_name = f'lstm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
-                self.lstm = lstm.load_check_point("lstm", model_name)
-            self.fc1 = nn.Linear(256, 10)
-            self.fc2 = nn.Linear(768 * self.window_size, 1)
-            self.fc3 = nn.Linear(3, 1)
-
-        self.relu = nn.ReLU()
+        model_list = self.ensembled_model
+        self.number_of_feature = 0
+        if model_list["svm"] != -1:
+            svm = Model()
+            data_mode = model_list["svm"]
+            model_name = f'svm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+            self.svm = svm.load_check_point("svm", model_name)
+            self.number_of_feature += 1
+        if model_list["random_forest"] != -1:
+            rfc = Model()
+            data_mode = model_list["random_forest"]
+            model_name = f'random_forest_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+            self.rfc = rfc.load_check_point("random_forest", model_name)
+            self.number_of_feature += 1
+        if model_list["xgboost"] != -1:
+            xgboost = Model()
+            data_mode = model_list["xgboost"]
+            model_name = f'xgboost_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+            self.xgboost = xgboost.load_check_point("xgboost", model_name)
+            self.number_of_feature += 1
+        if model_list["lstm"] != -1:
+            lstm = Model()
+            data_mode = model_list["lstm"]
+            model_name = f'lstm_{self.symbol}_w{self.window_size}_o{self.output_step}_d{str(data_mode)}'
+            self.lstm = lstm.load_check_point("lstm", model_name).structure
+            self.number_of_feature += 1
+        if model_list["news"] != -1:
+            self.news_fc = nn.Linear(768 * self.window_size, 1)
+            self.number_of_feature += 1
+            
+        self.final_fc = nn.Linear(self.number_of_feature, 1)
         self.tanh = nn.Tanh()
-        self.drop_out = nn.Dropout(self.dropout)
+        self.drop_out = nn.Dropout(self.drop_out)
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, x_stock, x_news):
-        if self.data_mode == 0:
-            x_stock = x_stock[:, :, :5]
-            batch = x_stock.shape[0]
-            x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
-            x = x_stock.reshape(batch, -1)
-            x = self.fc1(x)
-            x = self.sigmoid(x)
-            return x
-        elif self.data_mode == 1:
-            batch = x_stock.shape[0]
-            x_stock = self.stock_transformer(x_stock, x_stock)  # self-attention over the input sequence
-            x = x_stock.reshape(batch, -1)
-            x = self.fc1(x)
-            x = self.sigmoid(x)
-            return x
-        elif self.data_mode == 2:
-            batch = x_stock.shape[0]
-            if "svm" in self.ensembled_model:
+        model_list = self.ensembled_model
+        type2 = torch.cat([x_stock, x_news], dim=2)
+        batch = x_stock.shape[0]
+        if model_list["svm"] != -1:
+            if model_list['svm'] == 0:
+                svm_pred = self.svm.predict(x_stock[:, -1:, :5].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+            elif model_list['svm'] == 1:
                 svm_pred = self.svm.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
-
-            if "random_forest" in self.ensembled_model:
+            elif model_list['svm'] == 2:
+                
+                svm_pred = self.svm.predict(type2[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+        if model_list["random_forest"] != -1:
+            if model_list['random_forest'] == 0:
+                rfc_pred = self.rfc.predict(x_stock[:, -1:, :5].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+            elif model_list['random_forest'] == 1:
                 rfc_pred = self.rfc.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+            elif model_list['random_forest'] == 2:
+                rfc_pred = self.rfc.predict(type2[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+        if model_list["xgboost"] != -1:
+            if model_list['xgboost'] == 0:
+                xgboost_pred = self.xgboost.predict(x_stock[:, -1:, :5].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+            elif model_list['xgboost'] == 1:
+                xgboost_pred = self.xgboost.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+            elif model_list['xgboost'] == 2:
+                xgboost_pred = self.xgboost.predict(type2[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
+        if model_list["lstm"] != -1:
+            lstm_pred = self.lstm(x_stock, x_news).to("cuda")
 
-            if "xgboost" in self.ensembled_model:
-                self.xgboost = self.xgboost.predict(x_stock[:, -1:, :].cpu().detach().numpy().reshape(batch, -1)).to("cuda").unsqueeze(1)
 
-            if "lstm" in self.ensembled_model:
-                self.lstm = self.lstm(x)
+        outputs = []
+        if model_list["svm"] != -1:
+            svm_pred = self.drop_out(svm_pred)
+            outputs.append(svm_pred.cpu().detach().numpy())
 
-            outputs = []
-            if "svm" in self.ensembled_model:
-                svm_pred = self.drop_out(svm_pred)
-                outputs.append(svm_pred)
+        if model_list["random_forest"] != -1:
+            rfc_pred = self.drop_out(rfc_pred)
+            outputs.append(rfc_pred.cpu().detach().numpy())
 
-            if "random_forest" in self.ensembled_model:
-                rfc_pred = self.drop_out(rfc_pred)
-                outputs.append(rfc_pred)
+        if model_list["xgboost"] != -1:
+            xgboost_pred = self.drop_out(xgboost_pred.float().to(torch.float32))
+            outputs.append(xgboost_pred.cpu().detach().numpy())
 
-            if "xgboost" in self.ensembled_model:
-                xgboost_pred = self.xgboost(x_stock)
-                outputs.append(xgboost_pred)
-
-            if "lstm" in self.ensembled_model:
-                lstm_pred = self.lstm(x_stock)
-                outputs.append(lstm_pred)
-
+        if model_list["lstm"] != -1:
+            lstm_pred = self.drop_out(lstm_pred)
+            outputs.append(lstm_pred.cpu().detach().numpy())
+        if model_list["news"] != -1:
             x_news = x_news.view(batch, -1)
-            x_news = self.fc2(x_news)
+            x_news = self.news_fc(x_news)
             x_news = self.drop_out(x_news)
+            outputs.append(x_news.cpu().detach().numpy())
 
-            if outputs:
-                concatenated_outputs = torch.cat(outputs, dim=1)
-                x = torch.cat([concatenated_outputs, x_news], dim=1)
-            else:
-                x = x_news
+        if outputs:
+            # outputs = [tensor.cpu().detach().numpy() for tensor in outputs]
+            outputs = np.concatenate(outputs, axis=1)
+            x = torch.tensor(outputs, dtype=torch.float32).to("cuda")
+            x = self.final_fc(x)
+            x = self.sigmoid(x)          
 
-            x = self.fc3(x)
-            x = self.sigmoid(x)
-            return x
+        return x
 
 class PredictPriceLSTM(nn.Module):
     def __init__(self, input_size=1, hidden_layer_size=32, num_layers=2, output_size=1, dropout=0.2):

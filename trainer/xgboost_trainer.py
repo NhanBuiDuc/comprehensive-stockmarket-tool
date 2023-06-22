@@ -287,7 +287,7 @@ class xgboost_trainer(Trainer):
             if self.data_mode == 2:
                 _, news_X = nlp_u.prepare_news_data(df, self.symbol, self.window_size, self.start, self.end,
                                                     self.output_step,
-                                                    self.topk, new_data)
+                                                    self.topk, self.max_string_length, new_data)
 
                 news_X = news_X[:-self.output_step]
                 # Concatenate X_stocks and news_X
@@ -387,7 +387,7 @@ class xgboost_trainer(Trainer):
                                                     X_val_w = X_val
                                                     y_train_o = y_train
                                                     y_val_o = y_val
-                                                    model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                                    model_name = f'xgboost_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
                                                     config = self.config
                                                     model_config = {
                                                         "symbol": symbol,
@@ -413,10 +413,7 @@ class xgboost_trainer(Trainer):
                                                                     full_name=model_name)
                                                     
                                                     model.structure.fit(X_train_w, y_train_o)
-                                                    torch.save({"model": model,
-                                                            "state_dict": []
-                                                            },
-                                                        "./models/" + model.name + ".pkl")
+                                                    train_score = model.structure.score(X_train_w, y_train_o)
                                                     val_score = model.structure.score(X_val_w, y_val_o)
                                                     test_score = model.structure.score(X_test, y_test)
                                                     balance_score = model.structure.score(X_balance_test, y_balance_test)
@@ -432,6 +429,7 @@ class xgboost_trainer(Trainer):
                                                         'subsample': subsample,
                                                         'colsample_bytree': 0.5,
                                                         'max_string_length': string_length,
+                                                        "train_score": train_score,
                                                         'val_score': val_score,
                                                         "test_score": test_score,
                                                         "balance_score": balance_score                                    
@@ -465,7 +463,7 @@ class xgboost_trainer(Trainer):
                                                         y_test = test_dataloader.dataset.Y
                                                         y_balance_test = balance_dataloader.dataset.Y
                                                         num_feature = X_train.shape[-1]
-                                                    model_name = f'svm_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
+                                                    model_name = f'xgboost_{symbol}_w{window_size}_o{output_size}_d{str(data_mode)}'
                                                     config = self.config
                                                     model_config = {
                                                         "symbol": symbol,
@@ -491,10 +489,7 @@ class xgboost_trainer(Trainer):
                                                                     full_name=model_name)
                                                     
                                                     model.structure.fit(X_train, y_train)
-                                                    torch.save({"model": model,
-                                                            "state_dict": []
-                                                            },
-                                                        "./models/" + model.name + ".pkl")
+                                                    train_score = model.structure.score(X_train, y_train)
                                                     val_score = model.structure.score(X_val, y_val)
                                                     test_score = model.structure.score(X_test, y_test)
                                                     balance_score = model.structure.score(X_balance_test, y_balance_test)
@@ -510,6 +505,7 @@ class xgboost_trainer(Trainer):
                                                         'subsample': subsample,
                                                         'colsample_bytree': 0.5,
                                                         'max_string_length': string_length,
+                                                        "train_score": train_score,
                                                         'val_score': val_score,
                                                         "test_score": test_score,
                                                         "balance_score": balance_score                                    
@@ -611,24 +607,24 @@ class xgboost_trainer(Trainer):
                 test_full_class_counts[1])
             print("Balanced Test set - Class 0 count:", test_balanced_class_counts[0], ", Class 1 count:",
                 test_balanced_class_counts[1])
-            if os.path.exists(X_train_file):
-                os.remove(X_train_file)
-                np.save(X_train_file, X_train)
-            if os.path.exists(X_valid_file):
-                os.remove(X_valid_file)
-                np.save(X_valid_file, X_valid)
-            if os.path.exists(X_test_file):
-                os.remove(X_test_file)
-                np.save(X_test_file, X_test)
-            if os.path.exists(y_train_file):
-                os.remove(y_train_file)
-                np.save(y_train_file, y_train)
-            if os.path.exists(y_valid_file):
-                os.remove(y_valid_file)
-                np.save(y_valid_file, y_valid)
-            if os.path.exists(y_test_file):
-                os.remove(y_test_file)
-                np.save(y_test_file, y_test)
+            # if os.path.exists(X_train_file):
+            #     os.remove(X_train_file)
+            #     np.save(X_train_file, X_train)
+            # if os.path.exists(X_valid_file):
+            #     os.remove(X_valid_file)
+            #     np.save(X_valid_file, X_valid)
+            # if os.path.exists(X_test_file):
+            #     os.remove(X_test_file)
+            #     np.save(X_test_file, X_test)
+            # if os.path.exists(y_train_file):
+            #     os.remove(y_train_file)
+            #     np.save(y_train_file, y_train)
+            # if os.path.exists(y_valid_file):
+            #     os.remove(y_valid_file)
+            #     np.save(y_valid_file, y_valid)
+            # if os.path.exists(y_test_file):
+            #     os.remove(y_test_file)
+            #     np.save(y_test_file, y_test)
         else:
             # Load train and validation data
             X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
@@ -653,7 +649,7 @@ class xgboost_trainer(Trainer):
                                                 shuffle=self.test_shuffle)
         return train_dataloader, valid_dataloader, test_dataloader, test_balanced_dataloader
     
-    def prepare_eval_data(self, data_mode, window_size, output_step, string_length, new_data):
+    def prepare_eval_data(self):
         # Load train and validation data
         X_train = np.load('./dataset/X_train_' + self.model_name + '.npy', allow_pickle=True)
         y_train = np.load('./dataset/y_train_' + self.model_name + '.npy', allow_pickle=True)
