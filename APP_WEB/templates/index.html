@@ -18,7 +18,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../static/js/chart.js"></script>
     <script src="../static/js/index.js"></script>
-
+    <script src="https://kit.fontawesome.com/90c8120d4c.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="../static/css/chart.css" />
     <link rel="stylesheet" href="../static/css/analysisholo.css" />
     <link rel="stylesheet" href="../static/css/style.css"/>
@@ -144,19 +144,20 @@
                         <thead>
                             <tr>
                                 <th class="has-text-white">Symbol</th>
-                                <th class="has-text-white">LSTM</th>
                                 <th class="has-text-white">SVM</th>
                                 <th class="has-text-white">XGBoost</th>
                                 <th class="has-text-white">Random Forest</th>
+                                <th class="has-text-white">Ensemble</th>
+
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td>AAPL</td>
-                                <td>172.10</td>
-                                <td>Up</td>
-                                <td>Down</td>
-                                <td>Down</td>
+                                <td><i class="fa-solid fa-arrow-up" style="color: #62e5be;"> UP</i></td>
+                                <td><i class="fa-solid fa-arrow-down" style="color: #c81e1e;"> DOWN</i></td>
+                                <td><i class="fa-solid fa-arrow-down" style="color: #c81e1e;"> DOWN</i></td>
+                                <td><i class="fa-solid fa-arrow-up" style="color: #62e5be;"> UP</i></td>
                             </tr>
                         </tbody>
                     </table>
@@ -329,7 +330,7 @@
 
                     chart.build(symbol); // Rebuild the chart using the new data
                     index.build(symbol); // Rebuild the chart using the new data
-                    chart.renderDataToTable(symbol);
+                    //chart.renderDataToTable(symbol);
                     
                     // UI Process (Hide Loading, Show Table, Show Chart,...)
                     loadingSection.classList.add("is-hidden");

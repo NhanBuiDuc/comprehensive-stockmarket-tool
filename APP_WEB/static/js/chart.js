@@ -238,64 +238,44 @@ chart = {
     tbody.innerHTML = ``;
     object.getDataTable(value, function (res) {
       if (res) {
-        let price = "";
+        let price = ""
         let outputsize = document.getElementById("outputsize").value;
         object.callApiGetPrice(value, function (res_price) {
-          if (res_price){
-            price = res_price.price;
-            let tr = document.createElement("tr");
-            tr.innerHTML = `
-                    <td>${value}</td>
-                    <td>${parseFloat(price).toFixed(2)}</td>
-                    <td>${res["svm"][`${outputsize}`]}</td>
-                    <td>${res["xgboost"][`${outputsize}`]}</td>
-                    <td>${res["random"][`${outputsize}`]}</td>`;
-            tbody.append(tr);
-          }
-
+          price = str(res_price)
         })
         
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+                <td>${value}</td>
+                <td>${res["svm"][`${outputsize}`]}</td>
+                <td>${res["xgboost"][`${outputsize}`]}</td>
+                <td>${res["random"][`${outputsize}`]}</td>
+                <td>DOWN</td>`;
 
+        tbody.append(tr);
       }
     });
   },
 
-  // callApiGetPrice: function (value, callback) {
-  //   let url = `http://127.0.0.1:5000/execute/${value}`;
-  //   fetch(url, {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   })
-  //     .then((response) => {
-  //       console.log("respond: ", response);
-  //       return response.json();
-  //     })
-  //     .then((data) => {
-  //       console.log("Respone API", data);
-  //       callback(data);
-  //     })
-  //     .catch((err) => {
-  //       console.log("API went wrong.", err);
-  //     });
-  // },
-  callApiGetPrice: async function (value, callback) {
+  callApiGetPrice: function (value, callback) {
     let url = `http://127.0.0.1:5000/execute/${value}`;
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => {
+        console.log("respond: ", response);
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Respone API", data);
+        callback(data);
+      })
+      .catch((err) => {
+        console.log("API went wrong.", err);
       });
-      console.log("respond: ", response);
-      const data = await response.json();
-      console.log("Respone API", data);
-      callback(data);
-    } catch (err) {
-      console.log("API went wrong.", err);
-    }
   },
 
 
@@ -304,7 +284,7 @@ chart = {
     let object = this;
 
     object
-      .getData("prediction.json")
+      .getData("prediction2.json")
       .then(function (data) {
         let dataSymbol = data[`${value}`];
         callback(dataSymbol);
