@@ -1,24 +1,27 @@
-from itertools import combinations
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
-original_ensembled_model = {
-    "svm": 1,
-    "random_forest": 1,
-    "xgboost": 2,
-    "lstm": 2,
-    "news": 1
-}
+# Load the pre-trained SentenceTransformer model
+model = SentenceTransformer('ProsusAI/finbert')
 
-keys = list(original_ensembled_model.keys())
+# Define the sentences
+sentence1 = "Many investors seeing substantial gains in their portfolios."
+sentence2 = "A surge in market activity has resulted in numerous investors witnessing remarkable growth in the value of their investment portfolios."
+sentence3 = "She took a deep breath to speak in front of the audience."
 
-combinations_list = []
-for r in range(2, len(keys) + 1):
-    combinations_list.extend(combinations(keys, r))
+# Get the embeddings for the sentences
+embeddings = model.encode([sentence1, sentence2, sentence3])
 
-for combination in combinations_list:
-    new_ensembled_model = original_ensembled_model.copy()
-    for word in keys:
-        if word not in combination:
-            new_ensembled_model[word] = -1
+# Print the embeddings
+print("Embeddings:")
+for i, embedding in enumerate(embeddings):
+    print(f"Sentence {i+1}: {embedding}")
 
-    if list(new_ensembled_model.values()).count(-1) <= 3:
-        print(new_ensembled_model)
+# Calculate the cosine similarity
+similarity = cosine_similarity(embeddings)
+
+# Print the similarity matrix
+print("\nSimilarity Matrix:")
+for i in range(len(similarity)):
+    for j in range(len(similarity[i])):
+        print(f"The cosine similarity between sentence {i+1} and sentence {j+1} is: {similarity[i][j]}")

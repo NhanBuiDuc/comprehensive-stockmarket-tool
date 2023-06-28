@@ -506,7 +506,7 @@ class Transformer_trainer(Trainer):
 
 
         # symbol_list = ["AAPL", "AMZN", "GOOGL", "MSFT","TSLA"]
-        symbol_list = ["TSLA"]
+        symbol_list = ["MSFT"]
         output_size_list = [3, 7, 14]
         
         data_mode = 2

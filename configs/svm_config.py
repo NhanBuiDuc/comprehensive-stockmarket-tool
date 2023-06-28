@@ -1,12 +1,12 @@
 svm_cf = {
     "model": {
-        "C": 100000,
+        "C": 1000,
         "kernel": 'poly',
         "gamma": "scale",
         "coef0": 100,
         "class_weight": {0: 0.5, 1: 0.5},
         "window_size": 7,
-        "output_step": 7,
+        "output_step": 14,
         "data_mode": 2,
         "topk": 10,
         "symbol": "MSFT",
