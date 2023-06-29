@@ -8,12 +8,11 @@ import torch
 from sklearn.preprocessing import MinMaxScaler
 from functools import reduce
 import json
-
+from news_api import download_news_with_api
 
 
 class Predictor:
     def __init__(self):
-        self
         self.data_folder = f"./csv/"
         self.stock_list = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
         #self.stock_list = ["AAPL"]
@@ -80,7 +79,9 @@ class Predictor:
             7: 1,
             14: 2,
         }
-
+        # Realtime, so from date is from the latest date of the CSV file, to date is current date.
+        for symbol in self.stock_list:
+            download_news_with_api(symbol)
     
     def batch_predict(self, symbol, model_type_list, window_size, output_step):
         result = {}

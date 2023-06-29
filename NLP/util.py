@@ -1,8 +1,7 @@
 import requests
-import datetime
 import os
 import pandas as pd
-from datetime import timedelta
+from datetime import timedelta, datetime
 import numpy as np
 import json
 from sklearn.preprocessing import OneHotEncoder
@@ -850,7 +849,12 @@ def download_finhub_news(symbol, from_date, to_date, save_folder, new_data):
             df = pd.read_csv(filepath, index_col='date')
             return df
         else:
+
+            existed_df = pd.read_csv(filepath)
+            existed_df['date'] = pd.to_datetime(existed_df['date'])  # Convert 'date' column to datetime objects
+            from_date = existed_df['date'].max().strftime("%Y-%m-%d")
             stop_date = datetime.strptime(to_date, "%Y-%m-%d")
+
             from_date_dt = datetime.strptime(from_date, "%Y-%m-%d")
 
             final_df = pd.DataFrame()
@@ -869,11 +873,12 @@ def download_finhub_news(symbol, from_date, to_date, save_folder, new_data):
             # Convert the `datetime` column to a pandas datetime format
             final_df['date'] = pd.to_datetime(final_df['date'])
             # # Set the `datetime` column as the index
-            final_df.set_index('date', inplace=True)
+            # final_df.set_index('date', inplace=True)
             os.makedirs(save_folder, exist_ok=True)
             # Export the DataFrame to a CSV file
-            final_df.to_csv(filepath, index=True)
-            return final_df
+            existed_df = pd.concat([existed_df, final_df])
+            existed_df.to_csv(filepath, index=True)
+            return existed_df
     else:
         stop_date = datetime.strptime(to_date, "%Y-%m-%d")
         from_date_dt = datetime.strptime(from_date, "%Y-%m-%d")
@@ -894,7 +899,7 @@ def download_finhub_news(symbol, from_date, to_date, save_folder, new_data):
         # Convert the `datetime` column to a pandas datetime format
         final_df['date'] = pd.to_datetime(final_df['date'])
         # # Set the `datetime` column as the index
-        final_df.set_index('date', inplace=True)
+        # final_df.set_index('date', inplace=True)
         os.makedirs(save_folder, exist_ok=True)
         # Export the DataFrame to a CSV file
         final_df.to_csv(filepath, index=True)
@@ -902,61 +907,167 @@ def download_finhub_news(symbol, from_date, to_date, save_folder, new_data):
 
 
 def download_benzinga_news(symbol, from_date, to_date, save_folder, new_data):
+    # Extract and save relevant information
+    filename = f'{symbol}_benzinga_news.csv'
+    filepath = os.path.join(save_folder, filename)
     api_key = '936c241cdb1b4620b3bad6c77ba3ae4b'
     endpoint = 'https://api.benzinga.com/api/v2/news'
-
-    # Set up query parameters
-    params = {
-        'accept': "application/json (default)",
-        'tickers': symbol,  # Symbol passed as argument
-        'token': api_key,
-        'dateFrom': from_date,
-        'dateTo': to_date,
-        'pageSize': 100  # Example: Number of results per page
-    }
-
-    # Make the API request
-    response = requests.get(endpoint, params=params)
-    data = xmltodict.parse(response.text)
-
-    # Convert the XML response to JSON
-    json_data = json.dumps(data)
-    articles = json.loads(json_data)['result']['item']
-
-    # Process the response
-    if response.status_code == 200:
-        # Extract and save relevant information
-        filename = f'{symbol}_benzinga_news.csv'
-        filepath = os.path.join(save_folder, filename)
-
-        df = pd.DataFrame(articles)
-        df = df.rename(columns={'created': 'date'})
-        df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
-        df.set_index('date', inplace=True)
-
-        os.makedirs(save_folder, exist_ok=True)
-
-        if os.path.exists(filepath):
-            if not new_data:
-                print("File already exists. Skipping download.")
-                df_existing = pd.read_csv(filepath, index_col='date')
-                return pd.concat([df_existing, df])
-
-        df.to_csv(filepath, index=True)
-        return df
-    else:
-        print("Error occurred while fetching news:", data['error'])
-
-
-def download_google_news(symbol, from_date, to_date, save_folder, new_data):
-    filename = f'{symbol}_google_url.csv'
-    filepath = os.path.join(save_folder, filename)
     if os.path.exists(filepath):
         if not new_data:
             print("File already exists. Skipping download.")
-            df = pd.read_csv(filepath, index_col='date')
-            return df
+            df_existing = pd.read_csv(filepath, index_col='date')
+            return df_existing
         else:
+            
+            existed_df = pd.read_csv(filepath)
+            existed_df['date'] = pd.to_datetime(existed_df['date'])  # Convert 'date' column to datetime objects
+            from_date = existed_df['date'].max().strftime("%Y-%m-%d")
+            # Set up query parameters
+            params = {
+                'accept': "application/json (default)",
+                'tickers': symbol,  # Symbol passed as argument
+                'token': api_key,
+                'dateFrom': from_date,
+                'dateTo': to_date,
+                'pageSize': 100  # Example: Number of results per page
+            }
+
+            # Make the API request
+            response = requests.get(endpoint, params=params)
+            data = xmltodict.parse(response.text)
+
+            # Convert the XML response to JSON
+            json_data = json.dumps(data)
+            articles = json.loads(json_data)['result']['item']
+
+            # Process the response
+            if response.status_code == 200:
+
+                df = pd.DataFrame(articles)
+                df = df.rename(columns={'created': 'date'})
+                df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
+                # df.set_index('date', inplace=True)
+
+                os.makedirs(save_folder, exist_ok=True)
+                existed_df = pd.concat([existed_df, df])
+                existed_df.to_csv(filepath, index=True)
+                return existed_df
+            else:
+                return existed_df
+    else:
+            # Set up query parameters
+            params = {
+                'accept': "application/json (default)",
+                'tickers': symbol,  # Symbol passed as argument
+                'token': api_key,
+                'dateFrom': from_date,
+                'dateTo': to_date,
+                'pageSize': 100  # Example: Number of results per page
+            }
+
+            # Make the API request
+            response = requests.get(endpoint, params=params)
+            data = xmltodict.parse(response.text)
+
+            # Convert the XML response to JSON
+            json_data = json.dumps(data)
+            articles = json.loads(json_data)['result']['item']
+
+            # Process the response
+            if response.status_code == 200:
+
+                df = pd.DataFrame(articles)
+                df = df.rename(columns={'created': 'date'})
+                df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
+                # df.set_index('date', inplace=True)
+
+                os.makedirs(save_folder, exist_ok=True)
+                df.to_csv(filepath, index=True)
+                return existed_df
+            else:
+                return pd.DataFrame()
+
+# def download_google_news(symbol, from_date, to_date, save_folder, new_data):
+#     filename = f'{symbol}_google_url.csv'
+#     filepath = os.path.join(save_folder, filename)
+#     if os.path.exists(filepath):
+#         if not new_data:
+#             print("File already exists. Skipping download.")
+#             df = pd.read_csv(filepath, index_col='date')
+#             return df
+#         else:
+#             # Subtract the timedelta object from the from_date to get the to_date
+#             # Create a new GoogleNews object
+#             googlenews = GoogleNews(lang='en')
+#             # Set the search query and time range
+#             googlenews.search(symbol)
+#             googlenews.set_time_range(from_date, to_date)
+#             # Retrieve the news articles
+#             articles = googlenews.result()
+
+#             df = pd.DataFrame.from_records(articles)
+#             df = df.drop(columns=['date'])
+#             df = df.rename(columns={'link': 'url'})
+#             df = df.rename(columns={'datetime': 'date'})
+#             df = df.rename(columns={'media': 'source'})
+#             # Convert the `datetime` column to a pandas datetime format
+#             df['date'] = pd.to_datetime(df['date'])
+#             # Convert 'date' to the format 'year-month-day'
+#             df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+#             # Set the `datetime` column as the index
+#             df.set_index('date', inplace=True)
+#             # Create the folder if it doesn't exist
+#             os.makedirs(save_folder, exist_ok=True)
+#             # Save the DataFrame to the specified path
+#             df.to_csv(filepath, index=True)
+#             return df
+#     else:
+#         # Subtract the timedelta object from the from_date to get the to_date
+#         # Create a new GoogleNews object
+#         googlenews = GoogleNews(lang='en')
+#         # Set the search query and time range
+#         googlenews.search(symbol)
+#         googlenews.set_time_range(from_date, to_date)
+#         # Retrieve the news articles
+#         articles = googlenews.result()
+
+#         df = pd.DataFrame.from_records(articles)
+#         df = df.drop(columns=['date'])
+#         df = df.rename(columns={'link': 'url'})
+#         df = df.rename(columns={'datetime': 'date'})
+#         df = df.rename(columns={'media': 'source'})
+#         # Convert the `datetime` column to a pandas datetime format
+#         df['date'] = pd.to_datetime(df['date'])
+#         # Convert 'date' to the format 'year-month-day'
+#         df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+#         # Set the `datetime` column as the index
+#         df.set_index('date', inplace=True)
+#         # Create the folder if it doesn't exist
+#         os.makedirs(save_folder, exist_ok=True)
+#         # Save the DataFrame to the specified path
+#         df.to_csv(filepath, index=True)
+#         return df
+
+import os
+import pandas as pd
+from GoogleNews import GoogleNews
+
+def download_google_news(symbol, from_date, to_date, save_folder, new_data):
+    file_name = f'{symbol}_google_url.csv'
+    save_path = os.path.join(save_folder, file_name)
+
+    if os.path.exists(save_path):
+        if not new_data:
+            print("File already exists. Skipping download.")
+            df = pd.read_csv(save_path, index_col='date')
+        else:
+            df = pd.read_csv(save_path)
+            df['date'] = pd.to_datetime(df['date'])  # Convert 'date' column to datetime objects
+            from_date = df['date'].max().strftime("%Y-%m-%d")
+            # if pd.to_datetime(from_date) <= pd.to_datetime(max_date):
+            #     print("Existing data is up to date. Skipping download.")
+            #     return df
+
             # Subtract the timedelta object from the from_date to get the to_date
             # Create a new GoogleNews object
             googlenews = GoogleNews(lang='en')
@@ -966,30 +1077,29 @@ def download_google_news(symbol, from_date, to_date, save_folder, new_data):
             # Retrieve the news articles
             articles = googlenews.result()
 
-            df = pd.DataFrame.from_records(articles)
-            df = df.drop(columns=['date'])
-            df = df.rename(columns={'link': 'url'})
-            df = df.rename(columns={'datetime': 'date'})
-            df = df.rename(columns={'media': 'source'})
+            new_df = pd.DataFrame.from_records(articles)
+            new_df = new_df.drop(columns=['date'])
+            new_df = new_df.rename(columns={'link': 'url'})
+            new_df = new_df.rename(columns={'datetime': 'date'})
+            new_df = new_df.rename(columns={'media': 'source'})
+
             # Convert the `datetime` column to a pandas datetime format
-            df['date'] = pd.to_datetime(df['date'])
+            new_df['date'] = pd.to_datetime(new_df['date'])
             # Convert 'date' to the format 'year-month-day'
-            df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+            new_df['date'] = new_df['date'].dt.strftime('%Y-%m-%d')
             # Set the `datetime` column as the index
-            df.set_index('date', inplace=True)
-            # Create the folder if it doesn't exist
-            os.makedirs(save_folder, exist_ok=True)
-            # Save the DataFrame to the specified path
-            df.to_csv(filepath, index=True)
-            return df
+            # new_df.set_index('date', inplace=True)
+
+            # Append the new data to the existing DataFrame
+            df = pd.concat([df, new_df])
+
+            # Save the updated DataFrame to the specified path
+            df.to_csv(save_path, index=True)
     else:
-        # Subtract the timedelta object from the from_date to get the to_date
-        # Create a new GoogleNews object
+        # Download news for the first time
         googlenews = GoogleNews(lang='en')
-        # Set the search query and time range
         googlenews.search(symbol)
         googlenews.set_time_range(from_date, to_date)
-        # Retrieve the news articles
         articles = googlenews.result()
 
         df = pd.DataFrame.from_records(articles)
@@ -997,18 +1107,14 @@ def download_google_news(symbol, from_date, to_date, save_folder, new_data):
         df = df.rename(columns={'link': 'url'})
         df = df.rename(columns={'datetime': 'date'})
         df = df.rename(columns={'media': 'source'})
-        # Convert the `datetime` column to a pandas datetime format
         df['date'] = pd.to_datetime(df['date'])
-        # Convert 'date' to the format 'year-month-day'
         df['date'] = df['date'].dt.strftime('%Y-%m-%d')
-        # Set the `datetime` column as the index
         df.set_index('date', inplace=True)
-        # Create the folder if it doesn't exist
-        os.makedirs(save_folder, exist_ok=True)
-        # Save the DataFrame to the specified path
-        df.to_csv(filepath, index=True)
-        return df
 
+        os.makedirs(save_folder, exist_ok=True)
+        df.to_csv(save_path, index=True)
+
+    return df
 
 def download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_data):
     filename = f'{symbol}_alpha_vantage_url.csv'
@@ -1019,6 +1125,9 @@ def download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_dat
             df = pd.read_csv(filepath, index_col='date')
             return df
         else:
+            df = pd.read_csv(filepath)
+            df['date'] = pd.to_datetime(df['date'])  # Convert 'date' column to datetime objects
+            from_date = df['date'].max().strftime("%Y-%m-%d")
             # Subtract the timedelta object from the from_date to get the to_date
             # Create a new AlphaVantage object or use the appropriate library
 
@@ -1057,15 +1166,15 @@ def download_alpha_vantage_news(symbol, from_date, to_date, save_folder, new_dat
                 from_date_obj += timedelta(days=1)
 
             # Convert the articles list into a DataFrame
-            df = pd.DataFrame.from_records(articles)
-            df = df.drop(columns=['date'])
-            df = df.rename(columns={'link': 'url'})
-            df = df.rename(columns={'datetime': 'date'})
-            df = df.rename(columns={'media': 'source'})
+            new_df = pd.DataFrame.from_records(articles)
+            # new_df = df.drop(columns=['date'])
+            new_df = df.rename(columns={'link': 'url'})
+            new_df = df.rename(columns={'datetime': 'date'})
+            new_df = df.rename(columns={'media': 'source'})
             # Convert the `date` column to a pandas datetime format
-            df['date'] = pd.to_datetime(df['date'])
+            new_df['date'] = pd.to_datetime(df['date'])
             # Convert 'date' to the format 'year-month-day'
-            df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+            new_df['date'] = new_df['date'].dt.strftime('%Y-%m-%d')
             # Set the `date` column as the index
             df.set_index('date', inplace=True)
             os.makedirs(save_folder, exist_ok=True)
@@ -1134,13 +1243,16 @@ def download_bing_news(symbol, from_date, to_date, save_folder, new_data):
             df = pd.read_csv(filepath, index_col='date')
             return df
         else:
+            df = pd.read_csv(filepath)
+            df['date'] = pd.to_datetime(df['date'])  # Convert 'date' column to datetime objects
+            from_date = df['date'].max().strftime("%Y-%m-%d")
             # Perform the Bing News API request
             news_list = get_bing_news(symbol, from_date, to_date)
 
             # Convert the news list to a DataFrame
-            df = pd.DataFrame(news_list)
-            df.set_index('date', inplace=True)
-
+            new_df = pd.DataFrame(news_list)
+            # new_df.set_index('date', inplace=True)
+            df = pd.concat([df, new_df])
             # Save the DataFrame to the specified path
             df.to_csv(filepath, index=True)
             return df
@@ -1207,26 +1319,26 @@ def get_bing_news(symbol, from_date, to_date):
 
     return news_list
 
-
-def download_news(symbol, from_date, to_date, new_data=True):
+"""
+DownLoad news, if the file not exist then start to download
+Else update it, get the latest date of the dataframe
+"""
+def download_news(symbol, from_date, to_date):
     save_folder = f'./NLP/news_web_url/{symbol}/'
     file_name = f'{symbol}_url.csv'
     save_path = os.path.join(save_folder, file_name)
     main_df = pd.DataFrame()
     if os.path.exists(save_path):
-        if new_data:
             main_df = pd.read_csv(save_path)
+            main_df['date'] = pd.to_datetime(main_df['date'])  # Convert 'date' column to datetime objects
+            from_date = main_df['date'].max().strftime("%Y-%m-%d")
             try:
-                google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
-                if isinstance(google_df.index, pd.DatetimeIndex):
-                    google_df.reset_index(inplace=True)
-                    google_df.rename(columns={'index': 'date'}, inplace=True)
-                    google_df.reset_index(drop=True, inplace=True)
+                google_df = download_google_news(symbol, from_date, to_date, save_folder, True)
                 main_df = pd.concat([main_df, google_df])
             except:
                 pass
             try:
-                finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
+                finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=True)
                 if isinstance(finhub_df.index, pd.DatetimeIndex):
                     finhub_df.reset_index(inplace=True)
                     finhub_df.rename(columns={'index': 'date'}, inplace=True)
@@ -1235,7 +1347,7 @@ def download_news(symbol, from_date, to_date, new_data=True):
             except:
                 pass
             try:
-                benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
+                benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=True)
                 if isinstance(benzema_df.index, pd.DatetimeIndex):
                     benzema_df.reset_index(inplace=True)
                     benzema_df.rename(columns={'index': 'date'}, inplace=True)
@@ -1248,12 +1360,9 @@ def download_news(symbol, from_date, to_date, new_data=True):
             main_df.reset_index(drop=True, inplace=True)
             main_df.to_csv(save_path, index=False)
             return main_df.values
-        else:
-            main_df = pd.read_csv(save_path)
-            return main_df.values
     else:
         try:
-            google_df = download_google_news(symbol, from_date, to_date, save_folder, new_data)
+            google_df = download_google_news(symbol, from_date, to_date, save_folder, True)
             if isinstance(google_df.index, pd.DatetimeIndex):
                 google_df.reset_index(inplace=True)
                 google_df.rename(columns={'index': 'date'}, inplace=True)
@@ -1262,7 +1371,7 @@ def download_news(symbol, from_date, to_date, new_data=True):
         except:
             pass
         try:
-            finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=False)
+            finhub_df = download_finhub_news(symbol, from_date, to_date, save_folder, new_data=True)
             if isinstance(finhub_df.index, pd.DatetimeIndex):
                 finhub_df.reset_index(inplace=True)
                 finhub_df.rename(columns={'index': 'date'}, inplace=True)
@@ -1271,7 +1380,7 @@ def download_news(symbol, from_date, to_date, new_data=True):
         except:
             pass
         try:
-            benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=False)
+            benzema_df = download_benzinga_news(symbol, from_date, to_date, save_folder, new_data=True)
             if isinstance(benzema_df.index, pd.DatetimeIndex):
                 benzema_df.reset_index(inplace=True)
                 benzema_df.rename(columns={'index': 'date'}, inplace=True)

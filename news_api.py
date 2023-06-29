@@ -21,6 +21,9 @@ from NLP import util as u
 from newsplease import NewsPlease
 from sentence_transformers import SentenceTransformer
 from configs.config import config as cf
+
+
+
 untrustworthy_url = ["https://www.zacks.com",
                      "https://www.thefly.com",
                      "https://www.investing.com",
@@ -35,16 +38,13 @@ trustworthy_source = ["CNBC", "GuruFocus"
                       ]
 untrustworthy_source = ["Nasdaq", "Thefly.com", "Yahoo", "zacks.com"]
 
-if __name__ == "__main__":
+def download_news_with_api(symbol):
 
     # Set the search parameters
     # Define the from_date as the current date and time
     from_date = "2022-07-01"
-    to_date = "2023-05-01"
-    page_size = 100
-    total_results = 1000
-    topK = 5
-    max_summary_lenght = 60
+    to_date = datetime.now().strftime("%Y-%m-%d")
+    
     symbol = "AMZN"
     news_web_url_folder = "./NLP/news_web_url"
     news_web_file_name = news_web_url_folder + f'/{symbol}/{symbol}_url.csv'
@@ -56,9 +56,9 @@ if __name__ == "__main__":
         queries = json.load(f)
     keyword_query = list(queries.values())
     model_name = 'philschmid/bart-large-cnn-samsum'
-    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
+    summarizer = pipeline("summarization", model=model_name)
     sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
-    u.download_news(symbol, from_date=from_date, to_date=to_date)
+    u.download_news(symbol, from_date, to_date)
 
     dataframes_to_concat = []
     file_encoding = 'ISO-8859-1'
@@ -70,60 +70,131 @@ if __name__ == "__main__":
 
     # Sort the DataFrame by the date column
     df = df.sort_values('date', ascending=True)
-    for index, row in df.iterrows():
-        # summary = row["summary"]
-        # summary = u.preprocess_text(summary, tokenizer)
-        # if u.get_similarity_score(summary, keyword_query) > 0.0:
-        url = row["url"]
-        source = row["source"]
-        date = row["date"]
-        top_sentences_str = ""
-        try:
-            response = requests.get(url, timeout=20)
-            base_url = urlparse(response.url).scheme + '://' + urlparse(response.url).hostname
 
-            # if source in trustworthy_source:
-            if base_url not in untrustworthy_url:
-                article = NewsPlease.from_url(response.url)
-                if article is not None:
-                    if article.maintext is not None:
-                        # Preprocess the input text and the query
-                        full_text = u.preprocess_text(article.maintext)
-                        top_sentence = u.get_similar_sentences(full_text, keyword_query,
-                                                               sentence_model)[:5]
-                        if len(top_sentence) > 0:
-                            summary_top_sentence = summarizer(top_sentence)
-                            # summary_top_sentence = summary_top_sentence[0]["summary_text"]
-                            unique_summaries = []
-                            for summary in summary_top_sentence:
-                                # Check if this summary is unique
-                                if summary not in unique_summaries:
-                                    unique_summaries.append(summary["summary_text"])
+    if os.path.exists(news_data_path):
+        
+        main_df = pd.read_csv(news_data_path)
+        main_df['date'] = pd.to_datetime(main_df['date'])  # Convert 'date' column to datetime objects
+        from_date = main_df['date'].max().strftime("%Y-%m-%d")
+        # date_range = pd.date_range(start=from_date, end=to_date, freq='D')
+        # Filter rows within the specified date range
+        df = df[(df['date'] >= from_date) & (df['date'] <= to_date)]
 
-                            # Merge the unique summaries into a single string
-                            summary_top_sentence = " ".join(unique_summaries)
-                            print(date)
-                            print(base_url)
-                            print(source)
-                            print(summary_top_sentence)
-                            summary_df = pd.DataFrame({
-                                'date': date,
-                                'symbol': symbol,
-                                'source': source,
-                                'summary': summary_top_sentence,
-                                "base_url": base_url,
-                                "url": response.url
-                            }, index=[index])
-                            dataframes_to_concat.append(summary_df)
-        except Exception as e:
-            print("An exception occurred:", e)
-            print(date)
-            print(base_url)
-            print(source)
-    # Concatenate all the DataFrames into one
-    dataframe = pd.concat(dataframes_to_concat)
-    # Set the `datetime` column as the index
-    dataframe.set_index('date', inplace=True)
-    # Export the DataFrame to a CSV file
-    os.makedirs(os.path.dirname(news_data_path), exist_ok=True)
-    dataframe.to_csv(news_data_path, index=True)
+        for index, row in df.iterrows():
+            # summary = row["summary"]
+            # summary = u.preprocess_text(summary, tokenizer)
+            # if u.get_similarity_score(summary, keyword_query) > 0.0:
+            url = row["url"]
+            source = row["source"]
+            date = row["date"]
+            top_sentences_str = ""
+            try:
+                response = requests.get(url, timeout=20)
+                base_url = urlparse(response.url).scheme + '://' + urlparse(response.url).hostname
+
+                # if source in trustworthy_source:
+                if base_url not in untrustworthy_url:
+                    article = NewsPlease.from_url(response.url)
+                    if article is not None:
+                        if article.maintext is not None:
+                            # Preprocess the input text and the query
+                            full_text = u.preprocess_text(article.maintext)
+                            top_sentence = u.get_similar_sentences(full_text, keyword_query,
+                                                                sentence_model)[:5]
+                            if len(top_sentence) > 0:
+                                summary_top_sentence = summarizer(top_sentence)
+                                # summary_top_sentence = summary_top_sentence[0]["summary_text"]
+                                unique_summaries = []
+                                for summary in summary_top_sentence:
+                                    # Check if this summary is unique
+                                    if summary not in unique_summaries:
+                                        unique_summaries.append(summary["summary_text"])
+
+                                # Merge the unique summaries into a single string
+                                summary_top_sentence = " ".join(unique_summaries)
+                                print(date)
+                                print(base_url)
+                                print(source)
+                                print(summary_top_sentence)
+                                summary_df = pd.DataFrame({
+                                    'date': date,
+                                    'symbol': symbol,
+                                    'source': source,
+                                    'summary': summary_top_sentence,
+                                    "base_url": base_url,
+                                    "url": response.url
+                                }, index=[index])
+                                dataframes_to_concat.append(summary_df)
+            except Exception as e:
+                print("An exception occurred:", e)
+                print(date)
+                print(base_url)
+                print(source)
+        # Concatenate all the DataFrames into one
+        dataframe = pd.concat(dataframes_to_concat)
+        # Set the `datetime` column as the index
+        dataframe.set_index('date', inplace=True)
+        # Export the DataFrame to a CSV file
+        os.makedirs(os.path.dirname(news_data_path), exist_ok=True)
+        main_df = pd.concat([main_df, dataframe])
+        main_df.set_index('date', inplace=True)
+        main_df.to_csv(news_data_path, index=True)
+
+    else:
+        for index, row in df.iterrows():
+            # summary = row["summary"]
+            # summary = u.preprocess_text(summary, tokenizer)
+            # if u.get_similarity_score(summary, keyword_query) > 0.0:
+            url = row["url"]
+            source = row["source"]
+            date = row["date"]
+            top_sentences_str = ""
+            try:
+                response = requests.get(url, timeout=20)
+                base_url = urlparse(response.url).scheme + '://' + urlparse(response.url).hostname
+
+                # if source in trustworthy_source:
+                if base_url not in untrustworthy_url:
+                    article = NewsPlease.from_url(response.url)
+                    if article is not None:
+                        if article.maintext is not None:
+                            # Preprocess the input text and the query
+                            full_text = u.preprocess_text(article.maintext)
+                            top_sentence = u.get_similar_sentences(full_text, keyword_query,
+                                                                sentence_model)[:5]
+                            if len(top_sentence) > 0:
+                                summary_top_sentence = summarizer(top_sentence)
+                                # summary_top_sentence = summary_top_sentence[0]["summary_text"]
+                                unique_summaries = []
+                                for summary in summary_top_sentence:
+                                    # Check if this summary is unique
+                                    if summary not in unique_summaries:
+                                        unique_summaries.append(summary["summary_text"])
+
+                                # Merge the unique summaries into a single string
+                                summary_top_sentence = " ".join(unique_summaries)
+                                print(date)
+                                print(base_url)
+                                print(source)
+                                print(summary_top_sentence)
+                                summary_df = pd.DataFrame({
+                                    'date': date,
+                                    'symbol': symbol,
+                                    'source': source,
+                                    'summary': summary_top_sentence,
+                                    "base_url": base_url,
+                                    "url": response.url
+                                }, index=[index])
+                                dataframes_to_concat.append(summary_df)
+            except Exception as e:
+                print("An exception occurred:", e)
+                print(date)
+                print(base_url)
+                print(source)
+        # Concatenate all the DataFrames into one
+        dataframe = pd.concat(dataframes_to_concat)
+        # Set the `datetime` column as the index
+        dataframe.set_index('date', inplace=True)
+        # Export the DataFrame to a CSV file
+        os.makedirs(os.path.dirname(news_data_path), exist_ok=True)
+        dataframe.to_csv(news_data_path, index=True)
