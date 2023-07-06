@@ -17,9 +17,9 @@ lstm_cf = {
         },
         "symbol": "MSFT",
         "topk": 10,
-        "data_mode": 2,
+        "data_mode": 1,
         "window_size": 7,
-        "output_step": 7,
+        "output_step": 14,
         "max_string_length": 500,
         "param_grid": {
             'data_mode': [0, 1, 2],

@@ -1,12 +1,12 @@
 rf_cf = {
     "model": {
-        'n_estimators': 100,  # Number of trees in the forest
-        'criterion': 'gini',  # Splitting criterion (can be 'gini' or 'entropy')
+        'n_estimators': 10,  # Number of trees in the forest
+        'criterion': 'entropy',  # Splitting criterion (can be 'gini' or 'entropy')
         'max_depth': 4,  # Maximum depth of the tree
         'min_samples_leaf': 2,  # Minimum number of samples required to be at a leaf node  # Whether to use out-of-bag samples to estimate the generalization accuracy
         'random_state': 42,  # Random seed for reproducibility
         "window_size": 7,
-        "output_step": 7,
+        "output_step": 14,
         "data_mode": 1,
         "topk": 20,
         "symbol": "MSFT",
