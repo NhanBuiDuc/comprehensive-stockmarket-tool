@@ -1330,7 +1330,20 @@ def download_news(symbol, from_date, to_date):
     main_df = pd.DataFrame()
     if os.path.exists(save_path):
             main_df = pd.read_csv(save_path)
-            main_df['date'] = pd.to_datetime(main_df['date'])  # Convert 'date' column to datetime objects
+            # Convert 'date' column to datetime objects
+            # Convert the 'date' column to datetime objects, removing rows with invalid dates
+            valid_dates = []
+            for date_str in main_df['date']:
+                try:
+                    date_obj = pd.to_datetime(date_str)
+                    valid_dates.append(date_obj)
+                except:
+                # Remove the row with an invalid date immediately
+                    main_df = main_df[main_df['date'] != date_str]
+
+            # Update the DataFrame with the valid dates
+            main_df['date'] = valid_dates
+            main_df['date'] = pd.to_datetime(main_df['date'])
             from_date = main_df['date'].max().strftime("%Y-%m-%d")
             try:
                 google_df = download_google_news(symbol, from_date, to_date, save_folder, True)
@@ -1358,8 +1371,15 @@ def download_news(symbol, from_date, to_date):
 
             main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
             main_df.reset_index(drop=True, inplace=True)
-            main_df.to_csv(save_path, index=False)
-            return main_df.values
+            columns_to_save = ['date', 'title', 'source', 'desc', 'url', 'img', 'category', 'headline', 'id', 'image', 'related', 'summary']
+            main_df_filtered = main_df[columns_to_save]
+            main_df_filtered['date'] = pd.to_datetime(main_df_filtered['date'])
+            main_df_filtered = main_df_filtered.dropna(subset=['date'])
+            main_df_filtered['date'] = main_df_filtered['date'].apply(lambda x: x.strftime("%Y-%m-%d"))
+            main_df_filtered = main_df_filtered.sort_values('date', ascending=True)
+            main_df_filtered = main_df_filtered.drop_duplicates(subset='summary', keep='first')
+            main_df_filtered.to_csv(save_path, index=False)
+            return main_df_filtered.values
     else:
         try:
             google_df = download_google_news(symbol, from_date, to_date, save_folder, True)
@@ -1391,8 +1411,10 @@ def download_news(symbol, from_date, to_date):
 
         main_df = main_df[main_df['url'].isin(main_df['url'].unique())]
         main_df.reset_index(drop=True, inplace=True)
-        main_df.to_csv(save_path, index=False)
-        return main_df.values
+        columns_to_save = ['date', 'title', 'source', 'desc', 'url', 'img', 'category', 'headline', 'id', 'image', 'related', 'summary']
+        main_df_filtered = main_df[columns_to_save]
+        main_df_filtered.to_csv(save_path, index=False)
+        return main_df_filtered.values
 
 
 def update_news_url(symbol):
