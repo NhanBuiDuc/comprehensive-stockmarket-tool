@@ -243,15 +243,17 @@ chart = {
         object.callApiGetPrice(value, function (res_price) {
           price = str(res_price)
         })
-        
+      
+        console.log(res);
         let tr = document.createElement("tr");
         tr.innerHTML = `
+                <td>01/07/2023</td>
                 <td>${value}</td>
-                <td>${res["svm"][`${outputsize}`]}</td>
-                <td>${res["xgboost"][`${outputsize}`]}</td>
-                <td>${res["random"][`${outputsize}`]}</td>
+                <td>UP</td>
+                <td>${res["svm"][outputsize] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
+                <td>${res["xgboost"][outputsize] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
+                <td>${res["random"][outputsize]  == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
                 <td>DOWN</td>`;
-
         tbody.append(tr);
       }
     });

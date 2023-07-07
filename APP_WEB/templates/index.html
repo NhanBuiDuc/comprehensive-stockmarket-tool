@@ -139,11 +139,25 @@
             </div>
             
             <div class="column is-6">
+                <div class="is-6 flex-content-between">
+                    <div class="" style="padding-left:3.225rem; display:inline-flex; margin-block:auto;">
+                        <div style="margin-block:auto; padding-right:0.625rem">Current Price </div>
+                        <div class="price-box" id="currentPrice">190</div>
+                    </div>
+                    
+                    <div class="" style="padding-right:3.225rem; display:inline-flex; margin-block:auto;">
+                        <div style=" margin-block:auto; padding-right:0.625rem">Actual Price </div>
+                        <div class="price-box " id="actualPrice">180</div>
+                    </div>
+                    
+                </div>
                 <div class="table-container">
                     <table class="styled-table table is-hidden" id="stockTable">
                         <thead>
                             <tr>
+                                <th class="has-text-white">Date</th>
                                 <th class="has-text-white">Symbol</th>
+                                <th class="has-text-white">LSTM</th>
                                 <th class="has-text-white">SVM</th>
                                 <th class="has-text-white">XGBoost</th>
                                 <th class="has-text-white">Random Forest</th>
@@ -153,15 +167,22 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td>01/07/2023</td>
                                 <td>AAPL</td>
                                 <td><i class="fa-solid fa-arrow-up" style="color: #62e5be;"> UP</i></td>
                                 <td><i class="fa-solid fa-arrow-down" style="color: #c81e1e;"> DOWN</i></td>
                                 <td><i class="fa-solid fa-arrow-down" style="color: #c81e1e;"> DOWN</i></td>
                                 <td><i class="fa-solid fa-arrow-up" style="color: #62e5be;"> UP</i></td>
+                                <td><i class="fa-solid fa-arrow-up" style="color: #62e5be;"> UP</i></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="15" value="15" class="slider" id="dateSlider">
+                </div>
+
+                
             </div>
         </div>
 
@@ -330,7 +351,7 @@
 
                     chart.build(symbol); // Rebuild the chart using the new data
                     index.build(symbol); // Rebuild the chart using the new data
-                    //chart.renderDataToTable(symbol);
+                    chart.renderDataToTable(symbol);
                     
                     // UI Process (Hide Loading, Show Table, Show Chart,...)
                     loadingSection.classList.add("is-hidden");
