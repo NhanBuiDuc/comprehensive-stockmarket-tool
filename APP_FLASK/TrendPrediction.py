@@ -15,7 +15,7 @@ class Predictor:
     def __init__(self):
         self.data_folder = f"./csv/"
         self.stock_list = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
-        #self.stock_list = ["AAPL"]
+        # self.stock_list = ["GOOGL"]
         self.window_size_list = [3, 7, 14]
         self.output_size_list = [3, 7, 14]
         self.scaler = MinMaxScaler(feature_range=(-100, 100))
