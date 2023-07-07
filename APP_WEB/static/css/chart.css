@@ -476,3 +476,19 @@ footer {
     background: #04AA6D;
     cursor: pointer;
 }
+.datePicker {
+    margin: 0 0 0.625rem 3.225rem;
+    /* border: chartreuse; */
+    border-block: revert;
+    box-sizing: border-box;
+    border-radius: 24px;
+    height: 31px;
+    width: fit-content;
+    font-size: 15px;
+    font-style: inherit;
+    font-family: "Google Sans", Roboto, Arial, sans-serif;
+    justify-content: center;
+    position: relative;
+    text-align: center;
+    padding-right: 7px;
+}

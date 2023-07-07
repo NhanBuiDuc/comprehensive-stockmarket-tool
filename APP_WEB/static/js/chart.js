@@ -233,6 +233,9 @@ chart = {
   renderDataToTable: function (value) {
     let object = this;
 
+    let actualPrice = document.getElementById("actualPrice");
+    let currentPrice = document.getElementById("currentPrice");
+    let datePicker = document.getElementById("datePicker");
     let stockTable = document.getElementById("stockTable");
     let tbody = stockTable.querySelector("tbody");
     tbody.innerHTML = ``;
@@ -240,20 +243,24 @@ chart = {
       if (res) {
         let price = ""
         let outputsize = document.getElementById("outputsize").value;
-        object.callApiGetPrice(value, function (res_price) {
-          price = str(res_price)
-        })
-      
-        console.log(res);
+        let dateValue = document.getElementById("datePicker").value;
+        // Split the retrieved value using the hyphen "-"
+        const [year, month, day] = dateValue.split("-");
+
+        // Rearrange the split values to the desired format ("01-07-2023")
+        const formattedDate = `${day}/${month}/${year}`;
+        let datePicker = formattedDate;
+        currentPrice.innerText = res[datePicker]["current"];
+        actualPrice.innerText = res[datePicker][outputsize]["actual"];
         let tr = document.createElement("tr");
         tr.innerHTML = `
-                <td>01/07/2023</td>
+                <td>${datePicker}</td>
                 <td>${value}</td>
-                <td>UP</td>
-                <td>${res["svm"][outputsize] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
-                <td>${res["xgboost"][outputsize] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
-                <td>${res["random"][outputsize]  == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
-                <td>DOWN</td>`;
+                <td>${res[datePicker][outputsize]["lstm"] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
+                <td>${res[datePicker][outputsize]["svm"] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
+                <td>${res[datePicker][outputsize]["xgboost"] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
+                <td>${res[datePicker][outputsize]["random forest"]  == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
+                <td>${res[datePicker][outputsize]["ensembler"] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>`;
         tbody.append(tr);
       }
     });
@@ -286,7 +293,7 @@ chart = {
     let object = this;
 
     object
-      .getData("prediction2.json")
+      .getData("prediction.json")
       .then(function (data) {
         let dataSymbol = data[`${value}`];
         callback(dataSymbol);
