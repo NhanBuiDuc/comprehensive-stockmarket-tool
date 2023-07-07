@@ -435,7 +435,7 @@ footer {
 .price-box {
     border: 1px solid #ccc;
     width: 64px;
-    height: fit-content;
+    height: 26px;
     box-sizing: border-box;
     border-radius: 24px;
     text-align: center;
@@ -446,28 +446,7 @@ footer {
     margin-bottom: unset;
 }
 
-/* slider */
-.slider {
-    -webkit-appearance: none;
-    width: calc(100% - 3.225rem * 2);
-    height: 15px;
-    border-radius: 5px;  
-    background: #d3d3d3;
-    outline: none;
-    opacity: 0.7;
-    -webkit-transition: .2s;
-    transition: opacity .2s;
-  }
-  
-.slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 25px;
-    height: 25px;
-    border-radius: 50%; 
-    background: #04AA6D;
-    cursor: pointer;
-}
+
 
 .slider::-moz-range-thumb {
     width: 25px;
@@ -477,12 +456,12 @@ footer {
     cursor: pointer;
 }
 .datePicker {
-    margin: 0 0 0.625rem 3.225rem;
+    
     /* border: chartreuse; */
     border-block: revert;
     box-sizing: border-box;
     border-radius: 24px;
-    height: 31px;
+    height: 34px;
     width: fit-content;
     font-size: 15px;
     font-style: inherit;
@@ -490,5 +469,8 @@ footer {
     justify-content: center;
     position: relative;
     text-align: center;
-    padding-right: 7px;
+    padding-right: 30px;
+    padding-left: 30px;
+    border-radius: 10rem;
+    border: 0.1px solid #000;
 }

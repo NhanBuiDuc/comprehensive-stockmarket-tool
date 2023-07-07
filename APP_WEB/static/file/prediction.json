@@ -8,7 +8,7 @@
           "xgboost": "UP",
           "lstm": "DOWN",
           "ensembler": "UP",
-          "actual": 190
+          "actual": ""
         },
         "7": {
           "svm": "UP",
