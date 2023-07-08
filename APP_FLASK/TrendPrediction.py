@@ -9,54 +9,53 @@ from sklearn.preprocessing import MinMaxScaler
 from functools import reduce
 import json
 from news_api import download_news_with_api
-
+import pandas as pd
 
 class Predictor:
     def __init__(self):
         self.data_folder = f"./csv/"
         self.stock_list = ["AAPL", "AMZN", "GOOGL", "MSFT", "TSLA"]
-        # self.stock_list = ["GOOGL"]
         self.window_size_list = [3, 7, 14]
         self.output_size_list = [3, 7, 14]
         self.scaler = MinMaxScaler(feature_range=(-100, 100))
         self.path_to_des = './APP_WEB/static/file/prediction.json'
         self.config_dict = {
             "AAPL": {
-                "svm": [[7,2], [7,1], [14,1]],
-                "random_forest": [[3,0], [7,1], [3,2]],
-                "xgboost": [[3,2], [7,2], [7,0]],
+                "svm": [[7,1], [7,1], [14,1]],
+                "random_forest": [[7,1], [7,2], [14,0]],
+                "xgboost": [[7,1], [7,1], [14,1]],
+                "lstm": [[7,0], [7,0], [14,2]]
             },
             "AMZN": {
-                "svm": [[3,1], [14,1], [7,1]],
-                "random_forest": [[3,0], [7,2], [14,2]],
-                "xgboost": [[14,2], [3,0], [14,1]]
+                "svm": [[7,2], [14,1], [7,2]],
+                "random_forest": [[7,1], [14,1], [7,0]],
+                "xgboost": [[7,2], [14,1], [7,1]],
+                "lstm": [[7,2], [14,1], [7,2]]
             },
             "GOOGL": {
-                "svm": [[7,2], [7,2], [7,1]],
-                "random_forest": [[3,0], [7,1], [7,1]],
-                "xgboost": [[7,2], [7,1], [7,1]]
+                "svm": [[14,2], [14,1], [14,1]],
+                "random_forest": [[14,1], [7,2], [14,0]],
+                "xgboost": [[14,0], [14,2], [14,1]],
+                "lstm": [[14,0], [14,2], [14,0]]
             },
             "MSFT": {
-                "svm": [[3,1], [7,0], [3,0]],
-                "random_forest": [[7,1], [3,2], [3,0]],
-                "xgboost": [[7,1], [7,2], [3,0]]
+                "svm": [[3,0], [7,2], [7,2]],
+                "random_forest": [[3,2], [7,1], [7,1]],
+                "xgboost": [[3,2], [7,1], [7,1]],
+                "lstm": [[3,2], [7,2], [7,1]]
             },
             "TSLA": {
-                "svm": [[7,2], [14,2], [14,1]],
-                "random_forest": [[7,1], [14,1], [7,2]],
-                "xgboost": [[3,1], [14,1], [3,2]]
+                "svm": [[14,2], [14,1], [14,1]],
+                "random_forest": [[14,1], [14,0], [14,0]],
+                "xgboost": [[14,1], [14,2], [14,1]],
+                "lstm": [[14,1], [14,2], [14,2]]
             }
         }
         
 
         self.pytorch_timeseries_model_type_dict = [
-            "movement",
-            "magnitude",
             "assembler",
             "lstm",
-            "gru",
-            "transformer",
-            "pred_price_LSTM"
         ]
         self.tensorflow_timeseries_model_type_dict = [
             "svm",
@@ -80,8 +79,8 @@ class Predictor:
             14: 2,
         }
         # Realtime, so from date is from the latest date of the CSV file, to date is current date.
-        for symbol in self.stock_list:
-            download_news_with_api(symbol)
+        # for symbol in self.stock_list:
+        #     download_news_with_api(symbol)
     
     def batch_predict(self, symbol, model_type_list, window_size, output_step):
         result = {}
@@ -153,7 +152,7 @@ class Predictor:
     #         }     
     #     return output_json
 
-    def predict_1(self, symbol, model_type, output_step):
+    def predict_1(self, day, symbol, model_type, output_step):
         if output_step == 3:
             data_mode = self.config_dict[symbol][model_type][0][1]
             window_size = self.config_dict[symbol][model_type][0][0]
@@ -166,41 +165,39 @@ class Predictor:
         model_name = f'{model_type}_{symbol}_w{window_size}_o{output_step}_d{data_mode}'
 
 
-        price_data, stock_data, news_data = self.prepare_data(symbol, window_size)
-        X = np.concatenate((stock_data, news_data), axis=1)
-
+        price_data, stock_data, news_data = self.prepare_data(day, symbol, window_size, output_step)
+        X = np.concatenate((stock_data, news_data), axis=2)
         model = Model(model_type=model_type)
         model = model.load_check_point(model_type, model_name)
         if data_mode == 0:
-            if model_type == "transformer":
+            if model_type == "transformer"or model_type == "lstm":
                 stock_tensor = torch.tensor(stock_data).float().to("cuda")
                 news_tensor = torch.tensor(news_data).float().to("cuda")
                 model.structure.to("cuda")
                 model.data_mode = 0
                 output = model.structure(stock_tensor, news_tensor)
             else:
-
-                tensor_data = torch.tensor(price_data)[-1].unsqueeze(0)
+                tensor_data = torch.tensor(price_data)[:, -1, :]
                 output = model.predict(tensor_data)
         elif data_mode == 1:
-            if model_type == "transformer":
+            if model_type == "transformer" or model_type == "lstm":
                 stock_tensor = torch.tensor(stock_data).float().to("cuda")
                 news_tensor = torch.tensor(news_data).float().to("cuda")
                 model.structure.to("cuda")
                 model.data_mode = 1
                 output = model.structure(stock_tensor, news_tensor)
             else:
-                tensor_data = torch.tensor(stock_data)[-1].unsqueeze(0)
+                tensor_data = torch.tensor(stock_data)[:, -1, :]
                 output = model.predict(tensor_data)
         else:
-            if model_type == "transformer":
+            if model_type == "transformer" or model_type == "lstm":
                 stock_tensor = torch.tensor(stock_data).float().to("cuda")
                 news_tensor = torch.tensor(news_data).float().to("cuda")
                 model.structure.to("cuda")
                 model.data_mode = 2
                 output = model.structure(stock_tensor, news_tensor)
             else:
-                tensor_data = torch.tensor(X)[-1].unsqueeze(0)
+                tensor_data = torch.tensor(X)[:, -1, :]
                 output = model.predict(tensor_data)
 
         threshold = 0.5
@@ -214,6 +211,10 @@ class Predictor:
             model_print_name = 'random'
         elif model_type == "xgboost":
             model_print_name = 'xgboost'
+        elif model_type == "lstm":
+            model_print_name = 'lstm'
+        elif model_type == "ensembler":
+            model_print_name = 'ensembler'     
         if torch.all(converted_output == 1):
             output_json = {
                 f'{model_print_name}_{symbol}_{output_step}': "UP"
@@ -225,32 +226,58 @@ class Predictor:
         return output_json
 
 
-    def prepare_data(self, symbol, window_size):
+    def prepare_data(self, end, symbol, window_size, output_step):
         
-        end = '2023-05-01'
         # Convert the end date string to a datetime object
         end_date = datetime.strptime(end, "%Y-%m-%d")
         # Calculate the start date by subtracting 30 days from the end date
-        start_date = end_date - timedelta(days=window_size * 2)
+        start_date = end_date - timedelta(days=window_size * 5)
         start = start_date.strftime("%Y-%m-%d")
-        stock_df = u.prepare_stock_dataframe(symbol, window_size, start, end, new_data=False)
+        stock_df = u.prepare_stock_dataframe(symbol, window_size, start, end, new_data=True)
         
         # Filter the DataFrame based on the date range
         stock_df = stock_df.loc[start_date:end_date]
         stock_data = stock_df.values[-window_size:]
         price_data = stock_data[:, :5]
         #nlp_u.update_news_url(symbol)
-        news_data = util.prepare_news_data(stock_df, symbol, window_size, 5, False)
+        news_data = nlp_u.prepare_news_data(stock_df, symbol, window_size, start_date, end_date, output_step, 5, 500, True)
+        news_data = news_data[0]
+        news_data = news_data[-1, :, :]
+        news_data = np.expand_dims(news_data, axis=0)
         stock_data = self.scaler.fit_transform(stock_data)
+        stock_data = np.expand_dims(stock_data, axis=0)
         price_data = self.scaler.fit_transform(price_data)
+        price_data = np.expand_dims(price_data, axis=0)
         return price_data, stock_data, news_data
 
     def fetch_prediction(self):
         result = []
-        for symbol in self.stock_list:
-            for model_type in self.tensorflow_timeseries_model_type_dict:
-                    for output_step in self.output_size_list:
-                        result.append(self.predict_1(symbol, model_type, output_step))
+        df = u.prepare_stock_dataframe("AAPL", 3, "2022-07-01", datetime.now().strftime("%Y-%m-%d"), new_data=True)
+        df = df.reset_index().rename(columns={'index': 'date'})
+        date_column = df['date']
+        # Convert the date column to datetime objects
+        date_objects = pd.to_datetime(date_column)
+        # Filter the dates from 2020
+        filtered_dates = date_objects[date_objects >= pd.to_datetime("2023-07-05")].sort_values(ascending=False)
+
+        # Convert the date column to a list of formatted date strings
+        standard_date = filtered_dates.apply(lambda x: pd.to_datetime(x).strftime("%Y-%m-%d")).tolist()
+        for day in standard_date:
+            for symbol in self.stock_list:
+                for model_type in self.tensorflow_timeseries_model_type_dict:
+                        for output_step in self.output_size_list:
+                            prediction = self.predict_1(day, symbol, model_type, output_step)
+                            close_data = df[df['date'] == day]['close'].values[0]  # Get the corresponding close data
+                            prediction['current'] = close_data  # Add 'current' key-value pair
+                            if pd.to_datetime(day) + pd.DateOffset(days=output_step) in df['date']:
+                                actual = df[df['date'] == pd.to_datetime(day) + pd.DateOffset(days=output_step)]['close'].values[0]
+                            else:
+                                actual = ""
+                            prediction['actual'] = actual
+                            result.append(prediction)
+                # for model_type in self.pytorch_timeseries_model_type_dict:
+                #         for output_step in self.output_size_list:
+                #             result.append(self.predict_1(day, symbol, model_type, output_step))
         # result = dict(result)
         result = reduce(lambda d1, d2: d1.update(d2) or d1, result, {})
         #print(result)
@@ -267,7 +294,7 @@ class Predictor:
                 reformatted_data[stock][model] = {}
             
             # Add the prediction to the corresponding interval
-            reformatted_data[stock][model][interval] = value
+            reformatted_data[stock][interval][model] = value
         #json_object = json.loads(result)
         with open(self.path_to_des, "w") as json_file:
             # Write the dictionary to the JSON file
