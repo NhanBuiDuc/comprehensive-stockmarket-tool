@@ -83,7 +83,7 @@ def api_builder(function, url, symbol, api_key, datatype):
 
 def read_csv_file(path, file_name):
     # construct the full file path
-    file_path = f"{path}/{file_name}"
+    file_path = f"{path}{file_name}"
 
     # read the CSV file into a Pandas dataframe
     df = pd.read_csv(file_path, index_col=0, parse_dates=True)
