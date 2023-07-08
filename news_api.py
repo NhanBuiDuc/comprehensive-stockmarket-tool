@@ -56,9 +56,11 @@ def download_news_with_api(symbol):
         queries = json.load(f)
     keyword_query = list(queries.values())
     model_name = 'philschmid/bart-large-cnn-samsum'
-    summarizer = pipeline("summarization", model=model_name)
-    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-mean-tokens')
-    u.download_news(symbol, from_date, to_date)
+    summarizer = pipeline("summarization", model="philschmid/bart-large-cnn-samsum")
+    sentence_model = SentenceTransformer('sentence-transformers/bert-base-nli-tokensmean-')
+    u.download_news(symbol, from_date=from_date, to_date=to_date)
+
+    dataframes_to_concat = []
     file_encoding = 'ISO-8859-1'
     df = pd.read_csv(news_web_file_name, encoding=file_encoding)
     # filtered_df = df[df['source'].isin(trustworthy_source)]

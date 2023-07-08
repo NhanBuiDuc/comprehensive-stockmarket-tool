@@ -1,39 +1,8 @@
-// function loadJSON(filename) {
-//     var symbol = filename.substring(0, filename.indexOf('_signal'));
-//     const path = '../static/file/';
-//     let filepath = path + filename;
-//     console.log(symbol);
-//     return fetch(filepath)
-//       .then(response => response.json())
-//       .then(data => {
-//         return data; // Return the loaded JSON data
-//       })
-//       .catch(error => {
-//         console.error('Error:', error);
-//       });
-// }
-
 chart = {
-  // build: function () {
-  //     let object = this;
+  
+  upElements: "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>",
+  downElements: "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>",
 
-  //     console.log("Building chart...");
-  //     object.getData(function(data) {
-  //         object.buildHighchart(data);
-  //         object.buildAnalysisHoloDemo(data);
-  //     })
-  // },
-
-  // getData: function (callback) {
-  //     fetch('../static/file/AAPL_signal.json')
-  //         .then(response => response.json())
-  //         .then(data => {
-  //             if (callback) {
-  //                 callback(data);
-  //             }
-  //         })
-  //         .catch(error => console.error(error));
-  // },
   getData: async function (filename) {
     const path = "../static/file/";
     let filepath = path + filename;
@@ -55,6 +24,7 @@ chart = {
       object.buildHighchart(object.currentData, symbol); // Use the current data if available
       //   object.buildAnalysisHoloDemo(object.currentData);
       object.buildOnchangeOutputSize();
+      object.buildOnchangedatePicker();
     } else {
       console.log("No data available.");
     }
@@ -64,6 +34,14 @@ chart = {
     let object = this;
     let outputsize = document.getElementById("outputsize");
     outputsize.onchange = function () {
+      let symbol = document.getElementById("titleSignal").innerHTML;
+      object.renderDataToTable(symbol);
+    };
+  },
+  buildOnchangedatePicker: function () {
+    let object = this;
+    let datePicker = document.getElementById("datePicker");
+    datePicker.onchange = function () {
       let symbol = document.getElementById("titleSignal").innerHTML;
       object.renderDataToTable(symbol);
     };
@@ -233,6 +211,9 @@ chart = {
   renderDataToTable: function (value) {
     let object = this;
 
+    let actualPrice = document.getElementById("actualPrice");
+    let currentPrice = document.getElementById("currentPrice");
+    let datePicker = document.getElementById("datePicker");
     let stockTable = document.getElementById("stockTable");
     let tbody = stockTable.querySelector("tbody");
     tbody.innerHTML = ``;
@@ -240,20 +221,28 @@ chart = {
       if (res) {
         let price = ""
         let outputsize = document.getElementById("outputsize").value;
-        object.callApiGetPrice(value, function (res_price) {
-          price = str(res_price)
-        })
-      
-        console.log(res);
+        let dateValue = document.getElementById("datePicker").value;
+        // Split the retrieved value using the hyphen "-"
+        const [year, month, day] = dateValue.split("-");
+
+        console.log("data: ", res);
+
+        // Rearrange the split values to the desired format ("01-07-2023")
+        const formattedDate = `${day}/${month}/${year}`;
+        let datePicker = formattedDate;
+
+        currentPrice.innerText = (res[datePicker] ? res[datePicker]["current"] : "0");
+        actualPrice.innerText = (res[datePicker] ? res[datePicker][outputsize]["actual"]: "0");
+        
         let tr = document.createElement("tr");
         tr.innerHTML = `
-                <td>01/07/2023</td>
+                <td>${datePicker}</td>
                 <td>${value}</td>
-                <td>UP</td>
-                <td>${res["svm"][outputsize] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
-                <td>${res["xgboost"][outputsize] == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
-                <td>${res["random"][outputsize]  == "UP" ? "<i class='fa-solid fa-arrow-up' style='color: #289125;'> UP</i>" : "<i class='fa-solid fa-arrow-down' style='color: #c81e1e;'> DOWN</i>"}</td>
-                <td>DOWN</td>`;
+                <td>${res[datePicker][outputsize]["lstm"] == "UP" ? object.upElements : object.downElements}</td>
+                <td>${res[datePicker][outputsize]["svm"] == "UP" ? object.upElements : object.downElements}</td>
+                <td>${res[datePicker][outputsize]["xgboost"] == "UP" ? object.upElements : object.downElements}</td>
+                <td>${res[datePicker][outputsize]["random forest"]  == "UP" ? object.upElements : object.downElements}</td>
+                <td>${res[datePicker][outputsize]["ensembler"] == "UP" ? object.upElements : object.downElements}</td>`;
         tbody.append(tr);
       }
     });
@@ -286,7 +275,7 @@ chart = {
     let object = this;
 
     object
-      .getData("prediction2.json")
+      .getData("prediction.json")
       .then(function (data) {
         let dataSymbol = data[`${value}`];
         callback(dataSymbol);

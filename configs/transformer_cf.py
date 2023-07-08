@@ -4,7 +4,7 @@ transformer_cf = {
         "nhead": 3,
         "num_encoder_layers": 20,
         "dim_feedforward": 20,
-        "drop_out": 0.5,
+        "dropout": 0.5,
         "window_size": 14,
         "output_step": 3,
         "data_mode":2,
@@ -18,11 +18,10 @@ transformer_cf = {
         "ensembled_model": {
             "svm": 0,
             "random_forest": 1,
-            "xgboost": 2, 
-            "lstm": 2,
-            "news": 0
-        },
-        
+            "xgboost": 1,
+            "lstm": 0,
+            "news": 1
+        }
     },
     "training": {
         "device": "cuda",  # "cuda" or "cpu"

@@ -1,1 +1,89 @@
+<<<<<<< HEAD
 {}
+=======
+{
+    "AAPL": {
+      "01/07/2023": {
+        "current": "180",
+        "3": {
+          "svm": "UP",
+          "random forest": "DOWN",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": ""
+        },
+        "7": {
+          "svm": "UP",
+          "random forest": "DOWN",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": 190
+        },
+        "14": {
+          "svm": "UP",
+          "random forest": "DOWN",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": 190
+        }
+      },
+      "02/07/2023": {
+        "current": "185",
+        "3": {
+          "svm": "DOWN",
+          "random forest": "UP",
+          "xgboost": "DOWN",
+          "lstm": "UP",
+          "ensembler": "DOWN",
+          "actual": 182
+        },
+        "7": {
+          "svm": "UP",
+          "random forest": "DOWN",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": 189
+        },
+        "14": {
+          "svm": "UP",
+          "random forest": "DOWN",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": 194
+        }
+      },
+      "03/07/2023": {
+        "current": "190",
+        "3": {
+          "svm": "UP",
+          "random forest": "UP",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": 188
+        },
+        "7": {
+          "svm": "UP",
+          "random forest": "DOWN",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": 193
+        },
+        "14": {
+          "svm": "UP",
+          "random forest": "DOWN",
+          "xgboost": "UP",
+          "lstm": "DOWN",
+          "ensembler": "UP",
+          "actual": 189
+        }
+      }
+    }
+  }
+>>>>>>> 45bd6c903a7d9365c0711a42a7486feefcb2eea7
