@@ -100,10 +100,10 @@
 
 .styled-table {
     border-collapse: collapse;
-    margin: 25px 0;
-    font-size: 0.9em;
+    margin: 1rem 0;
+    font-size: 0.625rem;
     font-family: sans-serif;
-    min-width: 600px;
+    min-width: 49.125rem;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
     border-radius: 10px;
     overflow: hidden;
@@ -118,7 +118,7 @@
 
 .styled-table th,
 .styled-table td {
-    padding: 12px 15px;
+    padding: 0.75rem 0.925rem;
 }
 
 .styled-table tbody tr {

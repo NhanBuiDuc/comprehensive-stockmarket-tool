@@ -23,9 +23,9 @@ chart = {
     if (object.currentData) {
       object.buildHighchart(object.currentData, symbol); // Use the current data if available
 
-      let stockTable = document.getElementById("stockTable");
-      let tbody = stockTable.querySelector("tbody");
-      tbody.innerHTML = ``;
+      // let stockTable = document.getElementById("stockTable");
+      // let tbody = stockTable.querySelector("tbody");
+      // tbody.innerHTML = ``;
       object.buildOnchangeOutputSize();
       object.buildOnchangedatePicker();
     } else {
