@@ -22,7 +22,10 @@ chart = {
     console.log("Building chart...");
     if (object.currentData) {
       object.buildHighchart(object.currentData, symbol); // Use the current data if available
-      //   object.buildAnalysisHoloDemo(object.currentData);
+
+      let stockTable = document.getElementById("stockTable");
+      let tbody = stockTable.querySelector("tbody");
+      tbody.innerHTML = ``;
       object.buildOnchangeOutputSize();
       object.buildOnchangedatePicker();
     } else {
@@ -216,10 +219,9 @@ chart = {
     let datePicker = document.getElementById("datePicker");
     let stockTable = document.getElementById("stockTable");
     let tbody = stockTable.querySelector("tbody");
-    tbody.innerHTML = ``;
+    // tbody.innerHTML = ``;
     object.getDataTable(value, function (res) {
       if (res) {
-        let price = ""
         let outputsize = document.getElementById("outputsize").value;
         let dateValue = document.getElementById("datePicker").value;
         // Split the retrieved value using the hyphen "-"
@@ -234,6 +236,7 @@ chart = {
         currentPrice.innerText = (res[datePicker] ? res[datePicker]["current"] : "0");
         actualPrice.innerText = (res[datePicker] ? res[datePicker][outputsize]["actual"]: "0");
         
+
         let tr = document.createElement("tr");
         tr.innerHTML = `
                 <td>${datePicker}</td>
@@ -243,7 +246,12 @@ chart = {
                 <td>${res[datePicker][outputsize]["xgboost"] == "UP" ? object.upElements : object.downElements}</td>
                 <td>${res[datePicker][outputsize]["random forest"]  == "UP" ? object.upElements : object.downElements}</td>
                 <td>${res[datePicker][outputsize]["ensembler"] == "UP" ? object.upElements : object.downElements}</td>`;
-        tbody.append(tr);
+        
+        if (tbody.childElementCount >= 4) {
+          // Remove the last row from the table
+          tbody.removeChild(tbody.lastChild);
+        }
+        tbody.insertBefore(tr, tbody.firstChild);
       }
     });
   },
