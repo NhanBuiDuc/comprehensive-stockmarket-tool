@@ -1,89 +1,682 @@
-<<<<<<< HEAD
-{}
-=======
 {
-    "AAPL": {
-      "01/07/2023": {
-        "current": "180",
-        "3": {
-          "svm": "UP",
-          "random forest": "DOWN",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": ""
-        },
-        "7": {
-          "svm": "UP",
-          "random forest": "DOWN",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": 190
-        },
-        "14": {
-          "svm": "UP",
-          "random forest": "DOWN",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": 190
-        }
+  "AAPL": {
+    "07/07/2023": {
+      "current": "190.68",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
       },
-      "02/07/2023": {
-        "current": "185",
-        "3": {
-          "svm": "DOWN",
-          "random forest": "UP",
-          "xgboost": "DOWN",
-          "lstm": "UP",
-          "ensembler": "DOWN",
-          "actual": 182
-        },
-        "7": {
-          "svm": "UP",
-          "random forest": "DOWN",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": 189
-        },
-        "14": {
-          "svm": "UP",
-          "random forest": "DOWN",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": 194
-        }
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
       },
-      "03/07/2023": {
-        "current": "190",
-        "3": {
-          "svm": "UP",
-          "random forest": "UP",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": 188
-        },
-        "7": {
-          "svm": "UP",
-          "random forest": "DOWN",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": 193
-        },
-        "14": {
-          "svm": "UP",
-          "random forest": "DOWN",
-          "xgboost": "UP",
-          "lstm": "DOWN",
-          "ensembler": "UP",
-          "actual": 189
-        }
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "06/07/2023": {
+      "current": "191.81",
+      "3": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": ""
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "05/07/2023": {
+      "current": "191.33",
+      "3": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "03/07/2023": {
+      "current": "192.46",
+      "3": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "30/06/2023": {
+      "current": "193.97",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "191.81"
+      },
+      "7": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": ""
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": ""
+      }
+    },
+    "29/06/2023": {
+      "current": "189.59",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "191.33"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": ""
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": ""
+      }
+    },
+    "28/06/2023": {
+      "current": "189.25",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "192.46"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": ""
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": ""
+      }
+    },
+    "27/06/2023": {
+      "current": "188.06",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "193.97"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "190.68"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": ""
+      }
+    },
+    "26/06/2023": {
+      "current": "185.27",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "189.59"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "191.81"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": ""
+      }
+    },
+    "23/06/2023": {
+      "current": "186.68",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "189.25"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "191.33"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": ""
+      }
+    },
+    "22/06/2023": {
+      "current": "187.00",
+      "3": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "188.06"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "192.46"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "21/06/2023": {
+      "current": "183.96",
+      "3": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "185.27"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "193.97"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "20/06/2023": {
+      "current": "185.01",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "186.68"
+      },
+      "7": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "189.59"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "16/06/2023": {
+      "current": "184.92",
+      "3": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "187.00"
+      },
+      "7": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": "189.25"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": ""
+      }
+    },
+    "15/06/2023": {
+      "current": "186.01",
+      "3": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "183.96"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": "188.06"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "190.68"
+      }
+    },
+    "14/06/2023": {
+      "current": "183.95",
+      "3": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "185.01"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "185.27"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": "192.46"
+      }
+    },
+    "13/06/2023": {
+      "current": "183.31",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "184.92"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "186.68"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "193.97"
+      }
+    },
+    "12/06/2023": {
+      "current": "183.79",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "186.01"
+      },
+      "7": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "187.00"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": "189.59"
+      }
+    },
+    "09/06/2023": {
+      "current": "180.96",
+      "3": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "183.95"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "183.96"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "189.25"
+      }
+    },
+    "08/06/2023": {
+      "current": "180.57",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "183.31"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "185.01"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "189.59"
+      }
+    },
+    "07/06/2023": {
+      "current": "177.82",
+      "3": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "183.79"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "184.92"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "189.25"
+      }
+    },
+    "06/06/2023": {
+      "current": "179.21",
+      "3": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "180.96"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "186.01"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "188.06"
+      }
+    },
+    "05/06/2023": {
+      "current": "179.58",
+      "3": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "180.57"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "183.95"
+      },
+      "14": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "UP",
+        "actual": "185.27"
+      }
+    },
+    "02/06/2023": {
+      "current": "180.95",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "177.82"
+      },
+      "7": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "183.31"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "186.68"
+      }
+    },
+    "01/06/2023": {
+      "current": "180.09",
+      "3": {
+        "svm": "UP",
+        "random forest": "DOWN",
+        "xgboost": "DOWN",
+        "lstm": "UP",
+        "ensembler": "DOWN",
+        "actual": "179.21"
+      },
+      "7": {
+        "svm": "UP",
+        "random forest": "UP",
+        "xgboost": "UP",
+        "lstm": "UP",
+        "ensembler": "UP",
+        "actual": "183.79"
+      },
+      "14": {
+        "svm": "DOWN",
+        "random forest": "DOWN",
+        "xgboost": "UP",
+        "lstm": "DOWN",
+        "ensembler": "DOWN",
+        "actual": "187.00"
       }
     }
   }
->>>>>>> 45bd6c903a7d9365c0711a42a7486feefcb2eea7
+}
+
+
+
